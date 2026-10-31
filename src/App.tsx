@@ -1,17 +1,24 @@
+import { lazy, type ComponentType } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { Layout } from './components/Layout'
 import { TimerProvider } from './components/TimerProvider'
-import { CalendarPage } from './pages/CalendarPage'
-import { HabitsPage } from './pages/HabitsPage'
-import { JournalPage } from './pages/JournalPage'
-import { LibraryPage } from './pages/LibraryPage'
-import { ProjectDetailPage } from './pages/ProjectDetailPage'
-import { ProjectsPage } from './pages/ProjectsPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { StatsPage } from './pages/StatsPage'
-import { TasksPage } from './pages/TasksPage'
-import { TimerPage } from './pages/TimerPage'
 import { TodayPage } from './pages/TodayPage'
+
+// The home screen loads with the app; every other screen (and big libraries such as the
+// charts) is fetched when first opened, so the app starts faster.
+const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) =>
+  lazy(() => load().then((module) => ({ default: module[name] })))
+
+const CalendarPage = page(() => import('./pages/CalendarPage'), 'CalendarPage')
+const HabitsPage = page(() => import('./pages/HabitsPage'), 'HabitsPage')
+const JournalPage = page(() => import('./pages/JournalPage'), 'JournalPage')
+const LibraryPage = page(() => import('./pages/LibraryPage'), 'LibraryPage')
+const ProjectDetailPage = page(() => import('./pages/ProjectDetailPage'), 'ProjectDetailPage')
+const ProjectsPage = page(() => import('./pages/ProjectsPage'), 'ProjectsPage')
+const SettingsPage = page(() => import('./pages/SettingsPage'), 'SettingsPage')
+const StatsPage = page(() => import('./pages/StatsPage'), 'StatsPage')
+const TasksPage = page(() => import('./pages/TasksPage'), 'TasksPage')
+const TimerPage = page(() => import('./pages/TimerPage'), 'TimerPage')
 
 export default function App() {
   return (

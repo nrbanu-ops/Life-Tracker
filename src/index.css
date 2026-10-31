@@ -61,6 +61,24 @@
   }
 }
 
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* A light press on every button, so taps feel answered. */
+button:not(:disabled) {
+  transition:
+    transform 120ms ease-out,
+    background-color 150ms,
+    color 150ms;
+}
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::backdrop {

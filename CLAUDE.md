@@ -81,6 +81,10 @@ Vardiya/gün tipleri, ruh hali/enerji takibi, bulut senkronu (ileride Supabase),
    - Durumlar: istiyorum, devam, bitti, bıraktım; "istiyorum" dışında puan ve yorum. Kitapta okunan dil (filtre, afişte Türkçe dışı etiket), ilerleme (sayfa / sezon-bölüm).
    - Tür olarak "Yer" de var (gittiğin yerler): elle eklenir, şehir/ülke, tek fotoğraf (kare), durum sadece gitmek istiyorum / gittim. Harita ve konum sonra.
    - Kütüphane içinde Raf / Takvim görünümü (bitirilen günler, ana takvimden bağımsız) ve yıllık tür başına hedef (`libraryGoals` tablosu).
-5. İstatistik fonksiyonları (testlerle) ve İstatistik ekranı
-6. JSON dışa/içe aktarma
-7. Cila: koyu tema, boş ekran durumları, küçük animasyonlar
+5. ✅ İstatistik: `src/lib/stats.ts` (`streaks`, `dayStates`, `weekdayRates`, `weeklyRates`, `monthlyRates`, `overallRate`, testli). Ekran: son 30 gün / bu hafta / en iyi seri, habit seçici, 12 aylık ısı haritası, haftalık-aylık ve haftanın günleri grafikleri (Recharts), bırakma habit'leri ve projeler özeti.
+6. ✅ Yedekleme (Ayarlar): JSON indir / geri yükle (fotoğraflar data URL olarak), otomatik yedek: kullanıcının seçtiği dosyaya File System Access API ile değişiklikten sonra yazılır (`src/db/backup.ts`, `meta` tablosu; izin düşerse üstte "Devam ettir" şeridi). `navigator.storage.persist()` istenir.
+7. ✅ Cila: sayfalar lazy yüklenir (Recharts sadece İstatistik'te), sayfa geçişinde hafif belirme, butonlarda basma efekti, koyu tema kontrol edildi.
+
+Sonraki: telefona taşıma (ücretsiz barındırma + https), Yerler için harita/konum.
+
+Git: depo `main` dalında; her adımdan sonra commit at.
