@@ -36,7 +36,13 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: false,
       // Without these the new worker waits for a SKIP_WAITING message nobody sends, and updates never apply.
-      workbox: { skipWaiting: true, clientsClaim: true, cleanupOutdatedCaches: true },
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        // jpg too, so the background picture works offline.
+        globPatterns: ['**/*.{js,wasm,css,html,jpg}'],
+      },
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Life Tracker',
@@ -46,8 +52,8 @@ export default defineConfig({
         start_url: '.',
         scope: '.',
         display: 'standalone',
-        background_color: '#f6f7f5',
-        theme_color: '#f6f7f5',
+        background_color: '#f8f5ec',
+        theme_color: '#f8f5ec',
         icons: [
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },

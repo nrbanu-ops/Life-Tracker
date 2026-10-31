@@ -16,6 +16,7 @@ export function Layout() {
         paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))',
       }}
     >
+      <div className="app-backdrop" aria-hidden />
       <BackupManager />
       <TimerBanner />
       {/* Screens load on first visit; the tab bar stays put meanwhile. Keyed so each screen fades in. */}

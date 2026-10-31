@@ -2,7 +2,8 @@
 
 /* Colors live in CSS variables so light/dark follow the system setting. */
 :root {
-  --color-bg: #f6f7f5;
+  /* The background picture's paper colour, so the two meet without a seam. */
+  --color-bg: #f8f5ec;
   --color-surface: #ffffff;
   --color-text: #1d2420;
   --color-muted: #6b756f;
@@ -128,6 +129,29 @@ html,
 body,
 #root {
   min-height: 100%;
+}
+
+/*
+ * Blossom branches behind every screen, light theme only. A fixed layer rather than
+ * background-attachment: fixed, which Android's WebView scrolls anyway.
+ */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--color-bg) url("./assets/bg-light.jpg") center / cover no-repeat;
+}
+@media (min-aspect-ratio: 3/4) {
+  /* Wide screens: keep the branches at phone size in the corners instead of blowing them up. */
+  .app-backdrop {
+    background-size: auto 100%;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .app-backdrop {
+    display: none;
+  }
 }
 
 body {
