@@ -13,6 +13,9 @@ import { db } from '../db/db'
 import { fromDateKey } from '../lib/date'
 import { filterEntries, groupByDay, searchEntries, type JournalFilter } from '../lib/journal'
 import { ENERGY_EMOJI, MOOD_EMOJI } from '../lib/mood'
+import { geminiReady, useAiSettings } from '../lib/assistant'
+import { hasRecentReview } from '../lib/review'
+import { WeeklyReview } from '../components/WeeklyReview'
 import { useTodayKey } from '../lib/useTodayKey'
 
 export function JournalPage() {
@@ -21,6 +24,7 @@ export function JournalPage() {
   const entries = useLiveQuery(() => db.journal.toArray())
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray(), [], [])
   const moods = useLiveQuery(() => db.moods.toArray(), [], [])
+  const ai = useAiSettings()
   const [filter, setFilter] = useState<JournalFilter>('all')
   const [query, setQuery] = useState('')
   const [editingId, setEditingId] = useState<string>()
@@ -54,6 +58,10 @@ export function JournalPage() {
       />
 
       <JournalComposer date={today} />
+
+      {geminiReady(ai) && entries && (
+        <WeeklyReview today={today} variant="journal" hasRecent={hasRecentReview(entries, today)} />
+      )}
 
       {(entries?.length ?? 0) > 0 && (
         <input
