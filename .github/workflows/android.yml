@@ -1,0 +1,56 @@
+name: android
+# Builds the Android shell (android/) and publishes it as a GitHub Release.
+# Only needed when the shell itself changes; app updates come through the web deploy.
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android
+  cancel-in-progress: false
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the Release + tag
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Release key (optional, from repository secrets)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.p12"
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.p12" >> "$GITHUB_ENV"
+          else
+            echo "::warning::ANDROID_KEYSTORE_B64 is not set; the APK is signed with a throwaway debug key (see docs/ANDROID.md)"
+          fi
+      - name: Build APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          gradle -p android --no-daemon assembleRelease \
+            -PappUrl="https://${OWNER,,}.github.io/${REPO}/" \
+            -PshellVersion=${{ github.run_number }}
+          cp android/app/build/outputs/apk/release/app-release.apk LifeTracker.apk
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "android-v${{ github.run_number }}" LifeTracker.apk \
+            --title "Android uygulaması v${{ github.run_number }}" \
+            --notes "Telefona bir kere kurulur; uygulama güncellemeleri kendiliğinden gelir. Kurulum: docs/ANDROID.md" \
+            --latest

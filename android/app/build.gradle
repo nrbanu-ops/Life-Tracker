@@ -1,0 +1,49 @@
+plugins { id 'com.android.application' }
+
+// The web app the shell opens. CI passes -PappUrl=https://<owner>.github.io/<repo>/ so forks work too.
+def appUrl = project.findProperty('appUrl') ?: 'https://makolay322.github.io/Life-Tracker/'
+def shellVersion = (project.findProperty('shellVersion') ?: '1') as int
+
+// Release signing comes from CI secrets (see docs/ANDROID.md); without them the debug key is used.
+def keystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
+
+android {
+    namespace 'app.lifetracker'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'app.lifetracker'
+        minSdk 29
+        // 34 keeps the classic (non edge-to-edge) window, so the web app's layout needs no insets.
+        targetSdk 34
+        versionCode shellVersion
+        versionName "1.${shellVersion}"
+        buildConfigField 'String', 'APP_URL', "\"${appUrl}\""
+    }
+
+    buildFeatures { buildConfig true }
+
+    signingConfigs {
+        release {
+            if (keystorePath) {
+                storeFile file(keystorePath)
+                storeType 'pkcs12'
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig keystorePath ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

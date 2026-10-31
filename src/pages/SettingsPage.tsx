@@ -4,6 +4,7 @@ import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
+import { androidBridge } from '../lib/android'
 import { setAiSettings, useAiSettings } from '../lib/assistant'
 import { copyText } from '../lib/clipboard'
 import { getTmdbKey, setTmdbKey } from '../lib/library'
@@ -100,6 +101,13 @@ export function SettingsPage() {
         </section>
 
         <TmdbKeySection />
+
+        <p className="py-2 text-center text-xs text-muted">
+          Sürüm {__APP_VERSION__}
+          {androidBridge && ` · Android uygulaması ${androidBridge.version()}`}
+          <br />
+          Yeni sürümler kendiliğinden yüklenir.
+        </p>
 
       </div>
     </>

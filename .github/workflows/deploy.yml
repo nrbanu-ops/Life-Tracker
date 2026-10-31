@@ -1,0 +1,51 @@
+name: deploy
+# Every push to main checks, builds and publishes the web app to GitHub Pages.
+# The Android app and installed PWAs pick the new version up by themselves (service worker).
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['android/**', 'docs/**', '**.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Secret scan (keys must never be committed)
+        run: |
+          if git grep -nIE 'AIza[0-9A-Za-z_-]{35}|-----BEGIN (EC |RSA )?PRIVATE KEY-----|eyJhbGciOiJIUzI1NiJ9\.[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}' -- . ':!.github'; then
+            echo "::error::possible secret committed"; exit 1; fi
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - name: Build for Pages
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: |
+          npm run build
+          # Deep links (e.g. /projeler) before the service worker is installed.
+          cp dist/index.html dist/404.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -3,15 +3,20 @@ import { tr } from 'date-fns/locale'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState } from 'react'
 import {
+  ANDROID_BACKUP_NAME,
+  androidBackupOn,
   backupNow,
   chooseBackupFile,
   exportBackup,
   noteDownloadedBackup,
   restoreBackup,
+  setAndroidBackup,
   stopAutoBackup,
+  supportsAndroidBackup,
   supportsFileBackup,
 } from '../db/backup'
 import { db } from '../db/db'
+import { saveFile } from '../lib/android'
 import { backupFileName, parseBackup, type Backup } from '../lib/backup'
 import { useTodayKey } from '../lib/useTodayKey'
 
@@ -22,6 +27,7 @@ export function BackupSection() {
   const today = useTodayKey()
   const handle = useLiveQuery(async () => (await db.meta.get('backupHandle'))?.value as FileSystemFileHandle | undefined)
   const lastBackupAt = useLiveQuery(async () => (await db.meta.get('lastBackupAt'))?.value as string | undefined)
+  const androidOn = useLiveQuery(androidBackupOn)
   const [message, setMessage] = useState<Message>()
   const [pending, setPending] = useState<Backup>()
   const fileInput = useRef<HTMLInputElement>(null)
@@ -40,13 +46,9 @@ export function BackupSection() {
   const download = () =>
     run(async () => {
       const blob = new Blob([await exportBackup()], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = backupFileName(today)
-      link.click()
-      URL.revokeObjectURL(url)
+      if (!(await saveFile(backupFileName(today), blob))) return { kind: 'error', text: 'Dosya kaydedilemedi.' }
       await noteDownloadedBackup()
+      if (supportsAndroidBackup) return { kind: 'ok', text: 'İndirilenler/LifeTracker klasörüne kaydedildi ✓' }
     })
 
   const button = 'rounded-xl bg-bg px-4 py-2.5 text-sm'
@@ -60,6 +62,56 @@ export function BackupSection() {
           ? `Son yedek: ${formatDistanceToNow(new Date(lastBackupAt), { locale: tr, addSuffix: true })}.`
           : 'Henüz yedek alınmadı.'}
       </p>
+
+      {supportsAndroidBackup && (
+        <div className="mt-4 rounded-xl bg-bg p-3">
+          {androidOn ? (
+            <>
+              <p className="text-sm">
+                ✅ Otomatik yedek açık: <b>İndirilenler/LifeTracker/{ANDROID_BACKUP_NAME}</b>
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                Bir şey değiştikçe birkaç dakikada bir kendiliğinden güncellenir. Uygulamayı silmeden önce
+                bu dosyanın bir kopyasını sakla.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    run(async () => {
+                      await backupNow(true)
+                      return { kind: 'ok', text: 'Yedeklendi ✓' }
+                    })
+                  }
+                  className="rounded-xl bg-surface px-4 py-2 text-sm"
+                >
+                  Şimdi yedekle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => run(() => setAndroidBackup(false))}
+                  className="px-2 py-2 text-sm text-muted"
+                >
+                  Kapat
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm">
+                Verilerin değiştikçe telefonun İndirilenler klasörüne kendiliğinden yedeklensin.
+              </p>
+              <button
+                type="button"
+                onClick={() => run(() => setAndroidBackup(true))}
+                className="mt-3 w-full rounded-xl bg-accent py-2.5 text-sm font-medium text-surface"
+              >
+                Otomatik yedeği aç
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {supportsFileBackup && (
         <div className="mt-4 rounded-xl bg-bg p-3">

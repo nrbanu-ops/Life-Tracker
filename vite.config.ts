@@ -1,23 +1,48 @@
 /// <reference types="vitest/config" />
+import { execSync } from 'node:child_process'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// GitHub Pages serves the app under /<repo>/; the deploy workflow sets BASE_PATH.
+const base = process.env.BASE_PATH ?? '/'
+
+/** Shown in Settings so it's easy to see that an update arrived: date + commit. */
+function appVersion(): string {
+  const date = new Date().toISOString().slice(0, 10)
+  let commit = process.env.GITHUB_SHA?.slice(0, 7)
+  if (!commit) {
+    try {
+      commit = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    } catch {
+      commit = 'yerel'
+    }
+  }
+  return `${date} · ${commit}`
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion()),
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
+      // A new version takes over as soon as it's downloaded; main.tsx checks for one regularly.
       registerType: 'autoUpdate',
+      injectRegister: false,
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Life Tracker',
         short_name: 'Life Tracker',
         description: 'Projeler, alışkanlıklar ve istatistikler',
         lang: 'tr',
-        start_url: '/',
+        start_url: '.',
+        scope: '.',
         display: 'standalone',
         background_color: '#f6f7f5',
         theme_color: '#f6f7f5',

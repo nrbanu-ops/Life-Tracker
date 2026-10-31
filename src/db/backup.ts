@@ -1,3 +1,4 @@
+import { androidBridge } from '../lib/android'
 import { BACKUP_APP, BACKUP_FORMAT, decodeRecord, encodeRecord, type Backup } from '../lib/backup'
 import { db, META_TABLE } from './db'
 
@@ -104,8 +105,34 @@ export async function resumeAutoBackup(): Promise<boolean> {
   return true
 }
 
+// --- On the Android app: automatic backup into Downloads/LifeTracker/ through the shell's bridge.
+
+export const supportsAndroidBackup = androidBridge !== undefined
+export const ANDROID_BACKUP_NAME = 'life-tracker-yedek.json'
+
+export async function androidBackupOn(): Promise<boolean> {
+  return Boolean((await db.meta.get('androidBackup'))?.value)
+}
+
+export async function setAndroidBackup(on: boolean): Promise<void> {
+  await db.meta.put({ key: 'androidBackup', value: on })
+  if (on) await backupNow(true)
+}
+
+async function writeAndroid(): Promise<void> {
+  if (!androidBridge?.writeText(ANDROID_BACKUP_NAME, await exportBackup())) throw new Error('Yedek yazılamadı')
+  dirty = false
+  await db.meta.put({ key: 'lastBackupAt', value: new Date().toISOString() })
+}
+
 /** Writes the backup if something changed and permission is still there; `force` skips the change check. */
 export async function backupNow(force = false): Promise<'saved' | 'unchanged' | 'needs-permission' | 'off'> {
+  if (supportsAndroidBackup) {
+    if (!(await androidBackupOn())) return 'off'
+    if (!force && !dirty) return 'unchanged'
+    await writeAndroid()
+    return 'saved'
+  }
   const handle = await getBackupHandle()
   if (!handle) return 'off'
   if (!force && !dirty) return 'unchanged'
@@ -116,6 +143,7 @@ export async function backupNow(force = false): Promise<'saved' | 'unchanged' | 
 
 /** Records a manual download as a backup too, for the "last backup" line. */
 export async function noteDownloadedBackup(): Promise<void> {
-  if (!supportsFileBackup || !(await getBackupHandle())) dirty = false
+  const autoOn = supportsAndroidBackup ? await androidBackupOn() : supportsFileBackup && Boolean(await getBackupHandle())
+  if (!autoOn) dirty = false
   await db.meta.put({ key: 'lastBackupAt', value: new Date().toISOString() })
 }

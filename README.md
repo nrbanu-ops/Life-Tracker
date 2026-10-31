@@ -1,32 +1,48 @@
-# React + TypeScript + Vite
+# Life Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Kişisel planlayıcı, habit tracker ve hayat günlüğü. Tek kullanıcı, hesap yok. Bütün veriler kendi
+cihazında kalır (IndexedDB).
 
-Currently, two official plugins are available:
+- **Bugün:** günlük ve haftalık hedefleri tek dokunuşla işaretle, minimum versiyon, günü atlama
+- **Projeler:** hedefler, adımlar (milestone), bağlı habit'ler. **Claude** ya da **Gemini** ile sohbet ederek planla
+- **Takvim, Görevler, Günlük, Zamanlayıcı**
+- **Kütüphane:** kitap, film, dizi ve gittiğin yerler; afişler, puan, harita
+- **İstatistik:** ısı haritası, seriler, haftalık/aylık oranlar
+- **Yedekleme:** JSON indir/geri yükle, otomatik yedek
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Kullanım
 
-## React Compiler
+| Nerede | Nasıl |
+|---|---|
+| Telefon (Android) | [Releases](../../releases/latest) → `LifeTracker.apk` kur. Ayrıntılar: [docs/ANDROID.md](docs/ANDROID.md) |
+| Bilgisayar / iPhone | GitHub Pages adresini aç, tarayıcıdan "Uygulamayı yükle / Ana ekrana ekle" |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Güncellemeler kendiliğinden gelir: `main`'e her push siteyi yeniden yayınlar, uygulama yeni sürüme kendisi geçer.
 
-## Expanding the Oxlint configuration
+## Yapay zeka ile planlama
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Ayarlar'dan ikisi de ayrı ayrı açılıp kapatılabilir:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+- **Gemini asistanı:** uygulamanın içinde sohbet. Kendi ücretsiz anahtarını
+  [aistudio.google.com/apikey](https://aistudio.google.com/apikey) adresinden alıp Ayarlar'a yapıştırırsın.
+- **Claude ile planlama:** claude.ai'deki bir Projeye talimat yapıştırırsın, planı uygulamaya geri kopyalarsın. Anahtar gerekmez.
+
+Anahtarlar (Gemini, TMDB) **sadece cihazında** saklanır, yedeğe ve depoya girmez.
+
+## Geliştirme
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm test
+npm run build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+React + TypeScript + Vite, Tailwind v4, Dexie (IndexedDB), React Router, date-fns, Recharts, Leaflet,
+vite-plugin-pwa. Proje kuralları ve mimari: [CLAUDE.md](CLAUDE.md).
+
+| Klasör | İçerik |
+|---|---|
+| `src/` | Web uygulaması (`components`, `pages`, `db`, `lib`) |
+| `android/` | Android kabuğu (WebView + küçük köprü) |
+| `.github/workflows/` | `deploy` (Pages), `android` (APK → Release) |

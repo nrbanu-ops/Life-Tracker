@@ -24,7 +24,8 @@ const TimerPage = page(() => import('./pages/TimerPage'), 'TimerPage')
 export default function App() {
   return (
     <TimerProvider>
-      <BrowserRouter>
+      {/* On GitHub Pages the app lives under /<repo>/. */}
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<TodayPage />} />

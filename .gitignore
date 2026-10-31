@@ -22,3 +22,17 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Android shell
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Keys and secrets never go into the repository
+*.keystore
+*.jks
+*.p12
+*.pem
+.env
+.env.*

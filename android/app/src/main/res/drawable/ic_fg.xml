@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- The favicon (public/favicon.svg) scaled into the adaptive icon's safe zone: a progress ring and a tick. -->
+    <group android:scaleX="0.15" android:scaleY="0.15" android:translateX="15.6" android:translateY="15.6">
+        <path
+            android:strokeColor="#DFE9E4" android:strokeWidth="36" android:strokeLineCap="round"
+            android:trimPathEnd="0.743"
+            android:pathData="M256,106 A150,150 0 0,1 256,406 A150,150 0 0,1 256,106" />
+        <path
+            android:strokeColor="#FFFFFF" android:strokeWidth="40" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M190,260 L236,306 L326,206" />
+    </group>
+</vector>

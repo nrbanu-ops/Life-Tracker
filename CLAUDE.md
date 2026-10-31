@@ -20,6 +20,7 @@ Tek kullanıcı, giriş/hesap sistemi yok.
 - Recharts (grafikler)
 - Leaflet (kütüphanedeki yer haritası; react-leaflet yok, doğrudan kullanılıyor)
 - Vitest (birim testleri)
+- Android kabuğu: `android/` (Gradle, Java, WebView; kütüphane yok). APK GitHub Actions'ta derlenir.
 
 Yeni bir kütüphane eklemeden önce kullanıcıya sor.
 
@@ -86,6 +87,11 @@ Vardiya/gün tipleri, ruh hali/enerji takibi, bulut senkronu (ileride Supabase),
 6. ✅ Yedekleme (Ayarlar): JSON indir / geri yükle (fotoğraflar data URL olarak), otomatik yedek: kullanıcının seçtiği dosyaya File System Access API ile değişiklikten sonra yazılır (`src/db/backup.ts`, `meta` tablosu; izin düşerse üstte "Devam ettir" şeridi). `navigator.storage.persist()` istenir.
 7. ✅ Cila: sayfalar lazy yüklenir (Recharts sadece İstatistik'te), sayfa geçişinde hafif belirme, butonlarda basma efekti, koyu tema kontrol edildi.
 
-Sonraki: telefona taşıma (ücretsiz barındırma + https), sonra "Buradayım" ile anlık konum.
+8. ✅ Gemini asistanı: `/asistan` sayfasında kullanıcının kendi Gemini anahtarıyla sohbet (`src/lib/gemini.ts`, `src/lib/assistant.ts`); aynı planlama talimatı, cevaptaki json bloğu "Gözden geçir ve ekle" kartına döner (`PlanPreview`). Ayarlar'da Gemini ve Claude ayrı ayrı açılıp kapanır; anahtar localStorage'da, yedeğe girmez.
+9. ✅ Yayın ve telefon: GitHub'da herkese açık depo. `deploy` iş akışı her push'ta test + build edip GitHub Pages'e yayınlar (`BASE_PATH=/<repo>/`); service worker yeni sürümü kendisi alır (`src/main.tsx`). Android kabuğu `android/` (WebView, bağımlılıksız Java; `window.LifeTrackerAndroid` köprüsü: dosya kaydetme ve İndirilenler'e otomatik yedek, `src/lib/android.ts`); `android` iş akışı APK'yı Release'e koyar. Ayrıntılar `docs/ANDROID.md`.
 
-Git: depo `main` dalında; her adımdan sonra commit at.
+Depo herkese açık: hiçbir API anahtarı, şifre ya da imza anahtarı commit'lenmez (iş akışında gizli bilgi taraması var). Kullanıcı anahtarları sadece cihazda (localStorage), imza anahtarı GitHub Secrets'ta.
+
+Sonraki: "Buradayım" ile anlık konum.
+
+Git: depo `main` dalında; her adımdan sonra commit at, push'la (push = yayın).
