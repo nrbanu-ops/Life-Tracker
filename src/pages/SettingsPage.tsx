@@ -7,6 +7,7 @@ import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
 import { androidBridge } from '../lib/android'
 import { setAiSettings, useAiSettings } from '../lib/assistant'
 import { copyText } from '../lib/clipboard'
+import { askGemini } from '../lib/gemini'
 import { getTmdbKey, setTmdbKey } from '../lib/library'
 
 export function SettingsPage() {
@@ -119,6 +120,19 @@ function GeminiSection() {
   const ai = useAiSettings()
   const [key, setKey] = useState(ai.geminiKey)
   const saved = key.trim() === ai.geminiKey && ai.geminiKey !== ''
+  const [check, setCheck] = useState<{ ok: boolean; text: string } | 'checking'>()
+
+  async function saveAndCheck() {
+    setAiSettings({ geminiKey: key })
+    if (!key.trim()) return setCheck(undefined)
+    setCheck('checking')
+    try {
+      await askGemini(key, 'Tek kelimeyle cevap ver.', [{ role: 'user', text: 'Merhaba' }])
+      setCheck({ ok: true, text: 'Anahtar çalışıyor ✓' })
+    } catch (e) {
+      setCheck({ ok: false, text: (e as Error).message })
+    }
+  }
 
   return (
     <section id="yapay-zeka" className="rounded-2xl border border-border bg-surface p-4">
@@ -156,12 +170,16 @@ function GeminiSection() {
             />
             <button
               type="button"
-              onClick={() => setAiSettings({ geminiKey: key })}
-              className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-surface"
+              onClick={saveAndCheck}
+              disabled={check === 'checking'}
+              className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-surface disabled:opacity-60"
             >
-              {saved ? 'Kayıtlı ✓' : 'Kaydet'}
+              {check === 'checking' ? 'Deneniyor…' : saved ? 'Tekrar dene' : 'Kaydet'}
             </button>
           </div>
+          {check && check !== 'checking' && (
+            <p className={`mt-2 text-sm ${check.ok ? 'text-accent' : 'text-red-600 dark:text-red-400'}`}>{check.text}</p>
+          )}
           <p className="mt-2 text-xs text-muted">
             Anahtar sadece bu cihazda saklanır, yedeğe girmez. Sohbetler doğrudan Google'a gider.
           </p>
