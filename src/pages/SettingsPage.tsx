@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
@@ -28,6 +29,8 @@ export function SettingsPage() {
       />
 
       <div className="flex flex-col gap-4">
+        <BackupSection />
+
         <section id="claude" className="rounded-2xl border border-border bg-surface p-4">
           <h2 className="font-medium">Claude ile planlama</h2>
           <p className="mt-1 text-sm text-muted">
@@ -84,12 +87,6 @@ export function SettingsPage() {
 
         <TmdbKeySection />
 
-        <section className="rounded-2xl border border-border bg-surface p-4">
-          <h2 className="font-medium">Verilerin</h2>
-          <p className="mt-1 text-sm text-muted">
-            Tüm veriler sadece bu cihazda saklanıyor. Dışa ve içe aktarma yakında burada olacak.
-          </p>
-        </section>
       </div>
     </>
   )

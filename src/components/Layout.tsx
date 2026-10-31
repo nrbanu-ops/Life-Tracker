@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router'
+import { BackupManager } from './BackupManager'
 import { TabBar } from './TabBar'
 import { TimerBanner } from './TimerBanner'
 
@@ -12,6 +13,7 @@ export function Layout() {
         paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))',
       }}
     >
+      <BackupManager />
       <TimerBanner />
       <Outlet />
       <TabBar />

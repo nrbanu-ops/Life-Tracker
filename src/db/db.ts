@@ -5,6 +5,7 @@ import type {
   JournalEntry,
   LibraryGoal,
   LibraryItem,
+  MetaEntry,
   Milestone,
   Project,
   Task,
@@ -19,6 +20,7 @@ export const db = new Dexie('life-tracker') as Dexie & {
   journal: EntityTable<JournalEntry, 'id'>
   library: EntityTable<LibraryItem, 'id'>
   libraryGoals: EntityTable<LibraryGoal, 'id'>
+  meta: EntityTable<MetaEntry, 'key'>
 }
 
 // Booleans can't be indexed in IndexedDB, so `archived` and `done` are filtered in memory.
@@ -61,5 +63,12 @@ db.version(5).stores({
 db.version(6).stores({
   libraryGoals: 'id, year',
 })
+
+// v7: app bookkeeping such as the automatic backup file; never part of a backup itself.
+db.version(7).stores({
+  meta: 'key',
+})
+
+export const META_TABLE = 'meta'
 
 export const newId = () => crypto.randomUUID()

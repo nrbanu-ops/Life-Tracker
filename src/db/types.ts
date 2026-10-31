@@ -138,6 +138,12 @@ export type LibraryGoal = {
   target: number
 }
 
+/** Key–value bookkeeping, e.g. 'backupHandle' (a FileSystemFileHandle) or 'lastBackupAt'. */
+export type MetaEntry = {
+  key: string
+  value: unknown
+}
+
 /** partial: some amount logged, target not reached. skipped: keeps the streak, not counted. */
 export type HabitLogStatus = 'done' | 'minimum' | 'partial' | 'skipped'
 
