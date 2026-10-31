@@ -80,14 +80,30 @@ export type Task = {
   createdAt: string
 }
 
+/** 1 = very low … 5 = very high. */
+export type Level = 1 | 2 | 3 | 4 | 5
+
+/** How the day felt: one row per day, either value may be missing. */
+export type DayMood = {
+  /** Day key. */
+  date: string
+  mood?: Level
+  energy?: Level
+}
+
 /** A journal entry: free writing for a day, or a note attached to a habit on that day. */
 export type JournalEntry = {
   id: string
   /** Day key the entry belongs to. */
   date: string
+  /** May be empty when the entry is just a photo. */
   text: string
   /** Set for habit notes; at most one note per habit per day. */
   habitId?: string
+  /** A photo, shrunk before saving. */
+  photo?: Blob
+  /** 'review': a weekly look back written by Gemini. */
+  kind?: 'review'
   createdAt: string
   updatedAt?: string
 }

@@ -6,6 +6,7 @@ import { groupByDay } from '../lib/journal'
 import { EntrySheet } from './EntrySheet'
 import { JournalComposer } from './JournalComposer'
 import { JournalEntryList } from './JournalEntryList'
+import { MoodPicker } from './MoodPicker'
 
 type Props = {
   date: string
@@ -33,6 +34,7 @@ export function DayJournal({ date, canWrite }: Props) {
         </Link>
       </div>
       <div className="flex flex-col gap-3">
+        {canWrite && <MoodPicker date={date} />}
         {sorted.length > 0 && (
           <JournalEntryList
             entries={sorted}

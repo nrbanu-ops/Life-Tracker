@@ -10,7 +10,9 @@ import { ProgressBar } from '../components/ProgressBar'
 import { RateChart, type RatePoint } from '../components/RateChart'
 import { Segmented } from '../components/Segmented'
 import { db } from '../db/db'
-import type { Habit, HabitLog } from '../db/types'
+import { MoodChart, type MoodPoint } from '../components/MoodChart'
+import type { DayMood, Habit, HabitLog, Level } from '../db/types'
+import { average, describeEffect, ENERGY_COLOR, ENERGY_EMOJI, habitEffects, MOOD_COLOR, MOOD_EMOJI } from '../lib/mood'
 import { fromDateKey, toDateKey, weekRange } from '../lib/date'
 import { describeFrequency, WEEKDAY_SHORT } from '../lib/frequency'
 import { compareProjects, projectProgress } from '../lib/projects'
@@ -42,6 +44,7 @@ export function StatsPage() {
   const logs = useLiveQuery(() => db.habitLogs.where('date').between(from, today, true, true).toArray(), [from, today], [])
   const projects = useLiveQuery(() => db.projects.toArray(), [], [])
   const milestones = useLiveQuery(() => db.milestones.toArray(), [], [])
+  const moods = useLiveQuery(() => db.moods.where('date').between(from, today, true, true).toArray(), [from, today], [])
   const [selectedId, setSelectedId] = useState<string>()
 
   if (habits === undefined) return <PageHeader title="İstatistik" />
@@ -124,6 +127,8 @@ export function StatsPage() {
           <HabitStats key={selected.id} habit={selected} logs={logs} today={today} heatStart={heatStart} />
         </section>
       )}
+
+      <MoodSection habits={habits} logs={logs} moods={moods} today={today} />
 
       {quitting.length > 0 && <QuitStatsSection habits={quitting} />}
 
@@ -257,6 +262,74 @@ function daysUntilWeekEnd(start: string, today: string): string[] {
   const days: string[] = []
   for (let d = fromDateKey(start); toDateKey(d) <= end; d = addDays(d, 1)) days.push(toDateKey(d))
   return days
+}
+
+type MoodSectionProps = { habits: Habit[]; logs: HabitLog[]; moods: DayMood[]; today: string }
+
+function MoodSection({ habits, logs, moods, today }: MoodSectionProps) {
+  const [from30] = lastDays(today, 30)
+  const recent = moods.filter((m) => m.date >= from30)
+  const mood = average(recent, 'mood')
+  const energy = average(recent, 'energy')
+  const effects = habitEffects(habits, logs, moods, today).slice(0, 4)
+  const byDate = new Map(moods.map((m) => [m.date, m]))
+  const chart: MoodPoint[] = []
+  for (let d = fromDateKey(from30); toDateKey(d) <= today; d = addDays(d, 1)) {
+    const key = toDateKey(d)
+    const m = byDate.get(key)
+    chart.push({
+      label: format(d, 'd MMM', { locale: tr }),
+      detail: format(d, 'd MMMM EEEE', { locale: tr }),
+      mood: m?.mood ?? null,
+      energy: m?.energy ?? null,
+    })
+  }
+
+  return (
+    <section className="mb-6">
+      <h2 className="mb-2 text-sm font-medium text-muted">Ruh hali ve enerji · son 30 gün</h2>
+      {recent.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted">
+          Bugün ekranında günün ruh halini ve enerjini işaretle; burada nasıl gittiği ve habit'lerinle bağlantısı görünecek.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Tile label="Ruh hali" value={mood ? `${MOOD_EMOJI[Math.round(mood) as Level]} ${mood.toFixed(1)}` : '–'} detail="ortalama, 5 üzerinden" />
+            <Tile label="Enerji" value={energy ? `${ENERGY_EMOJI[Math.round(energy) as Level]} ${energy.toFixed(1)}` : '–'} detail="ortalama, 5 üzerinden" />
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="mb-2 flex gap-4 text-xs text-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="h-0.5 w-4 rounded" style={{ background: MOOD_COLOR }} /> Ruh hali
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-0.5 w-4 rounded" style={{ background: ENERGY_COLOR }} /> Enerji
+              </span>
+            </div>
+            <MoodChart data={chart} />
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <h3 className="text-sm font-medium">Habit'lerinle bağlantısı</h3>
+            {effects.length === 0 ? (
+              <p className="mt-1 text-sm text-muted">
+                Birkaç hafta işaretledikçe hangi habit'lerin ruh halini ve enerjini etkilediği burada görünecek.
+              </p>
+            ) : (
+              <ul className="mt-2 flex flex-col gap-2">
+                {effects.map((e) => (
+                  <li key={`${e.habit.id}-${e.key}`} className="flex gap-2 text-sm">
+                    <span aria-hidden>{e.diff > 0 ? '📈' : '📉'}</span>
+                    <span>{describeEffect(e)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  )
 }
 
 function QuitStatsSection({ habits }: { habits: Habit[] }) {

@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
+  DayMood,
   Habit,
   HabitLog,
   JournalEntry,
@@ -23,6 +24,7 @@ export const db = new Dexie('life-tracker') as Dexie & {
   library: EntityTable<LibraryItem, 'id'>
   libraryGoals: EntityTable<LibraryGoal, 'id'>
   meta: EntityTable<MetaEntry, 'key'>
+  moods: EntityTable<DayMood, 'date'>
   achievements: EntityTable<UnlockedAchievement, 'id'>
   projectAchievements: EntityTable<ProjectAchievement, 'id'>
 }
@@ -77,6 +79,11 @@ db.version(7).stores({
 db.version(8).stores({
   achievements: 'id',
   projectAchievements: 'id, projectId',
+})
+
+// v9: mood and energy per day.
+db.version(9).stores({
+  moods: 'date',
 })
 
 export const META_TABLE = 'meta'
