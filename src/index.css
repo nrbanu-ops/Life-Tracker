@@ -32,7 +32,17 @@
   }
 }
 
+/* Heatmap: one hue from light to dark (partial → minimum → done), derived per theme. */
+:root {
+  --color-heat-1: color-mix(in oklab, var(--color-accent) 28%, var(--color-surface));
+  --color-heat-2: color-mix(in oklab, var(--color-accent) 58%, var(--color-surface));
+  --color-heat-3: var(--color-accent);
+}
+
 @theme inline {
+  --color-heat-1: var(--color-heat-1);
+  --color-heat-2: var(--color-heat-2);
+  --color-heat-3: var(--color-heat-3);
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);
   --color-text: var(--color-text);

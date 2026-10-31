@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import type { Habit, HabitFrequency, HabitLog } from '../db/types'
-import { lastDays, successRate } from './stats'
+import {
+  dayStates,
+  lastDays,
+  monthlyRates,
+  overallRate,
+  streaks,
+  successRate,
+  weekdayRates,
+  weeklyRates,
+} from './stats'
 
 const habit = (frequency: HabitFrequency, extra: Partial<Habit> = {}): Habit => ({
   id: 'h',
@@ -83,6 +92,96 @@ describe('successRate: times per week', () => {
       planned: 2,
       rate: 0.5,
     })
+  })
+})
+
+describe('streaks: daily and weekdays', () => {
+  const recent = { createdAt: new Date(2026, 9, 19).toISOString() } // Mon 19th
+
+  it('counts back to the last miss, keeping minimum and ignoring skipped days', () => {
+    const logs = [
+      log('2026-10-19'),
+      // 20th missed: breaks
+      log('2026-10-21'),
+      log('2026-10-22', 'minimum'),
+      log('2026-10-23', 'skipped'),
+      log('2026-10-24'),
+      log('2026-10-25'),
+      log('2026-10-26'),
+      log('2026-10-27'),
+    ]
+    expect(streaks(habit({ type: 'daily' }, recent), logs, TODAY)).toEqual({ current: 6, longest: 6, unit: 'day' })
+  })
+
+  it('does not break on an unmarked today, and counts it once done', () => {
+    const logs = [log('2026-10-26'), log('2026-10-27')]
+    expect(streaks(habit({ type: 'daily' }, recent), logs, TODAY).current).toBe(2)
+    expect(streaks(habit({ type: 'daily' }, recent), [...logs, log(TODAY)], TODAY).current).toBe(3)
+  })
+
+  it('remembers the longest run after a break', () => {
+    const logs = [log('2026-10-19'), log('2026-10-20'), log('2026-10-21'), log('2026-10-27')]
+    expect(streaks(habit({ type: 'daily' }, recent), logs, TODAY)).toMatchObject({ current: 1, longest: 3 })
+  })
+
+  it('skips unplanned weekdays', () => {
+    // Mon/Wed habit: 19, 21, 26 done; 28 (today) open.
+    const h = habit({ type: 'weekdays', days: [1, 3] }, recent)
+    expect(streaks(h, [log('2026-10-19'), log('2026-10-21'), log('2026-10-26')], TODAY).current).toBe(3)
+  })
+})
+
+describe('streaks: times per week', () => {
+  const h = habit({ type: 'timesPerWeek', count: 2 }, { createdAt: new Date(2026, 9, 5).toISOString() })
+
+  it('counts consecutive weeks that met the target; a running week below target does not break', () => {
+    const logs = [
+      log('2026-10-05'), log('2026-10-06'), // week of 5th: met
+      log('2026-10-13'), // week of 12th: missed
+      log('2026-10-19'), log('2026-10-23'), // week of 19th: met
+      log('2026-10-26'), // running week: 1 of 2
+    ]
+    expect(streaks(h, logs, TODAY)).toEqual({ current: 1, longest: 1, unit: 'week' })
+  })
+})
+
+describe('dayStates', () => {
+  it('tells logged, missed, open and unplanned days apart', () => {
+    const h = habit({ type: 'weekdays', days: [1, 2, 3] }, { createdAt: new Date(2026, 9, 26).toISOString() })
+    const states = dayStates(h, [log('2026-10-26', 'minimum')], '2026-10-25', '2026-10-29', TODAY)
+    expect(Object.fromEntries(states)).toEqual({
+      '2026-10-25': 'none', // before the habit
+      '2026-10-26': 'minimum',
+      '2026-10-27': 'missed',
+      '2026-10-28': 'open', // today
+      '2026-10-29': 'none', // future
+    })
+  })
+})
+
+describe('weekdayRates', () => {
+  it('splits success by weekday', () => {
+    const logs = [log('2026-10-19'), log('2026-10-26'), log('2026-10-20')]
+    const rates = weekdayRates(habit({ type: 'daily' }), logs, '2026-10-19', '2026-10-27', TODAY)
+    expect(rates[0]).toEqual({ weekday: 1, done: 2, planned: 2, rate: 1 }) // Mondays
+    expect(rates[1]).toEqual({ weekday: 2, done: 1, planned: 2, rate: 0.5 }) // Tuesdays
+    expect(rates[2].planned).toBe(1) // Wed 21st only; today unmarked
+  })
+})
+
+describe('period rates', () => {
+  it('lists the last weeks and months oldest first, ending now', () => {
+    const weeks = weeklyRates(habit({ type: 'daily' }), [], TODAY, 3)
+    expect(weeks.map((w) => w.start)).toEqual(['2026-10-12', '2026-10-19', '2026-10-26'])
+    const months = monthlyRates(habit({ type: 'daily' }), [], TODAY, 2)
+    expect(months.map((m) => m.start)).toEqual(['2026-09-01', '2026-10-01'])
+  })
+
+  it('adds up all active habits', () => {
+    const a = habit({ type: 'daily' })
+    const b = { ...habit({ type: 'daily' }), id: 'b' }
+    const r = overallRate([a, b], [log('2026-10-27')], '2026-10-27', '2026-10-27', TODAY)
+    expect(r).toEqual({ done: 1, planned: 2, rate: 0.5 })
   })
 })
 
