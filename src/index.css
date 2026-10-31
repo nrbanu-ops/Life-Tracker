@@ -32,6 +32,18 @@
   }
 }
 
+/* Habits of a project: how much of its colour goes into the row tint and the check mark. */
+:root {
+  --pastel-row: 12%;
+  --pastel-mark: 55%;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pastel-row: 16%;
+    --pastel-mark: 72%;
+  }
+}
+
 /* Heatmap: one hue from light to dark (partial → minimum → done), derived per theme. */
 :root {
   --color-heat-1: color-mix(in oklab, var(--color-accent) 28%, var(--color-surface));

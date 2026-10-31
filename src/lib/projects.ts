@@ -14,6 +14,14 @@ export const PROJECT_COLORS = [
   '#6b756f',
 ]
 
+/**
+ * A softened project colour for habits linked to it: the colour mixed into the surface.
+ * 'row' is a faint background tint, 'mark' a pastel for check marks and dots; how much colour
+ * each gets is set per theme in index.css (dark surfaces need more to stay visible).
+ */
+export const pastel = (color: string, use: 'row' | 'mark'): string =>
+  `color-mix(in oklab, ${color} var(--pastel-${use}), var(--color-surface))`
+
 export const STATUS_LABEL: Record<ProjectStatus, string> = {
   active: 'Aktif',
   paused: 'Duraklatıldı',

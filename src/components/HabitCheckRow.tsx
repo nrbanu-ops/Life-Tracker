@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import type { HabitLogStatus } from '../db/types'
 import { formatAmount } from '../lib/amount'
+import { pastel } from '../lib/projects'
 import type { TodayItem } from '../lib/today'
 
 type Props = {
@@ -40,9 +41,14 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
 
   const progress =
     habit.kind !== 'check' && habit.target ? Math.min(1, (value ?? 0) / habit.target) : 0
+  // Habits of a project wear a pastel version of its colour: a soft row tint and check mark.
+  const tone = projectColor ? { row: pastel(projectColor, 'row'), mark: pastel(projectColor, 'mark') } : undefined
 
   return (
-    <li className={`flex items-center ${countsToday ? '' : 'opacity-60'}`}>
+    <li
+      className={`flex items-center ${countsToday ? '' : 'opacity-60'}`}
+      style={tone && { background: tone.row }}
+    >
       <button
         type="button"
         onPointerDown={startPress}
@@ -61,7 +67,7 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
         aria-label={`${habit.title}: ${statusLabel(status)}`}
         className="flex min-w-0 flex-1 touch-manipulation items-center gap-3 py-3.5 pl-4 text-left select-none"
       >
-        <CheckMark status={status} progress={progress} countable={habit.kind !== 'check'} />
+        <CheckMark status={status} progress={progress} countable={habit.kind !== 'check'} tone={tone?.mark} />
         <span className="min-w-0 flex-1">
           <span className={`block truncate font-medium ${status ? 'text-muted' : ''}`}>
             {habit.title}
@@ -70,13 +76,6 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
             <span className="block truncate text-sm text-muted">{details.join(' · ')}</span>
           )}
         </span>
-        {projectColor && (
-          <span
-            className="h-2.5 w-2.5 shrink-0 rounded-full"
-            style={{ background: projectColor }}
-            aria-hidden
-          />
-        )}
       </button>
       <button
         type="button"
@@ -110,15 +109,20 @@ type CheckMarkProps = {
   /** 0–1 toward the target, for count/duration habits. */
   progress: number
   countable: boolean
+  /** Pastel project colour; the app's accent when absent. */
+  tone?: string
 }
 
 const RING_RADIUS = 13
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS
 
-function CheckMark({ status, progress, countable }: CheckMarkProps) {
+function CheckMark({ status, progress, countable, tone }: CheckMarkProps) {
   if (status === 'done') {
     return (
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-surface">
+      <span
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${tone ? 'text-text' : 'bg-accent text-surface'}`}
+        style={tone ? { background: tone } : undefined}
+      >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={3}>
           <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -127,7 +131,12 @@ function CheckMark({ status, progress, countable }: CheckMarkProps) {
   }
   if (status === 'minimum') {
     return (
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-accent bg-accent-soft text-[10px] font-bold text-accent">
+      <span
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold ${
+          tone ? 'bg-surface text-text' : 'border-accent bg-accent-soft text-accent'
+        }`}
+        style={tone ? { borderColor: tone } : undefined}
+      >
         MIN
       </span>
     )
@@ -142,7 +151,9 @@ function CheckMark({ status, progress, countable }: CheckMarkProps) {
   if (countable) {
     // Empty or partial: a ring that fills toward the target, with + to hint at tapping.
     return (
-      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center text-accent">
+      <span
+        className={`relative flex h-8 w-8 shrink-0 items-center justify-center ${tone ? 'text-text' : 'text-accent'}`}
+      >
         <svg viewBox="0 0 32 32" className="absolute inset-0" aria-hidden>
           <circle cx="16" cy="16" r={RING_RADIUS} fill="none" stroke="var(--color-border)" strokeWidth={3} />
           <circle
@@ -150,7 +161,7 @@ function CheckMark({ status, progress, countable }: CheckMarkProps) {
             cy="16"
             r={RING_RADIUS}
             fill="none"
-            stroke="currentColor"
+            stroke={tone ?? 'currentColor'}
             strokeWidth={3}
             strokeLinecap="round"
             strokeDasharray={RING_LENGTH}
@@ -164,5 +175,10 @@ function CheckMark({ status, progress, countable }: CheckMarkProps) {
       </span>
     )
   }
-  return <span className="h-8 w-8 shrink-0 rounded-full border-2 border-border" />
+  return (
+    <span
+      className="h-8 w-8 shrink-0 rounded-full border-2 border-border bg-surface"
+      style={tone ? { borderColor: tone } : undefined}
+    />
+  )
 }
