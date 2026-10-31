@@ -32,6 +32,18 @@ describe('askGemini', () => {
     await expect(askGemini('k', 's', hi)).rejects.toThrow('User location is not supported')
   })
 
+  it('moves on when a model is too slow', async () => {
+    vi.useFakeTimers()
+    const hang = (_url: string, init: RequestInit) =>
+      new Promise((_, reject) => init.signal!.addEventListener('abort', () => reject(init.signal!.reason)))
+    const fetch = vi.fn().mockImplementationOnce(hang).mockReturnValueOnce(reply(200, answer('Hızlı')))
+    vi.stubGlobal('fetch', fetch)
+    const result = askGemini('k', 's', hi)
+    await vi.advanceTimersByTimeAsync(46_000)
+    expect(await result).toBe('Hızlı')
+    vi.useRealTimers()
+  })
+
   it('skips thought parts', async () => {
     const body = { candidates: [{ content: { parts: [{ text: 'düşünüyorum', thought: true }, { text: 'Cevap' }] } }] }
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(reply(200, body)))

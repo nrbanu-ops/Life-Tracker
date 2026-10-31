@@ -1,8 +1,10 @@
 /** One chat turn; Gemini calls the assistant's side "model". */
 export type ChatMessage = { role: 'user' | 'model'; text: string }
 
-// Tried in order: a model that is missing, out of free quota or overloaded falls through to the next.
-const MODELS = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.0-flash']
+// Tried in order: a model that is missing, out of free quota, overloaded or too slow falls through to the next.
+// A fixed fast model comes first: "flash-latest" points at the newest model, which can take minutes when busy.
+const MODELS = ['gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-flash-latest']
+const MODEL_TIMEOUT_MS = 45_000
 const endpoint = (model: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
 
@@ -26,6 +28,11 @@ export async function askGemini(
 }
 
 type Failure = { error: GeminiError; retry: boolean }
+type GeminiResponse = {
+  candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] }; finishReason?: string }[]
+  promptFeedback?: { blockReason?: string }
+  error?: { message?: string }
+}
 
 async function askModel(
   model: string,
@@ -34,7 +41,13 @@ async function askModel(
   messages: ChatMessage[],
   signal?: AbortSignal,
 ): Promise<string | Failure> {
+  const timer = new AbortController()
+  const timeout = timer.signal
+  const stopTimer = setTimeout(() => timer.abort(), MODEL_TIMEOUT_MS)
+  const stopOnCancel = () => timer.abort()
+  signal?.addEventListener('abort', stopOnCancel)
   let response: Response
+  let data: GeminiResponse | undefined
   try {
     response = await fetch(endpoint(model), {
       method: 'POST',
@@ -46,14 +59,21 @@ async function askModel(
         // No output cap: thinking models spend part of it before answering and a low cap returns nothing.
         generationConfig: { temperature: 0.6 },
       }),
-      signal,
+      // Aborts when the user cancels or the model takes too long.
+      signal: timeout,
+    })
+    data = await response.json().catch((e) => {
+      if (timeout.aborted) throw e
     })
   } catch (e) {
-    if ((e as Error).name === 'AbortError') throw e
+    if (signal?.aborted) throw e
+    if (timeout.aborted) return { error: new GeminiError('Gemini çok yavaş cevap veriyor, biraz sonra tekrar dene.'), retry: true }
     return { error: new GeminiError('Gemini’ye ulaşılamadı. İnternet bağlantını kontrol et.'), retry: false }
+  } finally {
+    clearTimeout(stopTimer)
+    signal?.removeEventListener('abort', stopOnCancel)
   }
 
-  const data = await response.json().catch(() => undefined)
   if (!response.ok) {
     const status = response.status
     return { error: new GeminiError(describeError(status, data)), retry: status === 404 || status === 429 || status >= 500 }
@@ -61,8 +81,8 @@ async function askModel(
 
   const candidate = data?.candidates?.[0]
   const text = (candidate?.content?.parts ?? [])
-    .filter((part: { thought?: boolean }) => !part.thought)
-    .map((part: { text?: string }) => part.text ?? '')
+    .filter((part) => !part.thought)
+    .map((part) => part.text ?? '')
     .join('')
     .trim()
   if (text) return text
@@ -72,8 +92,8 @@ async function askModel(
   return { error: new GeminiError('Gemini boş cevap verdi, tekrar dene.'), retry: true }
 }
 
-function describeError(status: number, data: unknown): string {
-  const message = (data as { error?: { message?: string } } | undefined)?.error?.message ?? ''
+function describeError(status: number, data: GeminiResponse | undefined): string {
+  const message = data?.error?.message ?? ''
   if (/api key not valid|api_key_invalid/i.test(message)) return 'Gemini API anahtarı geçersiz. Ayarlar’dan kontrol et.'
   if (status === 401 || status === 403) return `Gemini API anahtarı kabul edilmedi. ${message}`.trim()
   if (status === 429) return 'Gemini kotası doldu. Biraz bekleyip tekrar dene.'
