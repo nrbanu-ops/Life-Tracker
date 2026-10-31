@@ -85,6 +85,18 @@ export function buildToday(habits: Habit[], weekLogs: HabitLog[], today: string)
     })
 }
 
+/** "Haftada X kez" habits are weekly goals; everything else (every day, set weekdays) is daily. */
+export const isWeeklyGoal = (habit: Habit): boolean => habit.frequency.type === 'timesPerWeek'
+
+/** Weekly goals whose target this week is already reached, out of all weekly goals shown. */
+export function weekProgress(items: TodayItem[]): { done: number; total: number } {
+  const weekly = items.filter((item) => item.habit.frequency.type === 'timesPerWeek')
+  const done = weekly.filter(
+    (item) => item.habit.frequency.type === 'timesPerWeek' && (item.weekCount ?? 0) >= item.habit.frequency.count,
+  ).length
+  return { done, total: weekly.length }
+}
+
 /** Completed / counted items for the day ring; minimum counts as completed. */
 export function dayProgress(items: TodayItem[]): { done: number; total: number } {
   const counted = items.filter((item) => item.countsToday)

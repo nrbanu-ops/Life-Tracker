@@ -9,6 +9,7 @@ import { db } from '../db/db'
 import type { Habit, Project } from '../db/types'
 import { describeTarget } from '../lib/amount'
 import { describeFrequency } from '../lib/frequency'
+import { isWeeklyGoal } from '../lib/today'
 
 // Store only the id so the sheet always shows the live record.
 type Editing = { mode: 'new' } | { mode: 'edit'; id: string } | null
@@ -49,7 +50,22 @@ export function HabitsPage() {
           text="Her gün ya da haftada birkaç kez yapmak istediğin şeyleri ekle."
         />
       ) : (
-        <HabitList habits={active} projectById={projectById} onSelect={select} />
+        <div className="flex flex-col gap-6">
+          {[
+            { title: 'Günlük hedefler', list: active.filter((h) => h.kind !== 'quit' && !isWeeklyGoal(h)) },
+            { title: 'Haftalık hedefler', list: active.filter((h) => h.kind !== 'quit' && isWeeklyGoal(h)) },
+            { title: 'Bıraktıkların', list: active.filter((h) => h.kind === 'quit') },
+          ]
+            .filter((group) => group.list.length > 0)
+            .map((group) => (
+              <section key={group.title}>
+                <h2 className="mb-2 text-sm font-medium text-muted">
+                  {group.title} · {group.list.length}
+                </h2>
+                <HabitList habits={group.list} projectById={projectById} onSelect={select} />
+              </section>
+            ))}
+        </div>
       )}
 
       {archived.length > 0 && (

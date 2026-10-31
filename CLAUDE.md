@@ -27,7 +27,7 @@ Yeni bir kütüphane eklemeden önce kullanıcıya sor.
 Tipler `src/db/types.ts`, Dexie şeması `src/db/db.ts` içinde. Tarihleri her zaman yerel saatle `YYYY-MM-DD` string olarak sakla, UTC dönüşümü yapma (`src/lib/date.ts`).
 
 ## Ekranlar (MVP)
-1. Bugün (ana ekran): bugün planlanmış habit'ler tek dokunuşla işaretlenir; uzun basma veya ikinci dokunuş "minimum versiyon"; üstte günün tamamlanma oranı; aktif projelerin sıradaki milestone'ları.
+1. Bugün (ana ekran): bugün planlanmış habit'ler tek dokunuşla işaretlenir; uzun basma veya ikinci dokunuş "minimum versiyon"; üstte günün tamamlanma oranı; aktif projelerin sıradaki milestone'ları. Habit'ler "Günlük hedefler" (her gün / belirli günler) ve "Haftalık hedefler" (haftada X kez) olarak ayrı listelenir; halka sadece günlükleri sayar, haftalıkların kendi "bu hafta x/y" sayacı var (`isWeeklyGoal`, `weekProgress`). Habit'ler sayfası da aynı gruplarla.
 2. Projeler: kartlar (başlık, renk, ilerleme çubuğu, hedef tarih); detayda milestone listesi (ekle, sırala, işaretle), bağlı habit'ler ve son 30 gündeki başarı oranları.
 3. Habit'ler: ekleme/düzenleme/arşivleme, sıklık seçimi, projeye bağlama.
 4. İstatistik: habit başına ısı haritası (son 12 ay), mevcut ve en uzun seri, haftalık/aylık başarı oranı, haftanın günlerine göre başarı oranı.

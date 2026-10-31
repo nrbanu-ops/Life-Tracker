@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { Habit, HabitFrequency, HabitLog } from '../db/types'
 import { weekRange } from './date'
-import { buildToday, dayProgress, isShownOn, nextStatus, tapResult, withAmount } from './today'
+import {
+  buildToday,
+  dayProgress,
+  isShownOn,
+  isWeeklyGoal,
+  nextStatus,
+  tapResult,
+  weekProgress,
+  withAmount,
+} from './today'
 
 const habit = (id: string, frequency: HabitFrequency, extra: Partial<Habit> = {}): Habit => ({
   id,
@@ -140,5 +149,21 @@ describe('buildToday', () => {
     expect(items[1].value).toBe(3)
     expect(items[2].weekCount).toBe(0)
     expect(dayProgress(items)).toEqual({ done: 0, total: 2 })
+  })
+})
+
+describe('weekly goals', () => {
+  it('tells weekly goals from daily ones', () => {
+    expect(isWeeklyGoal(habit('a', { type: 'timesPerWeek', count: 3 }))).toBe(true)
+    expect(isWeeklyGoal(habit('a', { type: 'weekdays', days: [1] }))).toBe(false)
+  })
+
+  it('counts weekly goals already reached this week', () => {
+    const items = buildToday(
+      [habit('a', { type: 'timesPerWeek', count: 2 }), habit('b', { type: 'timesPerWeek', count: 3 }), habit('c', { type: 'daily' })],
+      [log('a', '2026-10-26'), log('a', '2026-10-27'), log('b', WED)],
+      WED,
+    )
+    expect(weekProgress(items)).toEqual({ done: 1, total: 2 })
   })
 })
