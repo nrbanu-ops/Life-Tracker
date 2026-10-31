@@ -120,8 +120,8 @@ function CheckMark({ status, progress, countable, tone }: CheckMarkProps) {
   if (status === 'done') {
     return (
       <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${tone ? 'text-text' : 'bg-accent text-surface'}`}
-        style={tone ? { background: tone } : undefined}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${tone ? '' : 'bg-accent text-surface'}`}
+        style={tone ? { background: tone, color: 'var(--pastel-ink)' } : undefined}
       >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={3}>
           <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />

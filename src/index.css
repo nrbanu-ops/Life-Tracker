@@ -32,15 +32,21 @@
   }
 }
 
-/* Habits of a project: how much of its colour goes into the row tint and the check mark. */
+/* Habits of a project: pastel lightness and chroma (OKLCH) for the row tint and the check mark. */
 :root {
-  --pastel-row: 12%;
-  --pastel-mark: 55%;
+  --pastel-row-l: 0.955;
+  --pastel-row-c: 0.035;
+  --pastel-mark-l: 0.84;
+  --pastel-mark-c: 0.09;
+  /* Tick on a pastel mark. */
+  --pastel-ink: #1d2420;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --pastel-row: 16%;
-    --pastel-mark: 72%;
+    --pastel-row-l: 0.29;
+    --pastel-row-c: 0.035;
+    --pastel-mark-l: 0.8;
+    --pastel-mark-c: 0.09;
   }
 }
 
