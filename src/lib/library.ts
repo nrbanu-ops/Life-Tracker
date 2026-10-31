@@ -353,6 +353,36 @@ export function finishedByDay(items: LibraryItem[]): Map<string, LibraryItem[]> 
   return byDay
 }
 
+/** Each kind's dot in the library calendar; the list under it names the kind too. */
+export const KIND_COLOR: Record<LibraryKind, string> = {
+  book: '#4a78b5',
+  movie: '#c4473a',
+  series: '#8b5cf6',
+  game: '#d08a2e',
+  place: '#3f8f6e',
+  other: '#8a9490',
+}
+
+export type LibraryDay = { finished: LibraryItem[]; started: LibraryItem[] }
+
+/** What was finished and what was started on each day, every kind together, in kind order. */
+export function libraryDays(items: LibraryItem[]): Map<string, LibraryDay> {
+  const days = new Map<string, LibraryDay>()
+  const dayOf = (key: string) => {
+    let day = days.get(key)
+    if (!day) days.set(key, (day = { finished: [], started: [] }))
+    return day
+  }
+  const byKind = (a: LibraryItem, b: LibraryItem) => LIBRARY_KINDS.indexOf(a.kind) - LIBRARY_KINDS.indexOf(b.kind)
+  for (const item of [...items].sort(byKind)) {
+    const finished = item.status === 'done' ? item.finishedAt : undefined
+    if (finished) dayOf(finished).finished.push(item)
+    // Started and finished the same day (a film) shows once, as finished.
+    if (item.startedAt && item.startedAt !== finished && item.status !== 'want') dayOf(item.startedAt).started.push(item)
+  }
+  return days
+}
+
 export type GoalProgress = { kind: LibraryKind; target: number; done: number }
 
 /** Each goal of the year with how many of its kind were finished that year, in kind order. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { LibraryItem } from '../db/types'
-import { bookProgress, finishedByDay, goalProgress, monthSummary, fromOpenLibrary, fromTmdb, fromTvmaze, fromWikipediaGames, groupLibrary, progressLabel, yearSummary } from './library'
+import { bookProgress, finishedByDay, libraryDays, goalProgress, monthSummary, fromOpenLibrary, fromTmdb, fromTvmaze, fromWikipediaGames, groupLibrary, progressLabel, yearSummary } from './library'
 
 describe('search result mapping', () => {
   it('reads games from a Wikipedia search, skipping series and franchises', () => {
@@ -72,6 +72,19 @@ const item = (over: Partial<LibraryItem>): LibraryItem => ({
   status: 'done',
   createdAt: '2026-01-01T00:00:00Z',
   ...over,
+})
+
+describe('libraryDays', () => {
+  it('puts every kind on its finish and start days, in kind order', () => {
+    const game = item({ kind: 'game', title: 'oyun', startedAt: '2026-03-01', finishedAt: '2026-03-10' })
+    const book = item({ title: 'kitap', finishedAt: '2026-03-10' })
+    const film = item({ kind: 'movie', title: 'film', startedAt: '2026-03-10', finishedAt: '2026-03-10' })
+    const series = item({ kind: 'series', title: 'dizi', status: 'active', startedAt: '2026-03-01' })
+    const wish = item({ title: 'istek', status: 'want', startedAt: '2026-03-01' })
+    const days = libraryDays([game, book, film, series, wish])
+    expect(days.get('2026-03-10')).toEqual({ finished: [book, film, game], started: [] })
+    expect(days.get('2026-03-01')).toEqual({ finished: [], started: [series, game] })
+  })
 })
 
 describe('groupLibrary', () => {

@@ -91,7 +91,8 @@ export function LibraryPage() {
         />
       </div>
 
-      <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1">
+      {/* The calendar always shows every kind together. */}
+      <div className={`-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 ${view === 'calendar' ? 'hidden' : ''}`}>
         {FILTERS.map((f) => (
           <button
             key={f}
@@ -107,7 +108,7 @@ export function LibraryPage() {
         ))}
       </div>
 
-      {showLanguages && (
+      {showLanguages && view !== 'calendar' && (
         <div className="-mx-4 -mt-2 mb-5 flex gap-2 overflow-x-auto px-4 pb-1">
           {[undefined, ...languages].map((language) => (
             <button
@@ -128,11 +129,7 @@ export function LibraryPage() {
       {items === undefined ? null : view === 'map' ? (
         <MapView items={filter === 'all' || filter === 'place' ? shown.filter((i) => i.kind === 'place') : []} onSelect={setSelectedId} />
       ) : view === 'calendar' ? (
-        <LibraryCalendar
-          items={filter === 'all' ? shown : shown.filter((i) => i.kind === filter)}
-          today={today}
-          onSelect={setSelectedId}
-        />
+        <LibraryCalendar items={items} today={today} onSelect={setSelectedId} />
       ) : (
         <>
           <LibraryGoals
