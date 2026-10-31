@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { fromNominatim, googleMapsLink, keepLines, parseGoogleMapsUrl, placeArea, sharedPlaceQueries } from './places'
+import {
+  fromNominatim,
+  googleMapsLink,
+  keepLines,
+  parseGoogleMapsUrl,
+  placeArea,
+  plainTitle,
+  sharedPlaceQueries,
+} from './places'
 
 describe('sharedPlaceQueries', () => {
   const shared = 'Galata Kulesi\nBereketzade, Galata Kulesi, 34421 Beyoğlu/İstanbul\n\nhttps://maps.app.goo.gl/abc123'
@@ -18,6 +26,22 @@ describe('sharedPlaceQueries', () => {
     expect(sharedPlaceQueries('Kapadokya https://maps.app.goo.gl/x')).toEqual(['Kapadokya'])
     expect(sharedPlaceQueries('https://maps.app.goo.gl/x')).toEqual([])
     expect(sharedPlaceQueries('Galata Kulesi')).toBeUndefined()
+  })
+
+  it('reads the name from a long link the Android app put in place of the short one', () => {
+    const resolved = 'https://www.google.com/maps?q=Galata+Kulesi,+Bereketzade,+Beyo%C4%9Flu&ftid=0x14cab9e:0x4&entry=gps'
+    expect(sharedPlaceQueries(resolved)).toEqual(['Galata Kulesi, Bereketzade, Beyoğlu', 'Galata Kulesi'])
+    expect(sharedPlaceQueries(`Galata Kulesi | Beyoğlu/İstanbul | ${resolved}`)?.[0]).toBe('Galata Kulesi, Beyoğlu, İstanbul')
+    expect(sharedPlaceQueries('https://www.google.com/maps?q=place_id:ChIJ123')).toEqual([])
+  })
+})
+
+describe('plainTitle', () => {
+  it('starts a hand-made place with the shared name, never the link', () => {
+    expect(plainTitle('Galata Kulesi | Beyoğlu/İstanbul | https://maps.app.goo.gl/x')).toBe('Galata Kulesi')
+    expect(plainTitle('https://www.google.com/maps?q=Galata+Kulesi,+Beyo%C4%9Flu&ftid=0x1')).toBe('Galata Kulesi')
+    expect(plainTitle('https://maps.app.goo.gl/x')).toBe('')
+    expect(plainTitle('Kapadokya')).toBe('Kapadokya')
   })
 })
 
@@ -80,6 +104,15 @@ describe('parseGoogleMapsUrl', () => {
 
   it('handles coordinate links and rejects others', () => {
     expect(parseGoogleMapsUrl('https://maps.google.com/?q=40.1,29.2')).toEqual({ title: undefined, latitude: 40.1, longitude: 29.2 })
+    // What shared pins open after the short link's redirect.
+    expect(parseGoogleMapsUrl('https://www.google.com/maps/search/5.811698,+-55.118891?entry=tts')).toEqual({
+      title: undefined,
+      latitude: 5.811698,
+      longitude: -55.118891,
+    })
+    expect(
+      parseGoogleMapsUrl('https://www.google.com/maps/place/30.956911,34.790920/data=!4m6!3m5!1s0!7e2!8m2!3d30.9569107!4d34.7909201'),
+    ).toEqual({ title: undefined, latitude: 30.9569107, longitude: 34.7909201 })
     expect(parseGoogleMapsUrl('https://maps.app.goo.gl/abc123')).toBeUndefined()
     expect(parseGoogleMapsUrl('Galata Kulesi')).toBeUndefined()
   })

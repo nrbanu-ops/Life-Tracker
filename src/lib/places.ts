@@ -70,8 +70,10 @@ export function parseGoogleMapsUrl(text: string): { title?: string; latitude: nu
   // The place's own pin (!3d!4d) is more exact than the map's centre (@lat,lng).
   const pin = url.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/)
   const centre = url.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/)
-  const query = url.match(/[?&](?:q|query)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/)
-  const match = pin ?? query ?? centre
+  const query = url.match(/[?&](?:q|query|ll)=(-?\d+(?:\.\d+)?)(?:,|%2C)(?:\s|\+|%20)*(-?\d+(?:\.\d+)?)/i)
+  // What a shared pin opens: …/maps/search/5.81,+-55.11 or …/maps/place/30.95,34.79/…
+  const path = url.match(/\/maps\/(?:search|place)\/(-?\d+(?:\.\d+)?)(?:,|%2C)(?:\s|\+|%20)*(-?\d+(?:\.\d+)?)/i)
+  const match = pin ?? query ?? path ?? centre
   if (!match) return undefined
   const latitude = Number(match[1])
   const longitude = Number(match[2])
@@ -80,24 +82,54 @@ export function parseGoogleMapsUrl(text: string): { title?: string; latitude: nu
   return { title: title && !/^-?\d+(\.\d+)?,/.test(title) ? title : undefined, latitude, longitude }
 }
 
+/** The place a Google Maps link names without a position, e.g. ?q=Galata+Kulesi,+Beyoğlu&ftid=… */
+function linkPlaceName(text: string): string | undefined {
+  const raw = text.match(/[?&]q=([^&\s]+)/)?.[1] ?? text.match(/\/maps\/place\/([^/@?\s]+)/)?.[1]
+  if (!raw) return undefined
+  let name: string
+  try {
+    name = decodeURIComponent(raw.replace(/\+/g, ' ')).trim()
+  } catch {
+    return undefined
+  }
+  // Coordinates and place ids are not names.
+  return name && !/^-?\d+(\.\d+)?,/.test(name) && !/^place_id:/i.test(name) ? name : undefined
+}
+
 /**
  * Text shared from the Google Maps app ("Share → Copy"): the place's name, its address and a
- * short maps.app.goo.gl link. The link can't be opened from the app (no CORS), so this returns
- * searches to try instead, most exact first: name and city, name and address, name alone.
- * Undefined when the text has no short link.
+ * maps.app.goo.gl link (in the Android app already swapped for the long link). A short link can't
+ * be opened from the web app (no CORS), so this returns searches to try instead, most exact
+ * first: name and city, name and address, name alone. Undefined when the text has no maps link.
  */
 export function sharedPlaceQueries(text: string): string[] | undefined {
-  if (!/maps\.app\.goo\.gl|goo\.gl\/maps/i.test(text)) return undefined
+  if (!/maps\.app\.goo\.gl|goo\.gl\/maps|google\.[a-z.]+\/maps|maps\.google\./i.test(text)) return undefined
   const lines = text
     .split(/\n+|\s\|\s/)
     .map((line) => line.replace(/https?:\/\/\S+/g, '').trim())
     .filter(Boolean)
-  if (lines.length === 0) return []
+  if (lines.length === 0) {
+    // Only a link: search by the name in it, e.g. "Galata Kulesi, Bereketzade, Beyoğlu".
+    const fromLink = linkPlaceName(text)
+    if (!fromLink) return []
+    const [first] = fromLink.split(',')
+    return [...new Set([fromLink, first.trim()])]
+  }
   const [name, ...rest] = lines
   const address = rest.join(', ')
   // "34421 Beyoğlu/İstanbul" → "Beyoğlu, İstanbul": OpenStreetMap doesn't like postcodes and slashes.
   const area = address.split(',').at(-1)?.replace(/\d{4,}/g, '').replace(/\//g, ', ').trim()
   return [...new Set([area && `${name}, ${area}`, address && `${name}, ${address}`, name].filter((q): q is string => !!q))]
+}
+
+/** A name to start a hand-made place with: the search text without links, e.g. the shared name. */
+export function plainTitle(query: string): string {
+  const [first = ''] = query
+    .replace(/https?:\/\/\S+/g, '')
+    .split(/\s\|\s|\n/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+  return first || linkPlaceName(query)?.split(',')[0].trim() || ''
 }
 
 /** Single-line inputs drop line breaks, which would glue the shared name onto the address. */

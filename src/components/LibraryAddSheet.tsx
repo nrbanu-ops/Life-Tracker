@@ -15,7 +15,7 @@ import {
   type SearchableKind,
   type SearchResult,
 } from '../lib/library'
-import { keepLines } from '../lib/places'
+import { keepLines, plainTitle } from '../lib/places'
 import { LanguageSelect } from './LanguageSelect'
 import { BottomSheet } from './BottomSheet'
 import { LibraryEntryFields } from './LibraryEntryFields'
@@ -129,7 +129,7 @@ function AddFlow({ today, defaultKind, initialQuery, onClose }: Props) {
       ) : manual ? (
         <ManualForm
           kind={kind}
-          initialTitle={query}
+          initialTitle={plainTitle(query)}
           fields={fields}
           saving={saving}
           onSave={save}
@@ -233,7 +233,7 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
         </div>
       ) : search.results.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">
-          {/goo\.gl/.test(trimmed)
+          {/goo\.gl|google\.[a-z.]+\/maps|maps\.google\./i.test(trimmed)
             ? 'Bu paylaşımdan yer bulunamadı. Google Haritalar’da Paylaş → Kopyala ile gelen metnin tamamını yapıştır ya da yerin adını yaz.'
             : 'Sonuç bulunamadı.'}
         </p>
