@@ -14,15 +14,6 @@ export const PROJECT_COLORS = [
   '#6b756f',
 ]
 
-/**
- * A true pastel of a project colour for habits linked to it: same hue, but light and softly
- * saturated (candy pink, lavender, mint…) rather than the colour greyed into the background.
- * 'row' is the background tint, 'mark' the check mark and dot; lightness and chroma per theme
- * live in index.css.
- */
-export const pastel = (color: string, use: 'row' | 'mark'): string =>
-  `oklch(from ${color} var(--pastel-${use}-l) var(--pastel-${use}-c) h)`
-
 export const STATUS_LABEL: Record<ProjectStatus, string> = {
   active: 'Aktif',
   paused: 'Duraklatıldı',

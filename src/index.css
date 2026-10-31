@@ -32,24 +32,6 @@
   }
 }
 
-/* Habits of a project: pastel lightness and chroma (OKLCH) for the row tint and the check mark. */
-:root {
-  --pastel-row-l: 0.955;
-  --pastel-row-c: 0.035;
-  --pastel-mark-l: 0.84;
-  --pastel-mark-c: 0.09;
-  /* Tick on a pastel mark. */
-  --pastel-ink: #1d2420;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pastel-row-l: 0.29;
-    --pastel-row-c: 0.035;
-    --pastel-mark-l: 0.8;
-    --pastel-mark-c: 0.09;
-  }
-}
-
 /* Heatmap: one hue from light to dark (partial → minimum → done), derived per theme. */
 :root {
   --color-heat-1: color-mix(in oklab, var(--color-accent) 28%, var(--color-surface));

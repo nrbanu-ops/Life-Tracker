@@ -9,7 +9,6 @@ import { db } from '../db/db'
 import type { Habit, Project } from '../db/types'
 import { describeTarget } from '../lib/amount'
 import { describeFrequency } from '../lib/frequency'
-import { pastel } from '../lib/projects'
 import { isWeeklyGoal } from '../lib/today'
 
 // Store only the id so the sheet always shows the live record.
@@ -138,17 +137,12 @@ function HabitList({ habits, projectById, onSelect }: ListProps) {
       {habits.map((habit) => {
         const project = habit.projectId ? projectById.get(habit.projectId) : undefined
         return (
-          <li key={habit.id} style={project && { background: pastel(project.color, 'row') }}>
+          <li key={habit.id}>
             <button
               type="button"
               onClick={() => onSelect(habit)}
               className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
             >
-              <span
-                className="h-3 w-3 shrink-0 rounded-full"
-                style={{ background: project ? pastel(project.color, 'mark') : 'var(--color-border)' }}
-                aria-hidden
-              />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{habit.title}</span>
                 <span className="block truncate text-sm text-muted">
