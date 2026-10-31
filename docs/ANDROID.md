@@ -19,6 +19,7 @@ Kabuğun web uygulamasına eklediği şeyler (`window.LifeTrackerAndroid`, `src/
 | Otomatik yedek | Ayarlar → Yedekleme → "Otomatik yedeği aç": değişiklikten sonra `İndirilenler/LifeTracker/life-tracker-yedek.json` dosyasının üzerine yazar |
 | Fotoğraf / dosya seçme | Sistemin dosya seçicisi |
 | Dış bağlantılar | Google Haritalar, TMDB, claude.ai vb. telefonun tarayıcısında / uygulamasında açılır |
+| Google Haritalar'dan paylaşma | Haritalar'da bir yer → **Paylaş** → **Life Tracker** ("Yer olarak ekle"): kabuk kısa linki (maps.app.goo.gl) açıp uzun linke çevirir, Kütüphane'de yer ekleme o konumla açılır |
 
 ## Kurulum
 
@@ -47,22 +48,24 @@ Depo herkese açık olduğu için anahtar depoda **değil**, GitHub'ın şifreli
 Secret yoksa her derleme geçici bir debug anahtarıyla imzalanır: ilk kurulum için sorun değil, ama kabuk
 ileride değişirse eskisini silip (yedekle!) yenisini kurmak gerekir.
 
-Kalıcı anahtar için bir kere (bilgisayarda, Git Bash'te):
-
-```bash
-mkdir -p ~/.lifetracker && cd ~/.lifetracker
-openssl req -x509 -newkey rsa:4096 -sha256 -days 10000 -nodes -subj "/CN=Life Tracker" -keyout key.pem -out cert.pem
-openssl pkcs12 -export -inkey key.pem -in cert.pem -name lifetracker -out release.p12
-base64 -w0 release.p12 > release.p12.b64
-```
-
-Sonra GitHub'da depo → Settings → Secrets and variables → Actions → **New repository secret**:
+Bu depoda anahtar bir kere Windows'ta .NET ile üretildi ve `%USERPROFILE%\.lifetracker\` klasöründe
+duruyor (`release.p12` ve iki metin dosyası). GitHub'da depo → Settings → Secrets and variables →
+Actions → **New repository secret**:
 
 | Ad | Değer |
 |---|---|
-| `ANDROID_KEYSTORE_B64` | `release.p12.b64` dosyasının içeriği |
-| `ANDROID_KEYSTORE_PASSWORD` | `pkcs12 -export` sırasında verdiğin şifre |
-| `ANDROID_KEY_ALIAS` | `lifetracker` |
+| `ANDROID_KEYSTORE_B64` | `ANDROID_KEYSTORE_B64.txt` dosyasının içeriği |
+| `ANDROID_KEYSTORE_PASSWORD` | `ANDROID_KEYSTORE_PASSWORD.txt` dosyasının içeriği |
+| `ANDROID_KEY_ALIAS` | isteğe bağlı; yoksa iş akışı anahtarın kendi adını `keytool` ile okur |
 
-`~/.lifetracker/` klasörünü güvenli bir yerde yedekle; anahtar kaybolursa yeni anahtarla imzalanan
-APK eski uygulamanın üzerine kurulamaz.
+Başka bir bilgisayarda yeniden üretmek gerekirse (Git Bash, openssl):
+
+```bash
+openssl req -x509 -newkey rsa:4096 -sha256 -days 10000 -nodes -subj "/CN=Life Tracker" -keyout key.pem -out cert.pem
+openssl pkcs12 -export -inkey key.pem -in cert.pem -name lifetracker -out release.p12
+base64 -w0 release.p12 > ANDROID_KEYSTORE_B64.txt
+```
+
+`.lifetracker` klasörünü güvenli bir yerde yedekle (ör. bir USB bellek ya da şifreli bir bulut
+klasörü), ama hiçbir depoya koyma. Anahtar kaybolursa yeni anahtarla imzalanan APK eski uygulamanın
+üzerine kurulamaz.

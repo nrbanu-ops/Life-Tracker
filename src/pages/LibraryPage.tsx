@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { lazy, Suspense, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
 import { EmptyState } from '../components/EmptyState'
 import { BackIcon } from '../components/icons'
 import { LibraryAddSheet } from '../components/LibraryAddSheet'
@@ -26,6 +26,7 @@ import {
   tracksProgress,
   yearSummary,
 } from '../lib/library'
+import { keepLines } from '../lib/places'
 import { useTodayKey } from '../lib/useTodayKey'
 
 const FILTERS: (LibraryKind | 'all')[] = ['all', ...LIBRARY_KINDS]
@@ -38,6 +39,15 @@ export function LibraryPage() {
   const goals = useLiveQuery(() => db.libraryGoals.where('year').equals(year).toArray(), [year], [])
   const [filter, setFilter] = useState<LibraryKind | 'all'>('all')
   const [adding, setAdding] = useState(false)
+  // ?paylas=… : a place shared into the Android app from Google Maps, read once.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [shared, setShared] = useState(() => {
+    const text = searchParams.get('paylas')
+    return text ? keepLines(text) : undefined
+  })
+  useEffect(() => {
+    if (searchParams.has('paylas')) setSearchParams({}, { replace: true })
+  }, [searchParams, setSearchParams])
   const [selectedId, setSelectedId] = useState<string>()
   const [view, setView] = useState<'shelf' | 'calendar' | 'map'>('shelf')
 
@@ -173,10 +183,14 @@ export function LibraryPage() {
       </div>
 
       <LibraryAddSheet
-        open={adding}
+        open={adding || shared !== undefined}
         today={today}
-        defaultKind={filter === 'all' ? 'book' : filter}
-        onClose={() => setAdding(false)}
+        defaultKind={shared !== undefined ? 'place' : filter === 'all' ? 'book' : filter}
+        initialQuery={shared}
+        onClose={() => {
+          setAdding(false)
+          setShared(undefined)
+        }}
       />
       <LibraryItemSheet item={selected} today={today} onClose={() => setSelectedId(undefined)} />
     </>

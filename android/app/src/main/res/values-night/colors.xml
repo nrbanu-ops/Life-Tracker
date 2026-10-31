@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#141816</color>
+    <color name="bg">#1C211D</color>
     <color name="accent">#7FB3A0</color>
     <bool name="light_bars">false</bool>
 </resources>

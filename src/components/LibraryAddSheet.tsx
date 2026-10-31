@@ -28,6 +28,8 @@ type Props = {
   today: string
   /** Kind selected when the sheet opens, e.g. the page's current filter. */
   defaultKind: LibraryKind
+  /** Search to start with, e.g. a place shared from Google Maps. */
+  initialQuery?: string
   onClose: () => void
 }
 
@@ -43,15 +45,16 @@ export function LibraryAddSheet(props: Props) {
 const inputClass =
   'w-full rounded-xl border border-border bg-bg px-3 py-2.5 outline-none focus:border-accent'
 
-function AddFlow({ today, defaultKind, onClose }: Props) {
+function AddFlow({ today, defaultKind, initialQuery, onClose }: Props) {
   const [kind, setKind] = useState<LibraryKind>(defaultKind)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery ?? '')
   // What is being added: a search pick, or a hand-made item when `manual` is set.
   const [picked, setPicked] = useState<SearchResult>()
   /** The user's own photo for a picked result, e.g. when it has no poster. */
   const [pickedPhoto, setPickedPhoto] = useState<Blob>()
   const [manual, setManual] = useState(!isSearchable(defaultKind))
-  const [entry, setEntry] = useState<LibraryEntry>({ status: 'done' })
+  // A place shared from Google Maps is more often one to visit than one already seen.
+  const [entry, setEntry] = useState<LibraryEntry>({ status: initialQuery ? 'want' : 'done' })
   const [language, setLanguage] = useState<string | undefined>(() => getLastLanguage() ?? 'tr')
   const [saving, setSaving] = useState(false)
 

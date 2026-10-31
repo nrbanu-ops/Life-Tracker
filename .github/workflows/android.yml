@@ -28,17 +28,24 @@ jobs:
       - name: Release key (optional, from repository secrets)
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           if [ -n "$KEYSTORE_B64" ]; then
             echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.p12"
             echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.p12" >> "$GITHUB_ENV"
+            # Without an alias secret, use the key's own (a key made on Windows has no chosen name).
+            if [ -z "$KEY_ALIAS" ]; then
+              KEY_ALIAS=$(keytool -list -v -storetype pkcs12 -keystore "$RUNNER_TEMP/release.p12" -storepass "$KEYSTORE_PASSWORD" | sed -n 's/^Alias name: //p' | head -1)
+              [ -n "$KEY_ALIAS" ] || { echo "::error::Could not read the key alias; check ANDROID_KEYSTORE_PASSWORD"; exit 1; }
+            fi
+            echo "ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
           else
             echo "::warning::ANDROID_KEYSTORE_B64 is not set; the APK is signed with a throwaway debug key (see docs/ANDROID.md)"
           fi
       - name: Build APK
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
         run: |
