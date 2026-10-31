@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import type { Habit, JournalEntry } from '../db/types'
+import { BlobImage } from './BlobImage'
 
 type Props = {
   entries: JournalEntry[]
@@ -7,7 +8,7 @@ type Props = {
   onEdit: (entry: JournalEntry) => void
 }
 
-/** Entries of one day: free writing and habit notes, tap to edit. */
+/** Entries of one day: free writing, photos, habit notes and weekly reviews; tap to edit. */
 export function JournalEntryList({ entries, habitsById, onEdit }: Props) {
   return (
     <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
@@ -26,9 +27,15 @@ export function JournalEntryList({ entries, habitsById, onEdit }: Props) {
                     {habit?.title ?? 'Silinmiş habit'}
                   </span>
                 )}
+                {entry.kind === 'review' && (
+                  <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">✨ Haftalık bakış</span>
+                )}
                 <span>{format(new Date(entry.createdAt), 'HH:mm')}</span>
               </span>
-              <span className="block text-sm whitespace-pre-wrap">{entry.text}</span>
+              {entry.photo && (
+                <BlobImage blob={entry.photo} alt="Günlük fotoğrafı" className="mb-2 max-h-64 rounded-xl object-cover" />
+              )}
+              {entry.text && <span className="block text-sm whitespace-pre-wrap">{entry.text}</span>}
             </button>
           </li>
         )

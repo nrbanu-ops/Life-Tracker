@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import type { JournalEntry } from '../db/types'
-import { filterEntries, groupByDay } from './journal'
+import type { Habit, JournalEntry } from '../db/types'
+import { filterEntries, groupByDay, searchEntries } from './journal'
+
+describe('searchEntries', () => {
+  const base = { date: '2026-10-31', createdAt: '2026-10-31T10:00:00' }
+  const list: JournalEntry[] = [
+    { ...base, id: 'a', text: 'Bugün İstanbul’da yağmur vardı' },
+    { ...base, id: 'b', text: 'Dizim ağrıdı', habitId: 'run' },
+    { ...base, id: 'c', text: 'Kahve ve kitap' },
+  ]
+  const habits = new Map([['run', { title: 'Koşu' } as Habit]])
+
+  it('matches every word, ignoring Turkish case, in the text or the habit name', () => {
+    expect(searchEntries(list, 'istanbul YAĞMUR', habits).map((e) => e.id)).toEqual(['a'])
+    expect(searchEntries(list, 'koşu', habits).map((e) => e.id)).toEqual(['b'])
+    expect(searchEntries(list, '  ', habits)).toHaveLength(3)
+  })
+})
 
 const entry = (id: string, date: string, createdAt: string, habitId?: string): JournalEntry => ({
   id,

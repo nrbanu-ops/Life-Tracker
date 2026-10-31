@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { deleteEntry, updateEntry } from '../db/journal'
 import type { JournalEntry } from '../db/types'
 import { fromDateKey } from '../lib/date'
+import { JOURNAL_PHOTO_SIZE } from '../lib/journal'
+import { BlobImage } from './BlobImage'
 import { BottomSheet } from './BottomSheet'
+import { PhotoPicker } from './PhotoPicker'
 
 type Props = {
   entry?: JournalEntry
@@ -27,10 +30,33 @@ export function EntrySheet({ entry, habitTitle, onClose }: Props) {
 
 function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => void }) {
   const [text, setText] = useState(entry.text)
+  // undefined = unchanged, null = removed.
+  const [photo, setPhoto] = useState<Blob | null | undefined>(undefined)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const shownPhoto = photo === undefined ? entry.photo : photo
+  // Habit notes are text only.
+  const canHavePhoto = !entry.habitId
 
   return (
     <div className="flex flex-col gap-3">
+      {shownPhoto && (
+        <div className="relative self-start">
+          <BlobImage blob={shownPhoto} alt="Günlük fotoğrafı" className="max-h-72 rounded-xl" />
+          <button
+            type="button"
+            onClick={() => setPhoto(null)}
+            aria-label="Fotoğrafı kaldır"
+            className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm text-white"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      {canHavePhoto && (
+        <div className="self-start">
+          <PhotoPicker label={shownPhoto ? '📷 Fotoğrafı değiştir' : '📷 Fotoğraf ekle'} maxSize={JOURNAL_PHOTO_SIZE} onPick={setPhoto} />
+        </div>
+      )}
       <textarea
         id="entry-text"
         value={text}
@@ -43,10 +69,10 @@ function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => v
       <button
         type="button"
         onClick={async () => {
-          await updateEntry(entry.id, text)
+          await updateEntry(entry.id, text, photo)
           onClose()
         }}
-        disabled={text.trim() === ''}
+        disabled={text.trim() === '' && !shownPhoto}
         className="rounded-xl bg-accent py-3 font-medium text-surface disabled:opacity-40"
       >
         Kaydet

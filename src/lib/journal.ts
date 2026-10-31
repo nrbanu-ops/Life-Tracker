@@ -1,4 +1,17 @@
-import type { JournalEntry } from '../db/types'
+import type { Habit, JournalEntry } from '../db/types'
+
+/** Journal photos are looked at full width, so they keep more pixels than posters. */
+export const JOURNAL_PHOTO_SIZE = 1200
+
+/** Entries whose text (or habit name) contains every word of the query, ignoring case. */
+export function searchEntries(entries: JournalEntry[], query: string, habitsById: Map<string, Habit>): JournalEntry[] {
+  const words = query.toLocaleLowerCase('tr').split(/\s+/).filter(Boolean)
+  if (words.length === 0) return entries
+  return entries.filter((e) => {
+    const haystack = `${e.text} ${e.habitId ? (habitsById.get(e.habitId)?.title ?? '') : ''}`.toLocaleLowerCase('tr')
+    return words.every((w) => haystack.includes(w))
+  })
+}
 
 /** 'all', 'free' (entries without a habit), or a habit id. */
 export type JournalFilter = 'all' | 'free' | (string & {})

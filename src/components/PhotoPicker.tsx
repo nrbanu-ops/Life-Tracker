@@ -4,10 +4,12 @@ import { shrinkImage } from '../lib/image'
 type Props = {
   label: string
   onPick: (photo: Blob) => void
+  /** Longest side in px after shrinking. */
+  maxSize?: number
 }
 
 /** Button that picks a photo from the device (or camera) and shrinks it. */
-export function PhotoPicker({ label, onPick }: Props) {
+export function PhotoPicker({ label, onPick, maxSize }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [failed, setFailed] = useState(false)
 
@@ -30,7 +32,7 @@ export function PhotoPicker({ label, onPick }: Props) {
           e.target.value = ''
           if (!file) return
           try {
-            onPick(await shrinkImage(file))
+            onPick(await shrinkImage(file, maxSize))
             setFailed(false)
           } catch {
             setFailed(true)

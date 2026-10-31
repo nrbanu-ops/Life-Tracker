@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import type { LibraryItem } from '../db/types'
 import { KIND_EMOJI } from '../lib/library'
+import { BlobImage } from './BlobImage'
 
 type Props = {
   item: Pick<LibraryItem, 'kind' | 'title' | 'posterUrl' | 'posterBlob'>
@@ -29,7 +30,7 @@ export function Poster({ item, badge, compact = false, className = '' }: Props) 
       </div>
       {/* Keyed so a new picture gets a fresh chance after an earlier one failed. */}
       {item.posterBlob ? (
-        <BlobImage blob={item.posterBlob} />
+        <BlobImage blob={item.posterBlob} className={imageClass} />
       ) : (
         item.posterUrl && <PosterImage key={item.posterUrl} src={item.posterUrl} />
       )}
@@ -57,15 +58,4 @@ function PosterImage({ src }: { src: string }) {
       className={imageClass}
     />
   )
-}
-
-/** A stored photo; its object URL lives exactly as long as the blob is shown. */
-function BlobImage({ blob }: { blob: Blob }) {
-  const ref = useRef<HTMLImageElement>(null)
-  useEffect(() => {
-    const url = URL.createObjectURL(blob)
-    if (ref.current) ref.current.src = url
-    return () => URL.revokeObjectURL(url)
-  }, [blob])
-  return <img ref={ref} alt="" className={imageClass} />
 }
