@@ -1,0 +1,151 @@
+// Dates are always local-time 'YYYY-MM-DD' strings; never convert to UTC.
+
+export type ProjectStatus = 'active' | 'paused' | 'done'
+
+export type Project = {
+  id: string
+  title: string
+  description?: string
+  color: string
+  status: ProjectStatus
+  targetDate?: string
+  createdAt: string
+}
+
+export type Milestone = {
+  id: string
+  projectId: string
+  title: string
+  done: boolean
+  dueDate?: string
+  order: number
+}
+
+export type HabitFrequency =
+  | { type: 'daily' }
+  | { type: 'weekdays'; days: number[] } // 1 = Monday … 7 = Sunday
+  | { type: 'timesPerWeek'; count: number }
+
+/**
+ * check: one tap marks it done. count/duration: progress toward `target`.
+ * quit: something to stop doing; tracked as time since the last restart, not daily logs.
+ */
+export type HabitKind = 'check' | 'count' | 'duration' | 'quit'
+
+export type Habit = {
+  id: string
+  title: string
+  projectId?: string
+  kind: HabitKind
+  /** count: units per day, duration: minutes per day. */
+  target?: number
+  /** count only, e.g. "bardak". */
+  unit?: string
+  /** Amount one tap adds (units or minutes). */
+  increment?: number
+  // quit only. These are moments in time, so unlike day keys they are full ISO timestamps.
+  /** When the user first stopped. */
+  quitStartedAt?: string
+  /** Each time the user started again, oldest first. */
+  relapses?: string[]
+  /** Days of the last milestone already celebrated in the current run. */
+  celebratedMilestone?: number
+  frequency: HabitFrequency
+  minimumVersion?: string
+  archived: boolean
+  order: number
+  createdAt: string
+}
+
+/** 1 = urgent … 4 = low. */
+export type TaskPriority = 1 | 2 | 3 | 4
+
+export type TaskRepeat = 'daily' | 'weekly' | 'monthly'
+
+export type Task = {
+  id: string
+  title: string
+  /** Day key; undated tasks live only on the tasks page. */
+  date?: string
+  /** 'HH:mm', only with a date. */
+  time?: string
+  priority: TaskPriority
+  /** Completing a repeating task creates its next occurrence. */
+  repeat?: TaskRepeat
+  projectId?: string
+  done: boolean
+  completedAt?: string
+  /** Set on a completed repeating task: the occurrence it created, removed again on undo. */
+  nextId?: string
+  createdAt: string
+}
+
+/** A journal entry: free writing for a day, or a note attached to a habit on that day. */
+export type JournalEntry = {
+  id: string
+  /** Day key the entry belongs to. */
+  date: string
+  text: string
+  /** Set for habit notes; at most one note per habit per day. */
+  habitId?: string
+  createdAt: string
+  updatedAt?: string
+}
+
+export type LibraryKind = 'book' | 'movie' | 'series' | 'place' | 'other'
+
+/** want: on the list, active: reading/watching now, done: finished, dropped: given up. */
+export type LibraryStatus = 'want' | 'active' | 'done' | 'dropped'
+
+/** A book, film, series or anything else the user reads or watches. */
+export type LibraryItem = {
+  id: string
+  kind: LibraryKind
+  title: string
+  /** Author for books, network for series, city/country for places. */
+  creator?: string
+  year?: number
+  /** Books: the language the user read it in, a code like 'en' or free text. */
+  language?: string
+  /** Poster from a search result. */
+  posterUrl?: string
+  /** The user's own photo, used instead of posterUrl. */
+  posterBlob?: Blob
+  /** Where the search result came from, e.g. 'openlibrary' / 'tvmaze' / 'tmdb'. */
+  source?: string
+  externalId?: string
+  status: LibraryStatus
+  /** Day keys. */
+  startedAt?: string
+  finishedAt?: string
+  // Where the user is. Books: current page of pageCount; series: season and episode.
+  page?: number
+  pageCount?: number
+  season?: number
+  episode?: number
+  /** 1–5 stars. */
+  rating?: number
+  review?: string
+  createdAt: string
+}
+
+/** How many of a kind the user wants to finish in a year, e.g. 24 books in 2026. */
+export type LibraryGoal = {
+  /** `${year}-${kind}`: one goal per kind per year. */
+  id: string
+  year: number
+  kind: LibraryKind
+  target: number
+}
+
+/** partial: some amount logged, target not reached. skipped: keeps the streak, not counted. */
+export type HabitLogStatus = 'done' | 'minimum' | 'partial' | 'skipped'
+
+export type HabitLog = {
+  id: string
+  habitId: string
+  date: string
+  status: HabitLogStatus
+  /** Amount logged for count/duration habits. */
+  value?: number
+}

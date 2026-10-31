@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/* Colors live in CSS variables so light/dark follow the system setting. */
+:root {
+  --color-bg: #f6f7f5;
+  --color-surface: #ffffff;
+  --color-text: #1d2420;
+  --color-muted: #6b756f;
+  --color-border: #e2e6e3;
+  --color-accent: #3f6b5c;
+  --color-accent-soft: #e3ece8;
+  /* Task priorities: urgent, high, medium. Low uses --color-border. */
+  --color-p1: #c4473a;
+  --color-p2: #d08a2e;
+  --color-p3: #4a78b5;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #141816;
+    --color-surface: #1c211f;
+    --color-text: #e6ebe8;
+    --color-muted: #8f9a94;
+    --color-border: #2b322f;
+    --color-accent: #7fb3a0;
+    --color-accent-soft: #233630;
+    --color-p1: #e8786b;
+    --color-p2: #e3a95a;
+    --color-p3: #7fa6dc;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-p1: var(--color-p1);
+  --color-p2: var(--color-p2);
+  --color-p3: var(--color-p3);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}

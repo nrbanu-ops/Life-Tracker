@@ -1,0 +1,368 @@
+import { format } from 'date-fns'
+import { useState, type FormEvent } from 'react'
+import { createHabit, deleteHabit, setHabitArchived, updateHabit, type HabitInput } from '../db/habits'
+import type { Habit, HabitFrequency, HabitKind, Project } from '../db/types'
+import { DEFAULT_INCREMENT } from '../lib/amount'
+import { WEEKDAY_SHORT } from '../lib/frequency'
+import { Segmented } from './Segmented'
+
+type FrequencyType = HabitFrequency['type']
+
+type Props = {
+  /** Omit to create a new habit. */
+  habit?: Habit
+  /** Project for a new habit, e.g. when created from a project page. */
+  defaultProjectId?: string
+  projects: Project[]
+  onDone: () => void
+}
+
+const kindOptions: { kind: HabitKind; label: string }[] = [
+  { kind: 'check', label: 'İşaretle' },
+  { kind: 'count', label: 'Sayı' },
+  { kind: 'duration', label: 'Süre' },
+  { kind: 'quit', label: 'Bırakma' },
+]
+
+/** Value format of <input type="datetime-local">, in local time. */
+const LOCAL_DATETIME = "yyyy-MM-dd'T'HH:mm"
+
+const frequencyOptions: { type: FrequencyType; label: string }[] = [
+  { type: 'daily', label: 'Her gün' },
+  { type: 'weekdays', label: 'Belirli günler' },
+  { type: 'timesPerWeek', label: 'Haftada X kez' },
+]
+
+const inputClass =
+  'w-full rounded-xl border border-border bg-bg px-3 py-2.5 outline-none focus:border-accent'
+
+export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) {
+  const initial = habit?.frequency
+  const [title, setTitle] = useState(habit?.title ?? '')
+  const [kind, setKind] = useState<HabitKind>(habit?.kind ?? 'check')
+  // Number fields are kept as text while typing and parsed on save.
+  const [target, setTarget] = useState(habit?.target?.toString() ?? '')
+  const [unit, setUnit] = useState(habit?.unit ?? '')
+  const [increment, setIncrement] = useState(habit?.increment?.toString() ?? '')
+  const [quitStart, setQuitStart] = useState(() =>
+    format(habit?.quitStartedAt ? new Date(habit.quitStartedAt) : new Date(), LOCAL_DATETIME),
+  )
+  // A quit date can't be in the future; fixed when the form opens.
+  const [latestQuitStart] = useState(() => format(new Date(), LOCAL_DATETIME))
+  const [frequencyType, setFrequencyType] = useState<FrequencyType>(initial?.type ?? 'daily')
+  const [days, setDays] = useState<number[]>(
+    initial?.type === 'weekdays' ? initial.days : [1, 2, 3, 4, 5],
+  )
+  const [count, setCount] = useState(initial?.type === 'timesPerWeek' ? initial.count : 3)
+  const [minimumVersion, setMinimumVersion] = useState(habit?.minimumVersion ?? '')
+  const [projectId, setProjectId] = useState(habit ? (habit.projectId ?? '') : (defaultProjectId ?? ''))
+  const [saving, setSaving] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const trimmedTitle = title.trim()
+  const countable = kind === 'count' || kind === 'duration'
+  const isQuit = kind === 'quit'
+  const daysMissing = !isQuit && frequencyType === 'weekdays' && days.length === 0
+  const quitStartMissing = isQuit && Number.isNaN(new Date(quitStart).getTime())
+  const targetValue = parsePositive(target)
+  const incrementValue = parsePositive(increment)
+  const targetMissing = countable && targetValue === undefined
+  const canSave =
+    trimmedTitle !== '' && !daysMissing && !targetMissing && !quitStartMissing && !saving
+
+  const toggleDay = (day: number) =>
+    setDays((current) =>
+      current.includes(day) ? current.filter((d) => d !== day) : [...current, day].sort((a, b) => a - b),
+    )
+
+  const buildFrequency = (): HabitFrequency => {
+    if (frequencyType === 'weekdays') return { type: 'weekdays', days }
+    if (frequencyType === 'timesPerWeek') return { type: 'timesPerWeek', count }
+    return { type: 'daily' }
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!canSave) return
+    setSaving(true)
+    const input: HabitInput = {
+      title: trimmedTitle,
+      kind,
+      target: countable ? targetValue : undefined,
+      unit: kind === 'count' ? unit.trim() || undefined : undefined,
+      increment: countable ? incrementValue : undefined,
+      quitStartedAt: isQuit ? new Date(quitStart).toISOString() : undefined,
+      // Quit habits have no schedule or minimum; they are tracked as time since quitting.
+      frequency: isQuit ? { type: 'daily' } : buildFrequency(),
+      minimumVersion: isQuit ? undefined : minimumVersion.trim() || undefined,
+      projectId: projectId || undefined,
+    }
+    if (habit) await updateHabit(habit.id, input)
+    else await createHabit(input)
+    onDone()
+  }
+
+  const handleArchiveToggle = async () => {
+    if (!habit) return
+    await setHabitArchived(habit.id, !habit.archived)
+    onDone()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm text-muted">
+          {isQuit ? 'Neyi bırakıyorsun?' : 'Ne yapmak istiyorsun?'}
+        </span>
+        <input
+          id="habit-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={isQuit ? 'ör. Sigara, şeker, sosyal medya' : 'ör. Koşu, su içmek, kitap okumak'}
+          className={inputClass}
+          autoFocus={!habit}
+          maxLength={80}
+        />
+      </label>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1.5 text-sm text-muted">Nasıl takip edilsin?</legend>
+        <Segmented
+          options={kindOptions.map((o) => ({ value: o.kind, label: o.label }))}
+          value={kind}
+          onChange={setKind}
+        />
+
+        {countable && (
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-muted">
+                {kind === 'count' ? 'Günlük hedef' : 'Günlük hedef (dakika)'}
+              </span>
+              <input
+                id="habit-target"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                placeholder={kind === 'count' ? '8' : '30'}
+                className={inputClass}
+              />
+            </label>
+            {kind === 'count' && (
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-muted">Birim (isteğe bağlı)</span>
+                <input
+                  id="habit-unit"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  placeholder="bardak"
+                  className={inputClass}
+                  maxLength={20}
+                />
+              </label>
+            )}
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-muted">
+                {kind === 'count' ? 'Her dokunuşta +' : 'Her dokunuşta + (dakika)'}
+              </span>
+              <input
+                id="habit-increment"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={increment}
+                onChange={(e) => setIncrement(e.target.value)}
+                placeholder={String(DEFAULT_INCREMENT[kind === 'duration' ? 'duration' : 'count'])}
+                className={inputClass}
+              />
+            </label>
+          </div>
+        )}
+        {countable && target !== '' && targetMissing && (
+          <p className="text-sm text-red-600 dark:text-red-400">Hedef 1 veya daha büyük olmalı.</p>
+        )}
+
+        {isQuit && (
+          <label className="flex flex-col gap-1.5 pt-1">
+            <span className="text-xs text-muted">Ne zamandan beri?</span>
+            <input
+              id="habit-quit-start"
+              type="datetime-local"
+              value={quitStart}
+              max={latestQuitStart}
+              onChange={(e) => setQuitStart(e.target.value)}
+              className={inputClass}
+            />
+            <span className="text-xs text-muted">
+              Sayaç bu andan itibaren işler. Tekrar başlarsan Bugün ekranından sıfırlayabilirsin.
+            </span>
+          </label>
+        )}
+      </fieldset>
+
+      {/* Quit habits have no schedule or minimum version. */}
+      {!isQuit && (
+        <>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1.5 text-sm text-muted">Sıklık</legend>
+            <Segmented
+              options={frequencyOptions.map((o) => ({ value: o.type, label: o.label }))}
+              value={frequencyType}
+              onChange={setFrequencyType}
+            />
+
+            {frequencyType === 'weekdays' && (
+              <div className="grid grid-cols-7 gap-1.5 pt-1">
+                {WEEKDAY_SHORT.map((label, index) => {
+                  const day = index + 1
+                  const selected = days.includes(day)
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDay(day)}
+                      aria-pressed={selected}
+                      className={`rounded-full py-2 text-xs font-medium transition-colors ${
+                        selected ? 'bg-accent text-surface' : 'bg-bg text-muted'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {daysMissing && (
+              <p className="text-sm text-red-600 dark:text-red-400">En az bir gün seç.</p>
+            )}
+
+            {frequencyType === 'timesPerWeek' && (
+              <div className="flex items-center justify-between rounded-xl bg-bg px-3 py-2">
+                <span className="text-sm">Haftada</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCount((c) => Math.max(1, c - 1))}
+                    disabled={count <= 1}
+                    aria-label="Azalt"
+                    className="h-9 w-9 rounded-full bg-surface text-lg disabled:opacity-40"
+                  >
+                    −
+                  </button>
+                  <span className="w-12 text-center tabular-nums">{count} kez</span>
+                  <button
+                    type="button"
+                    onClick={() => setCount((c) => Math.min(7, c + 1))}
+                    disabled={count >= 7}
+                    aria-label="Artır"
+                    className="h-9 w-9 rounded-full bg-surface text-lg disabled:opacity-40"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            )}
+          </fieldset>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm text-muted">Minimum versiyon (isteğe bağlı)</span>
+            <input
+              id="habit-minimum"
+              value={minimumVersion}
+              onChange={(e) => setMinimumVersion(e.target.value)}
+              placeholder="ör. 5 dk dil çalışması"
+              className={inputClass}
+              maxLength={80}
+            />
+            <span className="text-xs text-muted">Zor günlerde bunu yapman seriyi korur.</span>
+          </label>
+        </>
+      )}
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm text-muted">Proje (isteğe bağlı)</span>
+        {projects.length > 0 ? (
+          <select
+            id="habit-project"
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">Bağımsız habit</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.title}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="text-sm text-muted">
+            Henüz proje yok. Proje ekledikten sonra habit'i ona bağlayabilirsin.
+          </span>
+        )}
+      </label>
+
+      <div className="flex flex-col gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={!canSave}
+          className="rounded-xl bg-accent py-3 font-medium text-surface disabled:opacity-40"
+        >
+          {habit ? 'Kaydet' : 'Habit ekle'}
+        </button>
+        {habit && (
+          <button
+            type="button"
+            onClick={handleArchiveToggle}
+            className="rounded-xl py-3 text-sm text-muted"
+          >
+            {habit.archived ? 'Arşivden çıkar' : 'Arşivle'}
+          </button>
+        )}
+        {habit &&
+          (confirmDelete ? (
+            <div className="flex flex-col gap-2 rounded-xl bg-bg p-3">
+              <p className="text-sm text-muted">
+                Habit, geçmiş kayıtları ve notlarıyla birlikte kalıcı olarak silinir. Geçmişini
+                saklamak istersen arşivle.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await deleteHabit(habit.id)
+                    onDone()
+                  }}
+                  className="flex-1 rounded-xl bg-surface py-2.5 text-sm font-medium text-p1"
+                >
+                  Evet, sil
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="flex-1 rounded-xl py-2.5 text-sm text-muted"
+                >
+                  Vazgeç
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="rounded-xl py-3 text-sm text-muted"
+            >
+              Habit'i sil
+            </button>
+          ))}
+      </div>
+    </form>
+  )
+}
+
+function parsePositive(text: string): number | undefined {
+  const value = Math.floor(Number(text))
+  return text.trim() !== '' && value >= 1 ? value : undefined
+}
