@@ -35,9 +35,10 @@ export function ProjectsPage() {
     <>
       <PageHeader title="Projeler" />
 
-      {geminiReady(ai) && (
+      {ai.gemini && (
+        // Without a key (it is kept per device) the card leads to Settings instead of hiding.
         <Link
-          to="/asistan"
+          to={geminiReady(ai) ? '/asistan' : '/ayarlar#yapay-zeka'}
           className="mb-3 flex w-full items-center gap-3 rounded-2xl bg-accent-soft px-4 py-3 text-left"
         >
           <span className="text-xl" aria-hidden>
@@ -45,7 +46,11 @@ export function ProjectsPage() {
           </span>
           <span>
             <span className="block font-medium text-accent">Gemini ile planla</span>
-            <span className="block text-sm text-muted">Sohbet et; plan hazır olunca tek dokunuşla ekle</span>
+            <span className="block text-sm text-muted">
+              {geminiReady(ai)
+                ? 'Sohbet et; plan hazır olunca tek dokunuşla ekle'
+                : "Bu cihazda Gemini anahtarı yok; Ayarlar'dan ekle"}
+            </span>
           </span>
         </Link>
       )}
