@@ -4,14 +4,17 @@ import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
 import {
   autoEffort,
+  emergencyQuest,
   levelFor,
   questState,
   rankFor,
   statOf,
   summarize,
   tierOn,
+  titles,
   xpEvents,
   xpToNext,
+  XP,
   type XpData,
 } from './leveling'
 
@@ -239,5 +242,39 @@ describe('levels', () => {
     expect(month).toBeLessThanOrEqual(14)
     expect(year).toBeGreaterThanOrEqual(30)
     expect(year).toBeLessThanOrEqual(45)
+  })
+})
+
+describe('emergency quest', () => {
+  it('asks for a little more of the habit let slip most', () => {
+    const run = habit('Koşu', { createdAt: new Date(`${day(-35)}T08:00:00`).toISOString() })
+    const read = habit('Okuma', { createdAt: new Date(`${day(-35)}T08:00:00`).toISOString() })
+    // Reading every day, running only every third day in the four weeks before.
+    const logs = Array.from({ length: 28 }, (_, i) => i - 28).flatMap((i) => [
+      done(read, day(i)),
+      ...(i % 3 === 0 ? [done(run, day(i))] : []),
+    ])
+    const quest = emergencyQuest({ habits: [run, read], logs }, START)
+    expect(quest).toMatchObject({ kind: 'habit', habitId: run.id, target: 3 })
+    // Met on the third run: 100 XP on that day, nothing lost if it isn't.
+    const week = [0, 2, 4, 5].map((i) => done(run, day(i)))
+    const events = xpEvents(data([run, read], [...logs, ...week]), START, day(6), day(6)).filter((e) => e.source === 'emergency')
+    expect(events).toEqual([{ date: day(4), xp: XP.emergency, source: 'emergency', stat: 'str', tag: 'emergency' }])
+  })
+
+  it('falls back to writing in the journal when nothing slips', () => {
+    expect(emergencyQuest({ habits: [], logs: [] }, START)).toEqual({ kind: 'journal', week: START, target: 4 })
+  })
+})
+
+describe('titles', () => {
+  it('are earned from levels, streaks and counts', () => {
+    const h = habit('Okuma')
+    const logs = Array.from({ length: 30 }, (_, i) => done(h, day(i)))
+    const summary = summarize([])
+    summary.counts.quest = 30
+    const list = titles({ level: 2, summary, habits: [h], logs, library: [], today: day(30) })
+    const earned = list.filter((t) => t.earned).map((t) => t.id)
+    expect(earned).toEqual(['awakened', 'chosen', 'unchained'])
   })
 })

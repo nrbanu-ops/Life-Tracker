@@ -11,7 +11,7 @@ import type {
   UnlockedAchievement,
 } from '../db/types'
 import { fromDateKey, toDateKey, weekRange } from './date'
-import { successRate } from './stats'
+import { streaks, successRate } from './stats'
 import { isCompleted, isShownOn } from './today'
 
 // The leveling system (CLAUDE.md, step 12). Everything here is pure: XP is worked out from the
@@ -172,6 +172,7 @@ export type XpSource =
   | 'mood'
   | 'library'
   | 'achievement'
+  | 'emergency'
 
 export const SOURCE_LABEL: Record<XpSource, string> = {
   habit: "Habit'ler",
@@ -184,9 +185,12 @@ export const SOURCE_LABEL: Record<XpSource, string> = {
   mood: 'Ruh hali',
   library: 'Kütüphane',
   achievement: 'Başarımlar',
+  emergency: 'Acil görev',
 }
 
-export type XpEvent = { date: string; xp: number; source: XpSource; stat: StatKey; habitId?: string }
+export type XpTag = 'quest' | 'questWeek' | 'emergency' | 'comeback'
+
+export type XpEvent = { date: string; xp: number; source: XpSource; stat: StatKey; habitId?: string; tag?: XpTag }
 
 export type XpData = {
   habits: Habit[]
@@ -213,6 +217,7 @@ export const XP = {
   mood: 2,
   library: { book: 40, movie: 10, series: 10, place: 10, other: 10 } as Record<LibraryItem['kind'], number>,
   achievement: 50,
+  emergency: 100,
   quit: [
     [1, 10],
     [3, 20],
@@ -270,8 +275,8 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
     return mastery.get(week)!
   }
   const events: XpEvent[] = []
-  const emit = (date: string, xp: number) => {
-    if (date >= from && date <= to && xp > 0) events.push({ date, xp, source: 'habit', stat, habitId: habit.id })
+  const emit = (date: string, xp: number, tag?: XpTag) => {
+    if (date >= from && date <= to && xp > 0) events.push({ date, xp, source: 'habit', stat, habitId: habit.id, tag })
   }
   const base = (day: string) => TIER_XP[tierOn(habit, day)] * masteryOn(day)
 
@@ -300,7 +305,7 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
         const xp =
           base(day) * factor * extra * (1 + overshoot(habit, log.value)) * (1 + bonus + (comeback ? COMEBACK : 0)) *
           lateFactor(day, log.loggedAt)
-        emit(day, xp)
+        emit(day, xp, comeback ? 'comeback' : undefined)
         // Reaching the target: a fifth on top of the week's planned goes.
         if (isCompleted(log.status) && completed === count) emit(day, base(day) * count * 0.2 * lateFactor(day, log.loggedAt))
       }
@@ -333,6 +338,7 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
           (1 + overshoot(habit, log.value)) *
           (1 + dayStreakBonus(run) + (comeback ? COMEBACK : 0)) *
           lateFactor(day, log.loggedAt),
+        comeback ? 'comeback' : undefined,
       )
     } else {
       if (log?.status === 'partial') emit(day, base(day) * statusFactor(habit, log) * lateFactor(day, log.loggedAt))
@@ -398,11 +404,82 @@ function questEvents(habits: Habit[], logs: HabitLog[], from: string, to: string
     if (state.complete) {
       run++
       if (day >= from) {
-        events.push({ date: day, xp: XP.quest, source: 'quest', stat: 'dis' })
-        if (run % 7 === 0) events.push({ date: day, xp: XP.questWeek, source: 'quest', stat: 'dis' })
+        events.push({ date: day, xp: XP.quest, source: 'quest', stat: 'dis', tag: 'quest' })
+        if (run % 7 === 0) events.push({ date: day, xp: XP.questWeek, source: 'quest', stat: 'dis', tag: 'questWeek' })
       }
     } else if (day < today) {
       run = 0
+    }
+  }
+  return events
+}
+
+// --- Weekly emergency quest: one goal a week, picked on Monday from the weeks before.
+
+export type EmergencyQuest =
+  | { kind: 'habit'; week: string; habitId: string; title: string; target: number }
+  | { kind: 'journal'; week: string; target: number }
+
+/** How many times a habit is planned in a week. */
+function plannedInWeek(habit: Habit): number {
+  if (habit.frequency.type === 'timesPerWeek') return habit.frequency.count
+  if (habit.frequency.type === 'weekdays') return habit.frequency.days.length
+  return 7
+}
+
+/**
+ * The habit the user let slip most in the four weeks before (under 80% done), to do a little more
+ * often this week; without one, writing in the journal on four days. Nothing is lost if it isn't met.
+ */
+export function emergencyQuest(data: Pick<XpData, 'habits' | 'logs'>, week: string): EmergencyQuest {
+  const from = shift(week, -28)
+  const dayBefore = shift(week, -1)
+  const candidates = data.habits
+    .filter((h) => !h.archived && h.kind !== 'quit' && dayOf(h.createdAt) <= shift(week, -14))
+    .map((h) => ({ habit: h, ...successRate(h, data.logs, from, dayBefore, week) }))
+    .filter((c) => c.planned >= 4 && c.rate !== undefined && c.rate < 0.8)
+    .sort((a, b) => a.rate! - b.rate! || a.habit.order - b.habit.order)
+  const pick = candidates[0]
+  if (!pick) return { kind: 'journal', week, target: 4 }
+  const planned = plannedInWeek(pick.habit)
+  const target = Math.min(planned, Math.max(2, Math.round(pick.rate! * planned) + 1))
+  return { kind: 'habit', week, habitId: pick.habit.id, title: pick.habit.title, target }
+}
+
+const journalDaysOf = (journal: JournalEntry[]) =>
+  new Set(journal.filter((e) => e.kind !== 'review' && (e.text.trim() || e.photo)).map((e) => e.date))
+
+/** Progress toward the week's quest up to `day`, and the day it was met. */
+export function emergencyProgress(
+  quest: EmergencyQuest,
+  data: Pick<XpData, 'logs' | 'journal'>,
+  day: string,
+): { done: number; metOn?: string } {
+  const days: string[] = []
+  if (quest.kind === 'habit') {
+    for (const log of data.logs) {
+      if (log.habitId === quest.habitId && isCompleted(log.status) && log.date >= quest.week && log.date <= day && log.date <= shift(quest.week, 6)) {
+        days.push(log.date)
+      }
+    }
+  } else {
+    for (const date of journalDaysOf(data.journal)) {
+      if (date >= quest.week && date <= day && date <= shift(quest.week, 6)) days.push(date)
+    }
+  }
+  days.sort()
+  return { done: Math.min(days.length, quest.target), metOn: days.length >= quest.target ? days[quest.target - 1] : undefined }
+}
+
+function emergencyEvents(data: XpData, from: string, last: string): XpEvent[] {
+  const events: XpEvent[] = []
+  const habitStat = new Map(data.habits.map((h) => [h.id, statOf(h)]))
+  for (let week = weekRange(from).start; week <= last; week = shift(week, 7)) {
+    const quest = emergencyQuest(data, week)
+    const { metOn } = emergencyProgress(quest, data, last)
+    if (metOn && metOn >= from && metOn <= last) {
+      const stat = quest.kind === 'habit' ? (habitStat.get(quest.habitId) ?? 'dis') : 'sen'
+      events.push({ date: metOn, xp: XP.emergency, source: 'emergency', stat, tag: 'emergency' })
     }
   }
   return events
@@ -467,6 +544,7 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
       events.push({ date: item.finishedAt, xp: XP.library[item.kind], source: 'library', stat: LIBRARY_STAT[item.kind] })
     }
   }
+  events.push(...emergencyEvents(data, from, last))
   for (const a of data.achievements) {
     if (inRange(a.unlockedAt)) events.push({ date: a.unlockedAt, xp: XP.achievement, source: 'achievement', stat: 'dis' })
   }
@@ -495,9 +573,11 @@ export type XpSummary = {
   days: Record<string, number>
   sources: Partial<Record<XpSource, number>>
   stats: Partial<Record<StatKey, number>>
+  /** How often tagged things happened, e.g. daily quests done, for titles. */
+  counts: Partial<Record<XpTag, number>>
 }
 
-export const emptySummary = (): XpSummary => ({ xp: 0, days: {}, sources: {}, stats: {} })
+export const emptySummary = (): XpSummary => ({ xp: 0, days: {}, sources: {}, stats: {}, counts: {} })
 
 /** Habit XP goes 80% to the habit's stat and 20% to Disiplin: every habit done is also discipline. */
 export function summarize(events: XpEvent[], into: XpSummary = emptySummary()): XpSummary {
@@ -505,6 +585,7 @@ export function summarize(events: XpEvent[], into: XpSummary = emptySummary()): 
     into.xp += e.xp
     into.days[e.date] = (into.days[e.date] ?? 0) + e.xp
     into.sources[e.source] = (into.sources[e.source] ?? 0) + e.xp
+    if (e.tag) into.counts[e.tag] = (into.counts[e.tag] ?? 0) + 1
     if (e.source === 'habit' && e.stat !== 'dis') {
       into.stats[e.stat] = (into.stats[e.stat] ?? 0) + e.xp * 0.8
       into.stats.dis = (into.stats.dis ?? 0) + e.xp * 0.2
@@ -522,8 +603,61 @@ export function mergeSummaries(list: XpSummary[]): XpSummary {
     for (const [k, v] of Object.entries(s.days)) out.days[k] = (out.days[k] ?? 0) + v
     for (const [k, v] of Object.entries(s.sources)) out.sources[k as XpSource] = (out.sources[k as XpSource] ?? 0) + v
     for (const [k, v] of Object.entries(s.stats)) out.stats[k as StatKey] = (out.stats[k as StatKey] ?? 0) + v
+    for (const [k, v] of Object.entries(s.counts ?? {})) out.counts[k as XpTag] = (out.counts[k as XpTag] ?? 0) + v
   }
   return out
+}
+
+// --- Titles: earned once a condition is met, one can be worn on the profile.
+
+export type TitleInput = {
+  level: number
+  summary: XpSummary
+  habits: Habit[]
+  logs: HabitLog[]
+  library: LibraryItem[]
+  today: string
+}
+
+export type Title = { id: string; name: string; how: string; earned: boolean }
+
+/** The longest clean run of a quit habit so far, in days. */
+function longestQuitRun(habit: Habit, now: number): number {
+  if (!habit.quitStartedAt) return 0
+  const starts = [habit.quitStartedAt, ...(habit.relapses ?? [])].map((s) => new Date(s).getTime())
+  return Math.max(...starts.map((start, i) => ((starts[i + 1] ?? now) - start) / 86_400_000))
+}
+
+export function titles({ level, summary, habits, logs, library, today }: TitleInput): Title[] {
+  const longest = Math.max(0, ...habits.filter((h) => h.kind !== 'quit').map((h) => streaks(h, logs, today).longest))
+  const now = fromDateKey(today).getTime() + 86_400_000
+  const quitDays = Math.max(0, ...habits.filter((h) => h.kind === 'quit').map((h) => longestQuitRun(h, now)))
+  const booksByYear = new Map<string, number>()
+  for (const item of library) {
+    if (item.kind === 'book' && item.status === 'done' && item.finishedAt) {
+      const year = item.finishedAt.slice(0, 4)
+      booksByYear.set(year, (booksByYear.get(year) ?? 0) + 1)
+    }
+  }
+  const stat = (key: StatKey) => statValue(summary.stats[key])
+  const count = (tag: XpTag) => summary.counts[tag] ?? 0
+  const list: [string, string, string, boolean][] = [
+    ['awakened', 'Uyanmış', "Lv 2'ye ulaş", level >= 2],
+    ['chosen', 'Sistemin Seçtiği', '30 günlük görev tamamla', count('quest') >= 30],
+    ['hunter', 'Görev Avcısı', '10 acil görevi bitir', count('emergency') >= 10],
+    ['returner', 'Geri Dönen', '5 kez aradan sonra geri dön', count('comeback') >= 5],
+    ['unchained', 'Zincirsiz', 'Bir habit’te 30 seri yap', longest >= 30],
+    ['relentless', 'Yorulmak Bilmeyen', 'Bir habit’te 100 seri yap', longest >= 100],
+    ['iron-will', 'Demir İrade', 'Bir şeyi 90 gün bırak', quitDays >= 90],
+    ['bookworm', 'Kitap Kurdu', 'Bir yılda 12 kitap bitir', Math.max(0, ...booksByYear.values()) >= 12],
+    ['iron-fist', 'Demir Yumruk', 'Güç 30', stat('str') >= 30],
+    ['sage', 'Bilge', 'Zekâ 30', stat('int') >= 30],
+    ['unshakable', 'Sarsılmaz', 'Dayanıklılık 30', stat('vit') >= 30],
+    ['watcher', 'Gözlemci', 'Duyu 30', stat('sen') >= 30],
+    ['disciplined', 'Disiplin Ustası', 'Disiplin 30', stat('dis') >= 30],
+    ['shadow', 'Gölge Hükümdarı', 'S-Rank ol', level >= 65],
+  ]
+  return list.map(([id, name, how, earned]) => ({ id, name, how, earned }))
 }
 
 // --- Levels, ranks, stats
@@ -574,3 +708,11 @@ export const statValue = (xp: number | undefined) => Math.floor(Math.sqrt(xp ?? 
 export function xpPerDone(habit: Habit, logs: HabitLog[], today: string): number {
   return TIER_XP[tierOn(habit, today)] * masteryFactor(habit, logs, weekRange(today).start)
 }
+
+/** The week's emergency quest in a few words. */
+export function emergencyText(quest: EmergencyQuest): string {
+  return quest.kind === 'habit'
+    ? `Bu hafta ${quest.target} kez: ${quest.title}`
+    : `Bu hafta ${quest.target} gün günlük yaz`
+}
+

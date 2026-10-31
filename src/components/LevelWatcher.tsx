@@ -9,11 +9,11 @@ import { RankBadge } from './LevelCard'
 const GAIN_MS = 1600
 const TOAST_MS = 5000
 
-type Seen = { total: number; level: number; rank: Rank }
+type Seen = { total: number; level: number; rank: Rank; titles: Set<string> }
 
 /**
  * Freezes closed weeks into the XP ledger, and shows what XP does: a small "+14 XP" as it comes
- * in, a system message on a level up and a bigger card on a new rank.
+ * in, a system message on a level up or a new title and a bigger card on a new rank.
  */
 export function LevelWatcher() {
   const on = useLevelingOn()
@@ -21,7 +21,7 @@ export function LevelWatcher() {
   const state = useLeveling()
   const seen = useRef<Seen>(undefined)
   const [gain, setGain] = useState(0)
-  const [levelUp, setLevelUp] = useState<number>()
+  const [message, setMessage] = useState<string>()
   const [rankUp, setRankUp] = useState<Rank>()
 
   useEffect(() => {
@@ -31,14 +31,17 @@ export function LevelWatcher() {
   useEffect(() => {
     if (!state) return
     const before = seen.current
-    seen.current = { total: state.total, level: state.level, rank: state.rank }
+    const earned = new Set(state.titles.filter((t) => t.earned).map((t) => t.id))
+    seen.current = { total: state.total, level: state.level, rank: state.rank, titles: earned }
     // The first value is where the user already is: nothing to celebrate.
     if (!before || !on) return
     const delta = state.total - before.total
     if (delta >= 0.5) setGain((g) => g + delta)
+    const fresh = state.titles.find((t) => t.earned && !before.titles.has(t.id))
+    if (fresh) setMessage(`Unvan kazandın · ${fresh.name}`)
     if (state.level > before.level) {
       if (state.rank !== before.rank) setRankUp(state.rank)
-      else setLevelUp(state.level)
+      else setMessage(`Seviye atladın · Lv ${state.level}`)
     }
   }, [state, on])
 
@@ -49,10 +52,10 @@ export function LevelWatcher() {
   }, [gain])
 
   useEffect(() => {
-    if (levelUp === undefined) return
-    const timer = window.setTimeout(() => setLevelUp(undefined), TOAST_MS)
+    if (message === undefined) return
+    const timer = window.setTimeout(() => setMessage(undefined), TOAST_MS)
     return () => window.clearTimeout(timer)
-  }, [levelUp])
+  }, [message])
 
   if (!on) return null
   return (
@@ -67,16 +70,16 @@ export function LevelWatcher() {
         </div>
       )}
 
-      {levelUp !== undefined && (
+      {message !== undefined && (
         <Link
           to="/profil"
-          onClick={() => setLevelUp(undefined)}
+          onClick={() => setMessage(undefined)}
           role="status"
           className="fixed inset-x-4 z-40 mx-auto flex max-w-sm animate-[toast-in_260ms_ease-out] items-center gap-3 rounded-2xl border border-accent bg-surface px-4 py-3 shadow-lg"
           style={{ top: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
         >
           <span className="font-mono text-xs text-accent">[SİSTEM]</span>
-          <span className="font-medium">Seviye atladın · Lv {levelUp}</span>
+          <span className="font-medium">{message}</span>
         </Link>
       )}
 

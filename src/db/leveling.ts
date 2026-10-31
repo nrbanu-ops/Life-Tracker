@@ -2,16 +2,21 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { addDays } from 'date-fns'
 import { fromDateKey, toDateKey, weekRange } from '../lib/date'
 import {
+  emergencyProgress,
+  emergencyQuest,
   firstDay,
   levelFor,
   mergeSummaries,
   questState,
   rankFor,
   summarize,
+  titles,
   xpEvents,
+  type EmergencyQuest,
   type LevelInfo,
   type QuestState,
   type Rank,
+  type Title,
   type XpData,
   type XpSummary,
 } from '../lib/leveling'
@@ -54,7 +59,7 @@ export async function syncXpLedger(today: string): Promise<void> {
   const current = weekRange(today).start
   const [data, stored, dirtyEntry] = await Promise.all([loadXpData(), db.xpWeeks.toArray(), db.meta.get(DIRTY)])
   const dirty = new Set((dirtyEntry?.value as string[] | undefined) ?? [])
-  const have = new Set(stored.map((w) => w.week).filter((w) => !dirty.has(w)))
+  const have = new Set(stored.filter((w) => w.counts && !dirty.has(w.week)).map((w) => w.week))
   const first = weekRange(firstDay(data, today)).start
   const todo: string[] = []
   for (let week = first; week < current; week = shift(week, 7)) if (!have.has(week)) todo.push(week)
@@ -64,7 +69,7 @@ export async function syncXpLedger(today: string): Promise<void> {
     await db.xpWeeks.bulkPut(
       todo.map((week) => {
         const s = summaries.get(week) ?? summarize([])
-        return { week, xp: s.xp, days: s.days, sources: s.sources, stats: s.stats } as never
+        return { week, xp: s.xp, days: s.days, sources: s.sources, stats: s.stats, counts: s.counts } as never
       }),
     )
   }
@@ -86,6 +91,8 @@ export type LevelState = LevelInfo & {
   summary: XpSummary
   today: number
   quest: QuestState
+  emergency: EmergencyQuest & { done: number; met: boolean }
+  titles: Title[]
 }
 
 /** The user's level, rank, stats and today's quest, kept live; undefined while loading. */
@@ -95,7 +102,7 @@ export function useLeveling(): LevelState | undefined {
     const [data, stored, dirtyEntry] = await Promise.all([loadXpData(), db.xpWeeks.toArray(), db.meta.get(DIRTY)])
     const current = weekRange(today).start
     const dirty = new Set((dirtyEntry?.value as string[] | undefined) ?? [])
-    const frozen = stored.filter((w) => w.week < current && !dirty.has(w.week))
+    const frozen = stored.filter((w) => w.week < current && w.counts && !dirty.has(w.week))
     const frozenWeeks = new Set(frozen.map((w) => w.week))
     // Until the ledger catches up (first start, a changed week), missing weeks are worked out live.
     const first = weekRange(firstDay(data, today)).start
@@ -109,6 +116,8 @@ export function useLeveling(): LevelState | undefined {
     const live = xpEvents(data, liveFrom, today, today).filter((e) => !frozenWeeks.has(weekRange(e.date).start))
     const summary = mergeSummaries([...frozen.map((w) => w as unknown as XpSummary), summarize(live)])
     const info = levelFor(summary.xp)
+    const emergency = emergencyQuest(data, current)
+    const progress = emergencyProgress(emergency, data, today)
     return {
       ...info,
       total: summary.xp,
@@ -116,6 +125,8 @@ export function useLeveling(): LevelState | undefined {
       summary,
       today: summary.days[today] ?? 0,
       quest: questState(data.habits, data.logs, today),
+      emergency: { ...emergency, done: progress.done, met: !!progress.metOn },
+      titles: titles({ level: info.level, summary, habits: data.habits, logs: data.logs, library: data.library, today }),
     }
   }, [today])
 }

@@ -31,3 +31,35 @@ export function useLevelingOn(): boolean {
     () => true,
   )
 }
+
+// The title shown next to the level, chosen on the profile. Also per device.
+const TITLE_KEY = 'life-tracker:title'
+
+function readTitle(): string | undefined {
+  try {
+    return localStorage.getItem(TITLE_KEY) ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function setWornTitle(id: string | undefined): void {
+  try {
+    if (id) localStorage.setItem(TITLE_KEY, id)
+    else localStorage.removeItem(TITLE_KEY)
+  } catch {
+    // Private mode: the choice just doesn't stick.
+  }
+  for (const listener of listeners) listener()
+}
+
+export function useWornTitle(): string | undefined {
+  return useSyncExternalStore(
+    (listener) => {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+    readTitle,
+    () => undefined,
+  )
+}

@@ -24,6 +24,7 @@ import { useLeveling } from '../db/leveling'
 import { fromDateKey, toDateKey, weekRange } from '../lib/date'
 import {
   effortOf,
+  emergencyText,
   masteryFactor,
   nextRank,
   rankStart,
@@ -34,11 +35,12 @@ import {
   STATS,
   statValue,
   TIER_LABEL,
+  XP,
   xpPerDone,
   type Rank,
   type XpSource,
 } from '../lib/leveling'
-import { useLevelingOn } from '../lib/levelingSetting'
+import { setWornTitle, useLevelingOn, useWornTitle } from '../lib/levelingSetting'
 import { useTodayKey } from '../lib/useTodayKey'
 
 const RANK_TITLE: Record<Rank, string> = {
@@ -55,6 +57,7 @@ export function ProfilePage() {
   const today = useTodayKey()
   const on = useLevelingOn()
   const state = useLeveling()
+  const worn = useWornTitle()
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray(), [], [])
   const logs = useLiveQuery(() => db.habitLogs.toArray(), [], [])
 
@@ -70,7 +73,8 @@ export function ProfilePage() {
   )
   if (!state) return <PageHeader title="Profil" action={back} />
 
-  const { level, into, needed, rank, summary } = state
+  const { level, into, needed, rank, summary, emergency } = state
+  const wornTitle = state.titles.find((t) => t.id === worn && t.earned)
   const upcoming = nextRank(rank)
   const stats = STATS.map((key) => ({ key, label: STAT_SHORT[key], name: STAT_LABEL[key], value: statValue(summary.stats[key]) }))
   const weakest = [...stats].sort((a, b) => a.value - b.value)[0]
@@ -106,7 +110,7 @@ export function ProfilePage() {
             <p className="font-mono text-xs text-accent">[SİSTEM] Durum</p>
             <p className="text-2xl font-semibold">Lv {level}</p>
             <p className="text-sm text-muted">
-              {rank}-Rank · {RANK_TITLE[rank]}
+              {rank}-Rank · {wornTitle?.name ?? RANK_TITLE[rank]}
             </p>
           </div>
         </div>
@@ -120,6 +124,57 @@ export function ProfilePage() {
           </div>
         </div>
         <p className="mt-3 text-sm text-muted tabular-nums">Toplam {Math.round(summary.xp).toLocaleString('tr')} XP</p>
+      </section>
+
+      <section className="mb-4 rounded-2xl border border-p2/40 bg-surface p-4">
+        <p className="font-mono text-xs text-p2">[ACİL GÖREV] Bu hafta</p>
+        <p className="mt-1 font-medium">{emergencyText(emergency)}</p>
+        <div className="mt-3">
+          <ProgressBar ratio={emergency.done / emergency.target} color="var(--color-p2)" />
+          <div className="mt-1.5 flex justify-between text-xs text-muted tabular-nums">
+            <span>
+              {emergency.done} / {emergency.target}
+            </span>
+            <span>{emergency.met ? `Tamamlandı · +${XP.emergency} XP` : `Ödül: ${XP.emergency} XP`}</span>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-muted">
+          {emergency.kind === 'habit'
+            ? 'Son 4 haftada en çok aksattığın habit. Her pazartesi yenisi gelir; bitiremezsen bir şey kaybetmezsin.'
+            : 'Aksattığın bir habit yok; bu hafta yazmaya vakit ayır. Her pazartesi yenisi gelir.'}
+        </p>
+      </section>
+
+      <section className="mb-4 rounded-2xl border border-border bg-surface p-4">
+        <h2 className="mb-1 font-medium">Unvanlar</h2>
+        <p className="mb-3 text-sm text-muted">
+          {state.titles.filter((t) => t.earned).length} / {state.titles.length} kazanıldı. Birine dokun, seviyenin yanında
+          görünsün.
+        </p>
+        <ul className="flex flex-col gap-1.5">
+          {state.titles.map((t) => {
+            const wearing = wornTitle?.id === t.id
+            return (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  disabled={!t.earned}
+                  onClick={() => setWornTitle(wearing ? undefined : t.id)}
+                  aria-pressed={wearing}
+                  className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left ${
+                    wearing ? 'border-accent bg-accent-soft' : 'border-border'
+                  } ${t.earned ? '' : 'opacity-50'}`}
+                >
+                  <span className="min-w-0">
+                    <span className="block font-medium">{t.earned ? t.name : `🔒 ${t.name}`}</span>
+                    <span className="block text-xs text-muted">{t.how}</span>
+                  </span>
+                  {wearing && <span className="shrink-0 text-xs font-medium text-accent">Takılı</span>}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
       </section>
 
       <section className="mb-4 rounded-2xl border border-border bg-surface p-4">

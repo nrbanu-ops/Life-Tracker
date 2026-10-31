@@ -221,4 +221,6 @@ export type XpWeek = {
   days: Record<string, number>
   sources: Record<string, number>
   stats: Record<string, number>
+  /** Missing on weeks frozen before titles existed: those are worked out again. */
+  counts?: Record<string, number>
 }
