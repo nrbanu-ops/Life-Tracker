@@ -194,6 +194,7 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
     book: 'Kitap adı ya da yazar',
     movie: 'Film adı',
     series: 'Dizi adı',
+    game: 'Oyun adı (İngilizce adıyla daha iyi bulur)',
     place: 'Yer adı ya da Google Haritalar linki',
   }[kind]
 

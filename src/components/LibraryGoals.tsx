@@ -61,7 +61,7 @@ export function LibraryGoals({ year, progress }: Props) {
 function GoalForm({ year, progress, onDone }: Props & { onDone: () => void }) {
   // Text while typing; an empty field means no goal for that kind.
   const [targets, setTargets] = useState<Record<LibraryKind, string>>(() => {
-    const initial = { book: '', movie: '', series: '', place: '', other: '' }
+    const initial: Record<LibraryKind, string> = { book: '', movie: '', series: '', game: '', place: '', other: '' }
     for (const goal of progress) initial[goal.kind] = String(goal.target)
     return initial
   })

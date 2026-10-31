@@ -1,8 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import type { LibraryItem } from '../db/types'
-import { bookProgress, finishedByDay, goalProgress, monthSummary, fromOpenLibrary, fromTmdb, fromTvmaze, groupLibrary, progressLabel, yearSummary } from './library'
+import { bookProgress, finishedByDay, goalProgress, monthSummary, fromOpenLibrary, fromTmdb, fromTvmaze, fromWikipediaGames, groupLibrary, progressLabel, yearSummary } from './library'
 
 describe('search result mapping', () => {
+  it('reads games from a Wikipedia search, skipping series and franchises', () => {
+    const results = fromWikipediaGames({
+      query: {
+        pages: {
+          '7': { pageid: 7, index: 3, title: 'The Witcher', description: 'Fantasy franchise', thumbnail: { source: 'f.jpg' } },
+          '2': { pageid: 2, index: 2, title: 'The Witcher (video game series)', description: 'Video game series by CD Projekt RED' },
+          '4': { pageid: 4, index: 4, title: 'Hades (video game)', description: '2020 video game developed by Supergiant Games' },
+          '1': { pageid: 1, index: 1, title: 'The Witcher 3: Wild Hunt', description: '2015 video game', thumbnail: { source: 'w3.jpg' } },
+        },
+      },
+    })
+    expect(results).toEqual([
+      { kind: 'game', title: 'The Witcher 3: Wild Hunt', creator: undefined, year: 2015, posterUrl: 'w3.jpg', source: 'wikipedia', externalId: '1' },
+      { kind: 'game', title: 'Hades', creator: 'Supergiant Games', year: 2020, posterUrl: undefined, source: 'wikipedia', externalId: '4' },
+    ])
+    expect(fromWikipediaGames({ batchcomplete: '' })).toEqual([])
+  })
+
   it('reads Open Library books, covers first', () => {
     const results = fromOpenLibrary({
       docs: [

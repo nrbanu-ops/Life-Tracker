@@ -3,7 +3,7 @@ import type { LibraryGoal, LibraryItem, LibraryKind, LibraryStatus } from '../db
 import { areaAt, nearbyPhoto, parseGoogleMapsUrl, plainTitle, searchPlaces, sharedPlaceQueries } from './places'
 
 /** Every kind, in the order the app lists them. */
-export const LIBRARY_KINDS: LibraryKind[] = ['book', 'movie', 'series', 'place', 'other']
+export const LIBRARY_KINDS: LibraryKind[] = ['book', 'movie', 'series', 'game', 'place', 'other']
 
 /** Kinds with a search; 'other' is added by hand. */
 export type SearchableKind = Exclude<LibraryKind, 'other'>
@@ -13,6 +13,7 @@ export const KIND_LABEL: Record<LibraryKind, string> = {
   book: 'Kitap',
   movie: 'Film',
   series: 'Dizi',
+  game: 'Oyun',
   place: 'Yer',
   other: 'Diğer',
 }
@@ -21,6 +22,7 @@ export const KIND_EMOJI: Record<LibraryKind, string> = {
   book: '📚',
   movie: '🎬',
   series: '📺',
+  game: '🎮',
   place: '📍',
   other: '✨',
 }
@@ -29,6 +31,7 @@ export const CREATOR_LABEL: Record<LibraryKind, string> = {
   book: 'Yazar',
   movie: 'Yönetmen',
   series: 'Kanal / platform',
+  game: 'Stüdyo / platform',
   place: 'Şehir / ülke',
   other: 'Kimden (isteğe bağlı)',
 }
@@ -48,7 +51,13 @@ export const statusesFor = (kind: LibraryKind): LibraryStatus[] =>
   kind === 'place' ? ['want', 'done'] : ['want', 'active', 'done', 'dropped']
 
 export const statusLabel = (kind: LibraryKind, status: LibraryStatus) =>
-  kind === 'place' ? (status === 'want' ? 'Gitmek istiyorum' : 'Gittim') : STATUS_LABEL[status]
+  kind === 'place'
+    ? status === 'want'
+      ? 'Gitmek istiyorum'
+      : 'Gittim'
+    : kind === 'game' && status === 'active'
+      ? 'Oynuyorum'
+      : STATUS_LABEL[status]
 
 export const LANGUAGES = [
   { code: 'tr', label: 'Türkçe' },
@@ -196,6 +205,36 @@ export function fromTmdb(json: unknown, kind: 'movie' | 'series'): SearchResult[
   )
 }
 
+/**
+ * Video games from an English Wikipedia search: the page's lead image is usually the cover (non-free
+ * covers included), the short description ("2015 video game developed by …") gives year and studio.
+ */
+export function fromWikipediaGames(json: unknown): SearchResult[] {
+  const pages = (json as { query?: { pages?: Record<string, Json> } } | null)?.query?.pages
+  if (!pages) return []
+  return postersFirst(
+    Object.values(pages)
+      .sort((a, b) => Number(a.index ?? 0) - Number(b.index ?? 0))
+      .flatMap((page) => {
+        const title = str(page.title)?.replace(/\s*\((?:\d{4} )?video game\)$/i, '')
+        const description = str(page.description) ?? ''
+        if (!title || !/\bgame\b/i.test(description) || /\bseries\b|\bfranchise\b/i.test(description)) return []
+        const thumbnail = page.thumbnail as Json | undefined
+        return [
+          {
+            kind: 'game' as const,
+            title,
+            creator: description.match(/\b(?:developed|published) by (.+?)(?:\s+and published\b|$)/i)?.[1],
+            year: yearOf(description.match(/\b(19|20)\d{2}\b/)?.[0]),
+            posterUrl: str(thumbnail?.source),
+            source: 'wikipedia',
+            externalId: page.pageid === undefined ? undefined : String(page.pageid),
+          },
+        ]
+      }),
+  )
+}
+
 /** Thrown for a film search when no TMDB key is saved. */
 export class MissingKeyError extends Error {}
 
@@ -212,6 +251,14 @@ export async function searchLibrary(
     return fromOpenLibrary(await res.json())
   }
   if (kind === 'place') return searchPlace(query, signal)
+  if (kind === 'game') {
+    const search = encodeURIComponent(`${query.trim()} video game`)
+    const res = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${search}&gsrlimit=15&prop=pageimages|description&piprop=thumbnail&pithumbsize=400&pilicense=any`,
+      { signal },
+    )
+    return fromWikipediaGames(await res.json())
+  }
   if (kind === 'series') {
     const res = await fetch(`https://api.tvmaze.com/search/shows?q=${q}`, { signal })
     return fromTvmaze(await res.json())

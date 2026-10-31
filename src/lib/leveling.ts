@@ -215,7 +215,7 @@ export const XP = {
   project: { base: 100, perStep: 10, max: 300 },
   journal: 5,
   mood: 2,
-  library: { book: 40, movie: 10, series: 10, place: 10, other: 10 } as Record<LibraryItem['kind'], number>,
+  library: { book: 40, movie: 10, series: 10, game: 20, place: 10, other: 10 } as Record<LibraryItem['kind'], number>,
   achievement: 50,
   emergency: 100,
   quit: [
@@ -485,7 +485,7 @@ function emergencyEvents(data: XpData, from: string, last: string): XpEvent[] {
   return events
 }
 
-const LIBRARY_STAT: Record<LibraryItem['kind'], StatKey> = { book: 'int', movie: 'sen', series: 'sen', place: 'str', other: 'sen' }
+const LIBRARY_STAT: Record<LibraryItem['kind'], StatKey> = { book: 'int', movie: 'sen', series: 'sen', game: 'int', place: 'str', other: 'sen' }
 
 /** Every XP event between `from` and `to` (inclusive), never past today. */
 export function xpEvents(data: XpData, from: string, to: string, today: string): XpEvent[] {

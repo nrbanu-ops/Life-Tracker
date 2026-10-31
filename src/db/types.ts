@@ -117,7 +117,7 @@ export type JournalEntry = {
   updatedAt?: string
 }
 
-export type LibraryKind = 'book' | 'movie' | 'series' | 'place' | 'other'
+export type LibraryKind = 'book' | 'movie' | 'series' | 'game' | 'place' | 'other'
 
 /** want: on the list, active: reading/watching now, done: finished, dropped: given up. */
 export type LibraryStatus = 'want' | 'active' | 'done' | 'dropped'

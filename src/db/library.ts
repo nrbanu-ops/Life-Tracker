@@ -87,7 +87,7 @@ export async function deleteLibraryItem(id: string): Promise<void> {
 /** Sets the year's goals per kind at once; a missing or zero target removes that goal. */
 export async function setLibraryGoals(year: number, targets: Partial<Record<LibraryKind, number>>): Promise<void> {
   await db.transaction('rw', db.libraryGoals, async () => {
-    for (const kind of ['book', 'movie', 'series', 'place', 'other'] as const) {
+    for (const kind of ['book', 'movie', 'series', 'game', 'place', 'other'] as const) {
       const id = `${year}-${kind}`
       const target = targets[kind]
       if (target && target > 0) await db.libraryGoals.put({ id, year, kind, target })
