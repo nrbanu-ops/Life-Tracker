@@ -1,4 +1,25 @@
+import { subMonths, subWeeks, subYears } from 'date-fns'
 import type { Habit, JournalEntry } from '../db/types'
+import { fromDateKey, toDateKey } from './date'
+
+const LOOK_BACK: { label: string; back: (d: Date) => Date }[] = [
+  { label: '1 yıl önce bugün', back: (d) => subYears(d, 1) },
+  { label: '6 ay önce bugün', back: (d) => subMonths(d, 6) },
+  { label: '1 ay önce bugün', back: (d) => subMonths(d, 1) },
+  { label: '1 hafta önce bugün', back: (d) => subWeeks(d, 1) },
+]
+
+export type Memory = { label: string; date: string; entries: JournalEntry[] }
+
+/** The furthest-back day among a year, six months, a month and a week ago that has something written. */
+export function memoryFor(entries: JournalEntry[], today: string): Memory | undefined {
+  for (const { label, back } of LOOK_BACK) {
+    const date = toDateKey(back(fromDateKey(today)))
+    const found = entries.filter((e) => e.date === date)
+    if (found.length > 0) return { label, date, entries: groupByDay(found)[0].entries }
+  }
+  return undefined
+}
 
 /** Journal photos are looked at full width, so they keep more pixels than posters. */
 export const JOURNAL_PHOTO_SIZE = 1200

@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import type { Habit, JournalEntry } from '../db/types'
-import { filterEntries, groupByDay, searchEntries } from './journal'
+import { filterEntries, groupByDay, memoryFor, searchEntries } from './journal'
+
+describe('memoryFor', () => {
+  const at = (id: string, date: string): JournalEntry => ({ id, date, text: id, createdAt: `${date}T09:00:00` })
+
+  it('prefers the furthest back of a year, six months, a month and a week ago', () => {
+    const list = [at('week', '2026-10-24'), at('month', '2026-09-30'), at('other', '2026-10-01')]
+    expect(memoryFor(list, '2026-10-31')).toMatchObject({ label: '1 ay önce bugün', date: '2026-09-30' })
+    expect(memoryFor([...list, at('year', '2025-10-31')], '2026-10-31')?.label).toBe('1 yıl önce bugün')
+    expect(memoryFor([at('other', '2026-10-01')], '2026-10-31')).toBeUndefined()
+  })
+})
 
 describe('searchEntries', () => {
   const base = { date: '2026-10-31', createdAt: '2026-10-31T10:00:00' }

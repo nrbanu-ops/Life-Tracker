@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router'
 import { useState } from 'react'
 import { DayJournal } from '../components/DayJournal'
+import { MemoryCard } from '../components/MemoryCard'
 import { EmptyState } from '../components/EmptyState'
 import { HabitActionSheet } from '../components/HabitActionSheet'
 import { HabitCheckRow } from '../components/HabitCheckRow'
@@ -148,6 +149,8 @@ export function TodayPage() {
       )}
 
       <TodayMilestones />
+
+      <MemoryCard today={today} />
 
       <div className="mt-8">
         <DayJournal date={today} canWrite />
