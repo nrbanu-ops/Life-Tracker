@@ -1,6 +1,15 @@
 import type { HabitInput } from '../db/habits'
 import type { TaskInput } from '../db/tasks'
-import type { Habit, HabitFrequency, HabitKind, Milestone, Project, TaskPriority } from '../db/types'
+import type {
+  AchievementRule,
+  Habit,
+  HabitFrequency,
+  HabitKind,
+  Milestone,
+  Project,
+  ProjectAchievement,
+  TaskPriority,
+} from '../db/types'
 
 /**
  * Instructions for a claude.ai Project. The user pastes this once into the project's
@@ -15,6 +24,7 @@ Nasıl çalışalım:
    - Adımlar (milestone): hedefe sırayla götüren 4-8 ara hedef, mümkünse tarihleriyle.
    - Habit'ler: hedefe yardım edecek en fazla 3-4 düzenli alışkanlık. Her biri için sıklık ve zor günler için bir "minimum versiyon".
    - Görevler: bir kere yapılacak en fazla 5 hazırlık işi (isteğe bağlı).
+   - Başarımlar: bu hedefe özel 3-5 rozet. Yaratıcı bir ad, bir emoji, nasıl kazanılacağını anlatan kısa bir açıklama (ör. "14 gün üst üste kelime çalış") ve kazanma koşulu. Ulaşılabilir ama motive edici olsunlar; kolaydan zora sırala.
    Planı önce okunabilir bir liste olarak göster ve neyi değiştirmek istediğimi sor.
 3. Planı birlikte düzeltelim. Ben "tamam", "onaylıyorum" ya da "uygulamaya aktar" dediğimde son planı aşağıdaki formatta TEK bir json kod bloğu olarak ver.
 
@@ -23,6 +33,7 @@ Format kuralları:
 - kind: "check" (yapıldı/yapılmadı), "count" (sayı; "target" ve "unit" ile), "duration" (dakika; "target" ile).
 - frequency: {"type":"daily"} ya da {"type":"weekdays","days":[1,3,5]} (1=Pazartesi … 7=Pazar) ya da {"type":"timesPerWeek","count":3}
 - priority: 1=Acil, 2=Yüksek, 3=Orta, 4=Düşük
+- Başarımın "when" koşulu sadece şunlardan biri olabilir: bir adımın tamamlanması {"milestone":"<adımın tam adı>"}, bir habit'te seri {"habit":"<habit'in tam adı>","streak":14} (haftada X kez habit'lerinde hafta sayısı), bir habit'i toplam yapma {"habit":"<habit'in tam adı>","total":50}, proje ilerlemesi yüzdesi {"progress":75}, projede tamamlanan görev sayısı {"tasks":3}.
 - Bilmediğin ya da gerekmeyen alanları hiç yazma. Bütün metinler Türkçe olsun.
 - Mevcut bir projeye ekleme yapıyorsak sadece yeni adımları, habit'leri ve görevleri yaz; var olanları tekrar etme.
 
@@ -42,6 +53,11 @@ Format kuralları:
   ],
   "tasks": [
     { "title": "Koşu ayakkabısı al", "date": "2026-11-05", "priority": 2 }
+  ],
+  "achievements": [
+    { "title": "Isınma turları", "emoji": "👟", "description": "Toplam 10 kez koş", "when": { "habit": "Koşu", "total": 10 } },
+    { "title": "Demir bacaklar", "emoji": "🦵", "description": "12 koşu gününü hiç kaçırma", "when": { "habit": "Koşu", "streak": 12 } },
+    { "title": "Yarı yoldayım", "emoji": "🏅", "description": "Yarı maratonu koş", "when": { "milestone": "Yarı maraton koş" } }
   ]
 }
 \`\`\``
@@ -75,16 +91,54 @@ export function buildProjectMessage(
   return lines.join('\n')
 }
 
+/** Asks only for achievements for a project that already exists; the answer goes to `parseAchievements`. */
+export function buildAchievementsRequest(project: Project, milestones: Milestone[], habits: Habit[]): string {
+  const lines = [
+    `"${project.title}" projem için bu hedefe özel 3-5 başarım (rozet) belirle. Yaratıcı adlar ve emojiler seç, ulaşılabilir ama motive edici olsunlar, kolaydan zora sırala. "description" nasıl kazanılacağını anlatan kısa bir cümle olsun (ör. "14 gün üst üste kelime çalış"). Bütün metinler Türkçe olsun.`,
+    'Başka hiçbir şey yazmadan sadece tek bir json kod bloğu ver:',
+    '```json\n{ "achievements": [ { "title": "…", "emoji": "…", "description": "…", "when": { … } } ] }\n```',
+    'Kazanma koşulu ("when") sadece şunlardan biri olabilir: {"milestone":"<aşağıdaki adımlardan birinin tam adı>"}, {"habit":"<aşağıdaki habit\'lerden birinin tam adı>","streak":14}, {"habit":"<habit adı>","total":50}, {"progress":75}, {"tasks":3}.',
+  ]
+  if (project.description) lines.push(`Açıklama: ${project.description}`)
+  if (project.targetDate) lines.push(`Hedef tarih: ${project.targetDate}`)
+  if (milestones.length > 0) {
+    lines.push('Adımlar:')
+    for (const m of milestones) lines.push(`- ${m.title}${m.done ? ' (tamamlandı)' : ''}`)
+  }
+  const tracked = habits.filter((h) => h.kind !== 'quit')
+  if (tracked.length > 0) {
+    lines.push("Habit'ler:")
+    for (const h of tracked) {
+      lines.push(`- ${h.title} (${h.frequency.type === 'timesPerWeek' ? `haftada ${h.frequency.count} kez; seri hafta sayısıdır` : 'günlük'})`)
+    }
+  }
+  return lines.join('\n')
+}
+
 export type ImportedPlan = {
   project?: { title: string; description?: string; targetDate?: string }
   milestones: { title: string; dueDate?: string }[]
   habits: Omit<HabitInput, 'projectId'>[]
   tasks: Omit<TaskInput, 'projectId'>[]
+  achievements: PlanAchievement[]
   /** Items left out because they could not be read. */
   skipped: number
 }
 
-export type ParseResult = { ok: true; plan: ImportedPlan } | { ok: false; error: string }
+/** An achievement as the AI writes it: milestones and habits by title, resolved to ids on import. */
+export type PlanAchievement = {
+  title: string
+  emoji: string
+  description?: string
+  when:
+    | { milestone: string }
+    | { habit: string; streak: number }
+    | { habit: string; total: number }
+    | { progress: number }
+    | { tasks: number }
+}
+
+export type ParseResult ={ ok: true; plan: ImportedPlan } | { ok: false; error: string }
 
 type Json = Record<string, unknown>
 
@@ -114,6 +168,7 @@ const KEYS = {
   milestones: ['milestones', 'steps', 'adimlar', 'adımlar', 'asamalar', 'aşamalar', 'monthly_plan', 'monthlyPlan'],
   habits: ['habits', 'habit', 'daily_habits', 'dailyHabits', 'aliskanliklar', 'alışkanlıklar', 'rutinler', 'routines'],
   tasks: ['tasks', 'todos', 'gorevler', 'görevler', 'yapilacaklar', 'yapılacaklar'],
+  achievements: ['achievements', 'badges', 'basarimlar', 'başarımlar', 'rozetler'],
   title: ['title', 'name', 'milestone', 'baslik', 'başlık', 'ad', 'isim'],
   date: ['dueDate', 'due_date', 'milestone_date', 'date', 'due', 'tarih', 'targetDate', 'target_date'],
   timesPerWeek: ['timesPerWeek', 'times_per_week', 'days_per_week', 'daysPerWeek'],
@@ -242,8 +297,80 @@ export function parsePlan(answer: string): ParseResult {
     return { title, date: dateKey(pick(t, KEYS.date)), priority }
   })
 
+  const achievements = list(pick(root, KEYS.achievements), readAchievement)
+
   if (!project && milestones.length + habits.length + tasks.length === 0) {
     return { ok: false, error: 'Planda eklenecek bir şey bulamadım.' }
   }
-  return { ok: true, plan: { project, milestones, habits, tasks, skipped } }
+  return { ok: true, plan: { project, milestones, habits, tasks, achievements, skipped } }
+}
+
+function readAchievement(v: unknown): PlanAchievement | undefined {
+  if (!isObject(v)) return undefined
+  const title = titleOf(v, 60)
+  const w = pick(v, ['when', 'condition', 'kosul', 'koşul'])
+  if (!title || !isObject(w)) return undefined
+  const base = { title, emoji: text(v.emoji, 8) ?? '🏅', description: text(v.description, 120) }
+  const milestone = text(w.milestone, 120)
+  if (milestone) return { ...base, when: { milestone } }
+  const habit = text(w.habit, 80)
+  const streak = positiveInt(w.streak, 1000)
+  const total = positiveInt(w.total, 100_000)
+  if (habit && streak) return { ...base, when: { habit, streak } }
+  if (habit && total) return { ...base, when: { habit, total } }
+  const progress = positiveInt(w.progress, 100)
+  if (progress) return { ...base, when: { progress } }
+  const tasks = positiveInt(w.tasks, 1000)
+  if (tasks) return { ...base, when: { tasks } }
+  return undefined
+}
+
+/** Just the achievements from an answer that is only about them. */
+export function parseAchievements(answer: string): PlanAchievement[] {
+  const raw = extractJson(answer)
+  if (!raw) return []
+  try {
+    const data: unknown = JSON.parse(raw)
+    const list = Array.isArray(data) ? data : isObject(data) ? pick(data, KEYS.achievements) : undefined
+    return Array.isArray(list) ? list.flatMap((v) => readAchievement(v) ?? []) : []
+  } catch {
+    return []
+  }
+}
+
+const normalize = (s: string) => s.toLocaleLowerCase('tr').replace(/\s+/g, ' ').trim()
+
+/** Finds an item by title: exact first, then one title containing the other. */
+function findByTitle<T extends { id: string; title: string }>(items: T[], title: string): T | undefined {
+  const t = normalize(title)
+  return (
+    items.find((i) => normalize(i.title) === t) ??
+    items.find((i) => normalize(i.title).includes(t) || t.includes(normalize(i.title)))
+  )
+}
+
+/** Turns titles into the project's ids; achievements pointing at nothing are dropped. */
+export function resolveAchievements(
+  list: PlanAchievement[],
+  milestones: { id: string; title: string }[],
+  habits: { id: string; title: string }[],
+): Omit<ProjectAchievement, 'id' | 'projectId' | 'order'>[] {
+  return list.flatMap((a) => {
+    const w = a.when
+    let rule: AchievementRule | undefined
+    if ('milestone' in w) {
+      const m = findByTitle(milestones, w.milestone)
+      rule = m && { type: 'milestone', milestoneId: m.id }
+    } else if ('habit' in w) {
+      const h = findByTitle(habits, w.habit)
+      rule = h && ('streak' in w ? { type: 'habitStreak', habitId: h.id, count: w.streak } : { type: 'habitTotal', habitId: h.id, count: w.total })
+    } else if ('progress' in w) {
+      rule = { type: 'progress', percent: w.progress }
+    } else {
+      rule = { type: 'tasksDone', count: w.tasks }
+    }
+    if (!rule) return []
+    const item = { title: a.title, emoji: a.emoji, rule }
+    return [a.description ? { ...item, description: a.description } : item]
+  })
 }

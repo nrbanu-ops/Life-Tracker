@@ -20,10 +20,11 @@ export async function updateProject(id: string, input: ProjectInput): Promise<vo
   })
 }
 
-/** Deletes the project and its milestones; linked habits and tasks are kept, just unlinked. */
+/** Deletes the project, its milestones and achievements; linked habits and tasks are kept, just unlinked. */
 export async function deleteProject(id: string): Promise<void> {
-  await db.transaction('rw', [db.projects, db.milestones, db.habits, db.tasks], async () => {
+  await db.transaction('rw', [db.projects, db.milestones, db.habits, db.tasks, db.projectAchievements], async () => {
     await db.milestones.where('projectId').equals(id).delete()
+    await db.projectAchievements.where('projectId').equals(id).delete()
     await db.habits.where('projectId').equals(id).modify((h) => delete h.projectId)
     await db.tasks.where('projectId').equals(id).modify((t) => delete t.projectId)
     await db.projects.delete(id)
@@ -34,9 +35,9 @@ export async function createMilestone(
   projectId: string,
   title: string,
   dueDate?: string,
-): Promise<void> {
+): Promise<string | undefined> {
   const trimmed = title.trim()
-  if (!trimmed) return
+  if (!trimmed) return undefined
   const last = await db.milestones.where('[projectId+order]').between([projectId, -Infinity], [projectId, Infinity]).last()
   const milestone: Milestone = {
     id: newId(),
@@ -47,6 +48,7 @@ export async function createMilestone(
   }
   if (dueDate) milestone.dueDate = dueDate
   await db.milestones.add(milestone)
+  return milestone.id
 }
 
 export async function updateMilestone(id: string, title: string, dueDate?: string): Promise<void> {

@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { AchievementWatcher } from './AchievementWatcher'
 import { BackupManager } from './BackupManager'
 import { TabBar } from './TabBar'
 import { TimerBanner } from './TimerBanner'
@@ -23,6 +24,7 @@ export function Layout() {
           <Outlet />
         </div>
       </Suspense>
+      <AchievementWatcher />
       <TabBar />
     </div>
   )

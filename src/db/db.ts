@@ -8,7 +8,9 @@ import type {
   MetaEntry,
   Milestone,
   Project,
+  ProjectAchievement,
   Task,
+  UnlockedAchievement,
 } from './types'
 
 export const db = new Dexie('life-tracker') as Dexie & {
@@ -21,6 +23,8 @@ export const db = new Dexie('life-tracker') as Dexie & {
   library: EntityTable<LibraryItem, 'id'>
   libraryGoals: EntityTable<LibraryGoal, 'id'>
   meta: EntityTable<MetaEntry, 'key'>
+  achievements: EntityTable<UnlockedAchievement, 'id'>
+  projectAchievements: EntityTable<ProjectAchievement, 'id'>
 }
 
 // Booleans can't be indexed in IndexedDB, so `archived` and `done` are filtered in memory.
@@ -67,6 +71,12 @@ db.version(6).stores({
 // v7: app bookkeeping such as the automatic backup file; never part of a backup itself.
 db.version(7).stores({
   meta: 'key',
+})
+
+// v8: achievements: the earned ones, and the AI's project-specific ones.
+db.version(8).stores({
+  achievements: 'id',
+  projectAchievements: 'id, projectId',
 })
 
 export const META_TABLE = 'meta'

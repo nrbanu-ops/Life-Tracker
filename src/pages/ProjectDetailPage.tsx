@@ -10,6 +10,7 @@ import { MilestoneList } from '../components/MilestoneList'
 import { PageHeader } from '../components/PageHeader'
 import { PlanWithClaudeSheet } from '../components/PlanWithClaudeSheet'
 import { ProgressBar } from '../components/ProgressBar'
+import { ProjectAchievements } from '../components/ProjectAchievements'
 import { ProjectForm } from '../components/ProjectForm'
 import { TaskRow } from '../components/TaskRow'
 import { TaskSheet, type TaskEditing } from '../components/TaskSheet'
@@ -212,6 +213,8 @@ export function ProjectDetailPage() {
           </ul>
         )}
       </section>
+
+      <ProjectAchievements project={project} milestones={milestones} habits={linkedHabits} />
 
       <BottomSheet open={editingProject} title="Projeyi düzenle" onClose={() => setEditingProject(false)}>
         {editingProject && (

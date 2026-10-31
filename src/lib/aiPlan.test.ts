@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildProjectMessage, parsePlan, PLAN_INSTRUCTIONS } from './aiPlan'
+import { buildProjectMessage, parseAchievements, parsePlan, PLAN_INSTRUCTIONS, resolveAchievements } from './aiPlan'
 
 const answer = `Harika, işte son plan:
 
@@ -122,5 +122,40 @@ describe('buildProjectMessage', () => {
     expect(message).toContain('"Maraton"')
     expect(message).toContain('- [tamamlandı] 5 km')
     expect(message).toContain('Bugünün tarihi: 2026-10-31')
+  })
+})
+
+describe('achievements in plans', () => {
+  it('reads achievements and drops ones without a usable condition', () => {
+    const result = parsePlan(`\`\`\`json
+{ "project": { "title": "Maraton" }, "milestones": ["Yarı maraton koş"],
+  "achievements": [
+    { "title": "Demir bacaklar", "emoji": "🦵", "when": { "habit": "Koşu", "streak": 12 } },
+    { "title": "Yarı yol", "when": { "milestone": "Yarı maraton koş" } },
+    { "title": "Bozuk", "when": { "habit": "Koşu" } },
+    { "title": "Koşulsuz" }
+  ] }
+\`\`\``)
+    if (!result.ok) throw new Error(result.error)
+    expect(result.plan.achievements).toEqual([
+      { title: 'Demir bacaklar', emoji: '🦵', description: undefined, when: { habit: 'Koşu', streak: 12 } },
+      { title: 'Yarı yol', emoji: '🏅', description: undefined, when: { milestone: 'Yarı maraton koş' } },
+    ])
+    expect(result.plan.skipped).toBe(2)
+  })
+
+  it('resolves titles to ids, loosely, and drops what points at nothing', () => {
+    const list = parseAchievements(`{"achievements": [
+      { "title": "A", "emoji": "1", "when": { "milestone": "yarı maraton" } },
+      { "title": "B", "emoji": "2", "when": { "habit": "Koşu", "total": 20 } },
+      { "title": "C", "emoji": "3", "when": { "habit": "Yüzme", "total": 5 } },
+      { "title": "D", "emoji": "4", "when": { "progress": 75 } }
+    ]}`)
+    const resolved = resolveAchievements(list, [{ id: 'm', title: 'Yarı maraton koş' }], [{ id: 'h', title: 'Koşu' }])
+    expect(resolved.map((a) => a.rule)).toEqual([
+      { type: 'milestone', milestoneId: 'm' },
+      { type: 'habitTotal', habitId: 'h', count: 20 },
+      { type: 'progress', percent: 75 },
+    ])
   })
 })

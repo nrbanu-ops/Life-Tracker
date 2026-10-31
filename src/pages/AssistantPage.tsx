@@ -264,6 +264,7 @@ function ModelMessage({ text, added, onReview }: ModelMessageProps) {
               plan.milestones.length && `${plan.milestones.length} adım`,
               plan.habits.length && `${plan.habits.length} habit`,
               plan.tasks.length && `${plan.tasks.length} görev`,
+              plan.achievements.length && `${plan.achievements.length} başarım`,
             ]
               .filter(Boolean)
               .join(' · ')}

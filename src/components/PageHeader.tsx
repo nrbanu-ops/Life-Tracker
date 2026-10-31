@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import { JournalIcon, LibraryIcon, SettingsIcon, TimerIcon } from './icons'
+import { JournalIcon, LibraryIcon, SettingsIcon, TimerIcon, TrophyIcon } from './icons'
 
 type Props = {
   title: string
   subtitle?: string
-  /** Replaces the journal, library, timer and settings links, e.g. with a back button. */
+  /** Replaces the journal, library, achievements, timer and settings links, e.g. with a back button. */
   action?: ReactNode
 }
 
@@ -31,6 +31,13 @@ export function PageHeader({ title, subtitle, action }: Props) {
             className="rounded-full p-2 text-muted transition-colors hover:text-text"
           >
             <LibraryIcon width={22} height={22} />
+          </Link>
+          <Link
+            to="/basarimlar"
+            aria-label="Başarımlar"
+            className="rounded-full p-2 text-muted transition-colors hover:text-text"
+          >
+            <TrophyIcon width={22} height={22} />
           </Link>
           <Link
             to="/zamanlayici"

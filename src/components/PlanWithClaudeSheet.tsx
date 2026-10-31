@@ -220,6 +220,24 @@ export function PlanPreview({ plan, project, onBack, onImported }: PreviewProps)
               .join(' · '),
           })}
         />
+        {plan.achievements.length > 0 && (
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-muted">Başarımlar</p>
+            <ul className="divide-y divide-border overflow-hidden rounded-xl bg-bg">
+              {plan.achievements.map((a, i) => (
+                <li key={i} className="flex items-center gap-3 px-3 py-2.5">
+                  <span className="text-xl" aria-hidden>
+                    {a.emoji}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block">{a.title}</span>
+                    {a.description && <span className="block text-xs text-muted">{a.description}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {plan.skipped > 0 && (
           <p className="text-xs text-muted">{plan.skipped} madde okunamadığı için listede yok.</p>
         )}

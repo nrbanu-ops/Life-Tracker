@@ -69,6 +69,13 @@ export const LibraryIcon = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+export const TrophyIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg {...base(props)}>
+    <path d="M7.5 4h9v5a4.5 4.5 0 01-9 0z" />
+    <path d="M7.5 6H4.5a3 3 0 003 4M16.5 6h3a3 3 0 01-3 4M12 13.5V17M8.5 20h7M9.5 17h5v3h-5z" />
+  </svg>
+)
+
 export const TimerIcon =(props: SVGProps<SVGSVGElement>) => (
   <svg {...base(props)}>
     <circle cx="12" cy="13" r="8" />

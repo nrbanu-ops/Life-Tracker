@@ -141,6 +141,33 @@ export type LibraryGoal = {
   target: number
 }
 
+/** When a project achievement is earned; ids point at the project's own milestones and habits. */
+export type AchievementRule =
+  | { type: 'milestone'; milestoneId: string }
+  | { type: 'progress'; percent: number }
+  | { type: 'habitStreak'; habitId: string; count: number }
+  | { type: 'habitTotal'; habitId: string; count: number }
+  | { type: 'tasksDone'; count: number }
+
+/** A project-specific achievement chosen by the AI. */
+export type ProjectAchievement = {
+  id: string
+  projectId: string
+  title: string
+  emoji: string
+  description?: string
+  rule: AchievementRule
+  order: number
+}
+
+/** An earned achievement. Kept once earned, even if e.g. the streak later breaks. */
+export type UnlockedAchievement = {
+  /** The achievement's id, e.g. 'streak-30' or 'pa:<ProjectAchievement id>'. */
+  id: string
+  /** Day key. */
+  unlockedAt: string
+}
+
 /** Key–value bookkeeping, e.g. 'backupHandle' (a FileSystemFileHandle) or 'lastBackupAt'. */
 export type MetaEntry = {
   key: string
