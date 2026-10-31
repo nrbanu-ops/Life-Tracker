@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
+import { resetAllData } from '../db/backup'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
 import { androidBridge } from '../lib/android'
 import { setAiSettings, useAiSettings } from '../lib/assistant'
@@ -116,8 +117,70 @@ export function SettingsPage() {
 
         <UpdateSection />
 
+        <ResetSection />
       </div>
     </>
+  )
+}
+
+/** Deletes all entered data, behind a typed confirmation. */
+function ResetSection() {
+  const [open, setOpen] = useState(false)
+  const [typed, setTyped] = useState('')
+  const [busy, setBusy] = useState(false)
+  const ready = typed.trim().toLocaleUpperCase('tr') === 'SİL'
+
+  return (
+    <section id="sifirla" className="rounded-2xl border border-p1/40 bg-surface p-4">
+      <h2 className="font-medium">Tüm verileri sıfırla</h2>
+      <p className="mt-1 text-sm text-muted">
+        Habit'ler, işaretlemeler, projeler, görevler, günlük, ruh hali, kütüphane, başarımlar ve XP kalıcı olarak silinir.
+      </p>
+      {!open ? (
+        <button type="button" onClick={() => setOpen(true)} className="mt-3 rounded-xl border border-p1 px-4 py-2 text-sm font-medium text-p1">
+          Sıfırla…
+        </button>
+      ) : (
+        <div className="mt-3 flex flex-col gap-2">
+          <p className="rounded-xl bg-bg p-3 text-sm">
+            Bu geri alınamaz. Önce yukarıdan <b>Yedeği indir</b>'e bas. Otomatik yedek de kapanır, böylece son yedek
+            dosyan boş verilerle ezilmez. API anahtarların ve ayarların kalır.
+          </p>
+          <input
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder="Onaylamak için SİL yaz"
+            aria-label="Onaylamak için SİL yaz"
+            className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 outline-none focus:border-p1"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={!ready || busy}
+              onClick={async () => {
+                setBusy(true)
+                await resetAllData()
+                // A fresh start: every screen and watcher reads the empty database.
+                window.location.assign(import.meta.env.BASE_URL)
+              }}
+              className="flex-1 rounded-xl bg-p1 py-2.5 text-sm font-medium text-surface disabled:opacity-40"
+            >
+              {busy ? 'Siliniyor…' : 'Hepsini sil'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                setTyped('')
+              }}
+              className="rounded-xl px-4 py-2.5 text-sm text-muted"
+            >
+              Vazgeç
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   )
 }
 

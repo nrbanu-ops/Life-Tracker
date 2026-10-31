@@ -30,6 +30,16 @@ export async function restoreBackup(backup: Backup): Promise<number> {
   return count
 }
 
+/**
+ * Deletes everything the user entered. The meta table goes too, which turns the automatic backup
+ * off: otherwise the empty app would overwrite the last backup file right away.
+ */
+export async function resetAllData(): Promise<void> {
+  await db.transaction('rw', db.tables, async () => {
+    for (const table of db.tables) await table.clear()
+  })
+}
+
 // --- Automatic backup into a file the user picked once (File System Access API, desktop Chrome/Edge).
 
 /** The handle methods we use; not all of them are in TypeScript's DOM types yet. */
