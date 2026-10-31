@@ -166,12 +166,13 @@ function PlanFlow({ today, project, projectMessage, onImported }: Props) {
 type PreviewProps = {
   plan: ImportedPlan
   project?: Project
-  onBack: () => void
+  /** Inside the Claude flow, where the preview is step 3 and can go back. */
+  onBack?: () => void
   onImported: (projectId: string) => void
 }
 
-/** Step 3: choose what to add; everything starts selected. */
-function PlanPreview({ plan, project, onBack, onImported }: PreviewProps) {
+/** Choose what to add; everything starts selected. Also used by the Gemini chat. */
+export function PlanPreview({ plan, project, onBack, onImported }: PreviewProps) {
   const [milestones, setMilestones] = useState(() => plan.milestones.map(() => true))
   const [habits, setHabits] = useState(() => plan.habits.map(() => true))
   const [tasks, setTasks] = useState(() => plan.tasks.map(() => true))
@@ -183,7 +184,7 @@ function PlanPreview({ plan, project, onBack, onImported }: PreviewProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Step n={3} title="Eklemek istediklerini seç">
+      <Step n={onBack ? 3 : undefined} title="Eklemek istediklerini seç">
         <div className="rounded-xl bg-bg px-3 py-2.5 text-sm">
           {project ? (
             <>
@@ -235,9 +236,11 @@ function PlanPreview({ plan, project, onBack, onImported }: PreviewProps) {
           {project ? `${selected} öğeyi ekle` : `Projeyi oluştur (${selected} öğe)`}
         </button>
       </Step>
-      <button type="button" onClick={onBack} className="py-2 text-sm text-muted">
-        ← Geri
-      </button>
+      {onBack && (
+        <button type="button" onClick={onBack} className="py-2 text-sm text-muted">
+          ← Geri
+        </button>
+      )}
     </div>
   )
 }
@@ -280,13 +283,15 @@ function ChoiceGroup<T>({ title, items, checked, onToggle, render }: GroupProps<
   )
 }
 
-function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+function Step({ n, title, children }: { n?: number; title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
       <h3 className="flex items-center gap-2 font-medium">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">
-          {n}
-        </span>
+        {n !== undefined && (
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent">
+            {n}
+          </span>
+        )}
         {title}
       </h3>
       {children}

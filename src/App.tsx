@@ -9,6 +9,7 @@ import { TodayPage } from './pages/TodayPage'
 const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) =>
   lazy(() => load().then((module) => ({ default: module[name] })))
 
+const AssistantPage = page(() => import('./pages/AssistantPage'), 'AssistantPage')
 const CalendarPage = page(() => import('./pages/CalendarPage'), 'CalendarPage')
 const HabitsPage = page(() => import('./pages/HabitsPage'), 'HabitsPage')
 const JournalPage = page(() => import('./pages/JournalPage'), 'JournalPage')
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="zamanlayici" element={<TimerPage />} />
             <Route path="kutuphane" element={<LibraryPage />} />
             <Route path="ayarlar" element={<SettingsPage />} />
+            <Route path="asistan" element={<AssistantPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

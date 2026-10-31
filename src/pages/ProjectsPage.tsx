@@ -11,6 +11,7 @@ import { ProgressBar } from '../components/ProgressBar'
 import { ProjectForm } from '../components/ProjectForm'
 import { db } from '../db/db'
 import type { Milestone, Project } from '../db/types'
+import { geminiReady, useAiSettings } from '../lib/assistant'
 import { fromDateKey } from '../lib/date'
 import { compareProjects, describeTarget, nextMilestone, projectProgress, STATUS_LABEL } from '../lib/projects'
 import { useTodayKey } from '../lib/useTodayKey'
@@ -23,6 +24,7 @@ export function ProjectsPage() {
   const [creating, setCreating] = useState(false)
   const [planning, setPlanning] = useState(false)
   const [showDone, setShowDone] = useState(false)
+  const ai = useAiSettings()
 
   const sorted = [...(projects ?? [])].sort(compareProjects)
   const open = sorted.filter((p) => p.status !== 'done')
@@ -33,22 +35,37 @@ export function ProjectsPage() {
     <>
       <PageHeader title="Projeler" />
 
-      <button
-        type="button"
-        onClick={() => setPlanning(true)}
-        className="mb-4 flex w-full items-center gap-3 rounded-2xl bg-accent-soft px-4 py-3 text-left"
-      >
-        <span className="text-xl" aria-hidden>
-          ✨
-        </span>
-        <span>
-          <span className="block font-medium text-accent">Claude ile planla</span>
-          <span className="block text-sm text-muted">
-            Hedefini anlat; adımları ve habit'leri birlikte çıkarın
+      {geminiReady(ai) && (
+        <Link
+          to="/asistan"
+          className="mb-3 flex w-full items-center gap-3 rounded-2xl bg-accent-soft px-4 py-3 text-left"
+        >
+          <span className="text-xl" aria-hidden>
+            💬
           </span>
-        </span>
-      </button>
-
+          <span>
+            <span className="block font-medium text-accent">Gemini ile planla</span>
+            <span className="block text-sm text-muted">Sohbet et; plan hazır olunca tek dokunuşla ekle</span>
+          </span>
+        </Link>
+      )}
+      {ai.claude && (
+        <button
+          type="button"
+          onClick={() => setPlanning(true)}
+          className="mb-4 flex w-full items-center gap-3 rounded-2xl bg-accent-soft px-4 py-3 text-left"
+        >
+          <span className="text-xl" aria-hidden>
+            ✨
+          </span>
+          <span>
+            <span className="block font-medium text-accent">Claude ile planla</span>
+            <span className="block text-sm text-muted">
+              Hedefini anlat; adımları ve habit'leri birlikte çıkarın
+            </span>
+          </span>
+        </button>
+      )}
       {projects === undefined ? null : open.length === 0 && done.length === 0 ? (
         <EmptyState
           title="Henüz proje yok"

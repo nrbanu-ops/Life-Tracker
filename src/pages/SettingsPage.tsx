@@ -4,6 +4,7 @@ import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
+import { setAiSettings, useAiSettings } from '../lib/assistant'
 import { copyText } from '../lib/clipboard'
 import { getTmdbKey, setTmdbKey } from '../lib/library'
 
@@ -11,6 +12,7 @@ export function SettingsPage() {
   const navigate = useNavigate()
   const [copied, setCopied] = useState<boolean>()
   const [showText, setShowText] = useState(false)
+  const ai = useAiSettings()
 
   return (
     <>
@@ -31,11 +33,21 @@ export function SettingsPage() {
       <div className="flex flex-col gap-4">
         <BackupSection />
 
+        <GeminiSection />
+
         <section id="claude" className="rounded-2xl border border-border bg-surface p-4">
-          <h2 className="font-medium">Claude ile planlama</h2>
+          <Switch
+            label="Claude ile planlama"
+            checked={ai.claude}
+            onChange={(claude) => setAiSettings({ claude })}
+          />
           <p className="mt-1 text-sm text-muted">
-            Projelerini Claude hesabınla planlarsın; ek ücret yok. Bir kere kurman yeterli:
+            Projelerini claude.ai hesabınla planlarsın; mesajı kopyalayıp cevabı geri yapıştırırsın, ek
+            ücret yok.
           </p>
+          {ai.claude && (
+            <>
+          <p className="mt-3 text-sm text-muted">Bir kere kurman yeterli:</p>
           <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm">
             <li>
               <a
@@ -83,12 +95,95 @@ export function SettingsPage() {
           <p className="mt-3 text-sm text-muted">
             Sonra Projeler sekmesinde <b>✨ Claude ile planla</b> butonunu kullan.
           </p>
+            </>
+          )}
         </section>
 
         <TmdbKeySection />
 
       </div>
     </>
+  )
+}
+
+/** In-app planning chat with the user's own Gemini key; the key never leaves this device except to Google. */
+function GeminiSection() {
+  const ai = useAiSettings()
+  const [key, setKey] = useState(ai.geminiKey)
+  const saved = key.trim() === ai.geminiKey && ai.geminiKey !== ''
+
+  return (
+    <section id="yapay-zeka" className="rounded-2xl border border-border bg-surface p-4">
+      <Switch label="Gemini asistanı" checked={ai.gemini} onChange={(gemini) => setAiSettings({ gemini })} />
+      <p className="mt-1 text-sm text-muted">
+        Uygulamanın içinde sohbet ederek hedef planla; plan hazır olunca adımlar, habit'ler ve görevler tek
+        dokunuşla eklenir. Kendi ücretsiz Gemini anahtarınla çalışır.
+      </p>
+      {ai.gemini && (
+        <>
+          <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm">
+            <li>
+              <a
+                href="https://aistudio.google.com/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="text-accent underline"
+              >
+                aistudio.google.com/apikey
+              </a>{' '}
+              sayfasında Google hesabınla <b>Create API key</b> de.
+            </li>
+            <li>Anahtarı kopyalayıp buraya yapıştır.</li>
+          </ol>
+          <div className="mt-4 flex gap-2">
+            <input
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              type="password"
+              placeholder="Gemini API anahtarı"
+              aria-label="Gemini API anahtarı"
+              autoComplete="off"
+              spellCheck={false}
+              className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-sm outline-none focus:border-accent"
+            />
+            <button
+              type="button"
+              onClick={() => setAiSettings({ geminiKey: key })}
+              className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-surface"
+            >
+              {saved ? 'Kayıtlı ✓' : 'Kaydet'}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            Anahtar sadece bu cihazda saklanır, yedeğe girmez. Sohbetler doğrudan Google'a gider.
+          </p>
+          {ai.geminiKey && (
+            <p className="mt-2 text-sm text-muted">
+              Projeler sekmesinde <b>💬 Gemini ile planla</b> butonunu kullan.
+            </p>
+          )}
+        </>
+      )}
+    </section>
+  )
+}
+
+function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-3">
+      <span className="font-medium">{label}</span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="peer sr-only"
+      />
+      <span
+        aria-hidden
+        className="relative h-7 w-12 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent after:absolute after:top-1 after:left-1 after:h-5 after:w-5 after:rounded-full after:bg-surface after:shadow after:transition-transform peer-checked:after:translate-x-5"
+      />
+    </label>
   )
 }
 

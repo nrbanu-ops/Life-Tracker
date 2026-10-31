@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { BottomSheet } from '../components/BottomSheet'
 import { BackIcon } from '../components/icons'
 import { LinkHabitsSheet } from '../components/LinkHabitsSheet'
@@ -18,6 +18,7 @@ import { setTaskDone } from '../db/tasks'
 import type { Habit, HabitLog } from '../db/types'
 import { buildProjectMessage } from '../lib/aiPlan'
 import { describeTarget as describeAmount } from '../lib/amount'
+import { geminiReady, useAiSettings } from '../lib/assistant'
 import { fromDateKey } from '../lib/date'
 import { describeFrequency } from '../lib/frequency'
 import { describeTarget, projectProgress, STATUS_LABEL } from '../lib/projects'
@@ -54,6 +55,7 @@ export function ProjectDetailPage() {
   const [editingProject, setEditingProject] = useState(false)
   const [linking, setLinking] = useState(false)
   const [planning, setPlanning] = useState(false)
+  const ai = useAiSettings()
   const [taskEditing, setTaskEditing] = useState<TaskEditing>(null)
 
   const back = (
@@ -128,13 +130,25 @@ export function ProjectDetailPage() {
           <h2 className="text-sm font-medium text-muted">
             Adımlar{progress.total > 0 && ` · ${progress.done}/${progress.total}`}
           </h2>
-          <button
-            type="button"
-            onClick={() => setPlanning(true)}
-            className="rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent"
-          >
-            ✨ Claude ile ekle
-          </button>
+          <div className="flex gap-2">
+            {geminiReady(ai) && (
+              <Link
+                to={`/asistan?proje=${id}`}
+                className="rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent"
+              >
+                💬 Gemini
+              </Link>
+            )}
+            {ai.claude && (
+              <button
+                type="button"
+                onClick={() => setPlanning(true)}
+                className="rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent"
+              >
+                {geminiReady(ai) ? '✨ Claude' : '✨ Claude ile ekle'}
+              </button>
+            )}
+          </div>
         </div>
         <MilestoneList projectId={id} milestones={milestones} color={project.color} today={today} />
       </section>
