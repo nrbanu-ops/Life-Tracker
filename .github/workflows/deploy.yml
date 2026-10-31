@@ -22,7 +22,7 @@ jobs:
           cache: npm
       - name: Secret scan (keys must never be committed)
         run: |
-          if git grep -nIE 'AIza[0-9A-Za-z_-]{35}|-----BEGIN (EC |RSA )?PRIVATE KEY-----|eyJhbGciOiJIUzI1NiJ9\.[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}' -- . ':!.github'; then
+          if git grep -nIE 'AIza[0-9A-Za-z_-]{35}|AQ\.Ab[0-9A-Za-z_-]{30,}|-----BEGIN (EC |RSA )?PRIVATE KEY-----|eyJhbGciOiJIUzI1NiJ9\.[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}' -- . ':!.github'; then
             echo "::error::possible secret committed"; exit 1; fi
       - run: npm ci
       - run: npm test
