@@ -19,11 +19,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #141816;
-    --color-surface: #1c211f;
+    /* The dark background picture's colour; cards sit a step lighter so they still stand out. */
+    --color-bg: #1c211d;
+    --color-surface: #252b27;
     --color-text: #e6ebe8;
-    --color-muted: #8f9a94;
-    --color-border: #2b322f;
+    --color-muted: #949f99;
+    --color-border: #343c37;
     --color-accent: #7fb3a0;
     --color-accent-soft: #233630;
     --color-p1: #e8786b;
@@ -132,8 +133,8 @@ body,
 }
 
 /*
- * Blossom branches behind every screen, light theme only. A fixed layer rather than
- * background-attachment: fixed, which Android's WebView scrolls anyway.
+ * Blossom branches behind every screen, a light and a dark picture. A fixed layer rather
+ * than background-attachment: fixed, which Android's WebView scrolls anyway.
  */
 .app-backdrop {
   position: fixed;
@@ -150,7 +151,8 @@ body,
 }
 @media (prefers-color-scheme: dark) {
   .app-backdrop {
-    display: none;
+    /* A veil in the picture's own colour: the paper stays the same, the bright blossoms dim so icons over them stay clear. */
+    background-image: linear-gradient(rgb(28 33 29 / 0.45), rgb(28 33 29 / 0.45)), url("./assets/bg-dark.jpg");
   }
 }
 
