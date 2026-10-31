@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router'
 import { useState } from 'react'
 import { DayJournal } from '../components/DayJournal'
+import { LevelCard } from '../components/LevelCard'
 import { MemoryCard } from '../components/MemoryCard'
 import { EmptyState } from '../components/EmptyState'
 import { HabitActionSheet } from '../components/HabitActionSheet'
@@ -54,6 +55,8 @@ export function TodayPage() {
   return (
     <>
       <PageHeader title="Bugün" subtitle={subtitle} />
+
+      <LevelCard />
 
       <TodayTasks today={today} projectColor={projectColor} />
 

@@ -96,6 +96,11 @@ Vardiya/gün tipleri, ruh hali/enerji takibi, bulut senkronu (ileride Supabase),
 11. ✅ Günlük eklentileri: günlük ruh hali ve enerji (1–5, `moods` tablosu, Bugün ve gün detayında `MoodPicker`; İstatistik'te ortalama, çizgi grafik ve habit'lerle bağlantısı `src/lib/mood.ts` → `habitEffects`, her iki tarafta en az 3 gün); günlük yazısına fotoğraf (`photo` Blob, 1200 px); günlükte arama; Bugün'de "1 yıl / 6 ay / 1 ay / 1 hafta önce bugün" kartı (`memoryFor`); Gemini haftalık bakış (`src/lib/review.ts`, günlüğe `kind: 'review'` olarak kaydedilir; Günlük sayfasında buton, Pazar günleri Bugün'de hatırlatma).
    - Yer ekleme: Google Haritalar uygulamasında Paylaş → Kopyala metni yapıştırılabilir; kısa link (maps.app.goo.gl) açılamadığı için metindeki ad ve adres OpenStreetMap'te aranır (`sharedPlaceQueries`).
 
+12. ✅ Seviye sistemi (Solo Leveling'den esinlenerek; Ayarlar'dan kapatılabilir, `src/lib/levelingSetting.ts`): XP, seviye, rank (E→S), statlar (Güç, Zekâ, Dayanıklılık, Duyu, Disiplin), günlük görev (günün en zor 5 günlük habit'i). Hesap saf fonksiyonlarda, testli: `src/lib/leveling.ts`.
+   - Zorluk = bir seferlik efor (Hafif 5 / Orta 12 / Ağır 25 / Zorlu 40 XP); sıklık zorluğa girmez. Uygulama karar verir: süreli habit'te dakika (fiziksel ise bir kademe yukarı), yoksa addaki kelime, yoksa Orta. Kullanıcı habit formunda değiştirebilir; değişiklik `effortLog` ile o günden itibaren geçerli.
+   - Adalet kuralları: düşük başarı XP'yi artırmaz (plan şişirme ödüllenmez), sadece ustalık (90 gün ≥%95) azaltır; seri bonusu en fazla +%50; geri dönüş bonusu (3 planlı gün kaçırınca) haftada bir; günlük habit XP'si 150'den sonra yarım; haftalık hedefin üstü yarım; geç işaretleme (`HabitLog.loggedAt`) son 7 gün %75, daha eskisi %25.
+   - Biten haftalar `xpWeeks` tablosunda dondurulur (habit silinse ya da kurallar değişse de XP gitmez); eski bir gün değişirse o hafta yeniden hesaplanır. Arayüz: Bugün'de `LevelCard`, `LevelWatcher` (+XP, seviye/rank bildirimi), `/profil`.
+
 Depo herkese açık: hiçbir API anahtarı, şifre ya da imza anahtarı commit'lenmez (iş akışında gizli bilgi taraması var). Kullanıcı anahtarları sadece cihazda (localStorage), imza anahtarı GitHub Secrets'ta.
 
 Sonraki: "Buradayım" ile anlık konum.

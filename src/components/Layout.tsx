@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { AchievementWatcher } from './AchievementWatcher'
 import { BackupManager } from './BackupManager'
+import { LevelWatcher } from './LevelWatcher'
 import { TabBar } from './TabBar'
 import { TimerBanner } from './TimerBanner'
 
@@ -26,6 +27,7 @@ export function Layout() {
         </div>
       </Suspense>
       <AchievementWatcher />
+      <LevelWatcher />
       <TabBar />
     </div>
   )

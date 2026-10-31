@@ -9,6 +9,7 @@ import { setAiSettings, useAiSettings } from '../lib/assistant'
 import { copyText } from '../lib/clipboard'
 import { askGemini } from '../lib/gemini'
 import { getTmdbKey, setTmdbKey } from '../lib/library'
+import { setLevelingOn, useLevelingOn } from '../lib/levelingSetting'
 import { checkForUpdate, type UpdateResult } from '../lib/update'
 
 export function SettingsPage() {
@@ -16,6 +17,7 @@ export function SettingsPage() {
   const [copied, setCopied] = useState<boolean>()
   const [showText, setShowText] = useState(false)
   const ai = useAiSettings()
+  const levelingOn = useLevelingOn()
 
   return (
     <>
@@ -100,6 +102,14 @@ export function SettingsPage() {
           </p>
             </>
           )}
+        </section>
+
+        <section id="seviye" className="rounded-2xl border border-border bg-surface p-4">
+          <Switch label="Seviye sistemi" checked={levelingOn} onChange={setLevelingOn} />
+          <p className="mt-1 text-sm text-muted">
+            Habit'ler, görevler ve günlük XP kazandırır; seviye, rank ve statlar Bugün ekranında ve Profil'de.
+            Kapatınca hiçbir yerde görünmez.
+          </p>
         </section>
 
         <TmdbKeySection />

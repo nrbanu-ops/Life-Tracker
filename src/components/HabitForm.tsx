@@ -4,6 +4,18 @@ import { createHabit, deleteHabit, setHabitArchived, updateHabit, type HabitInpu
 import type { Habit, HabitFrequency, HabitKind, Project } from '../db/types'
 import { DEFAULT_INCREMENT } from '../lib/amount'
 import { WEEKDAY_SHORT } from '../lib/frequency'
+import {
+  autoEffort,
+  EFFORT_TIERS,
+  STAT_LABEL,
+  statOf,
+  STATS,
+  TIER_LABEL,
+  TIER_XP,
+  type EffortTier,
+  type StatKey,
+} from '../lib/leveling'
+import { useLevelingOn } from '../lib/levelingSetting'
 import { Segmented } from './Segmented'
 
 type FrequencyType = HabitFrequency['type']
@@ -56,6 +68,9 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   const [count, setCount] = useState(initial?.type === 'timesPerWeek' ? initial.count : 3)
   const [minimumVersion, setMinimumVersion] = useState(habit?.minimumVersion ?? '')
   const [projectId, setProjectId] = useState(habit ? (habit.projectId ?? '') : (defaultProjectId ?? ''))
+  const [effort, setEffort] = useState<EffortTier | ''>(habit?.effort ?? '')
+  const [stat, setStat] = useState<StatKey | ''>(habit?.stat ?? '')
+  const levelingOn = useLevelingOn()
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -67,6 +82,9 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   const targetValue = parsePositive(target)
   const incrementValue = parsePositive(increment)
   const targetMissing = countable && targetValue === undefined
+  // What the app would decide, shown next to "Otomatik".
+  const guess = autoEffort({ title: trimmedTitle, kind, target: countable ? targetValue : undefined, stat: stat || undefined })
+  const guessStat = statOf({ title: trimmedTitle, kind })
   const canSave =
     trimmedTitle !== '' && !daysMissing && !targetMissing && !quitStartMissing && !saving
 
@@ -96,6 +114,8 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
       frequency: isQuit ? { type: 'daily' } : buildFrequency(),
       minimumVersion: isQuit ? undefined : minimumVersion.trim() || undefined,
       projectId: projectId || undefined,
+      effort: isQuit ? undefined : effort || undefined,
+      stat: isQuit ? undefined : stat || undefined,
     }
     if (habit) await updateHabit(habit.id, input)
     else await createHabit(input)
@@ -278,6 +298,36 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
             />
             <span className="text-xs text-muted">Zor günlerde bunu yapman seriyi korur.</span>
           </label>
+
+          {levelingOn && (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm text-muted">Zorluk</span>
+                <select value={effort} onChange={(e) => setEffort(e.target.value as EffortTier | '')} className={inputClass}>
+                  <option value="">Otomatik ({TIER_LABEL[guess.tier]})</option>
+                  {EFFORT_TIERS.map((tier) => (
+                    <option key={tier} value={tier}>
+                      {TIER_LABEL[tier]} · {TIER_XP[tier]} XP
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm text-muted">Stat</span>
+                <select value={stat} onChange={(e) => setStat(e.target.value as StatKey | '')} className={inputClass}>
+                  <option value="">Otomatik ({STAT_LABEL[guessStat]})</option>
+                  {STATS.map((key) => (
+                    <option key={key} value={key}>
+                      {STAT_LABEL[key]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <span className="col-span-2 -mt-1 text-xs text-muted">
+                {effort ? 'Senin seçimin; bugünden itibaren geçerli.' : `Uygulama karar veriyor: ${guess.reason}.`}
+              </span>
+            </div>
+          )}
         </>
       )}
 

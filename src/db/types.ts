@@ -9,6 +9,8 @@ export type Project = {
   color: string
   status: ProjectStatus
   targetDate?: string
+  /** When it was marked done. */
+  completedAt?: string
   createdAt: string
 }
 
@@ -17,6 +19,8 @@ export type Milestone = {
   projectId: string
   title: string
   done: boolean
+  /** Day key it was checked off. */
+  doneAt?: string
   dueDate?: string
   order: number
 }
@@ -52,6 +56,11 @@ export type Habit = {
   celebratedMilestone?: number
   frequency: HabitFrequency
   minimumVersion?: string
+  /** Leveling: effort tier and stat chosen by the user; the app guesses them otherwise. */
+  effort?: 'light' | 'medium' | 'heavy' | 'intense'
+  stat?: 'str' | 'int' | 'vit' | 'sen' | 'dis'
+  /** The tier in use from each day on, so a change never alters XP already earned. */
+  effortLog?: { from: string; tier: 'light' | 'medium' | 'heavy' | 'intense' }[]
   archived: boolean
   order: number
   createdAt: string
@@ -200,4 +209,16 @@ export type HabitLog = {
   status: HabitLogStatus
   /** Amount logged for count/duration habits. */
   value?: number
+  /** Day key the log was first written: marking a day late gives less XP. */
+  loggedAt?: string
+}
+
+/** A closed week's XP, frozen so later changes (a deleted habit, new rules) never take it away. */
+export type XpWeek = {
+  /** Monday's day key. */
+  week: string
+  xp: number
+  days: Record<string, number>
+  sources: Record<string, number>
+  stats: Record<string, number>
 }

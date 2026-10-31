@@ -1,17 +1,23 @@
+import { todayKey } from '../lib/date'
 import { db, newId } from './db'
 import type { Milestone, Project } from './types'
 
 export type ProjectInput = Pick<Project, 'title' | 'description' | 'color' | 'status' | 'targetDate'>
 
 export async function createProject(input: ProjectInput): Promise<string> {
-  const project: Project = { ...input, id: newId(), createdAt: new Date().toISOString() }
+  const now = new Date().toISOString()
+  const project: Project = { ...input, id: newId(), createdAt: now }
+  if (input.status === 'done') project.completedAt = now
   await db.projects.add(project)
   return project.id
 }
 
 export async function updateProject(id: string, input: ProjectInput): Promise<void> {
+  const before = await db.projects.get(id)
   // Every key is listed so a cleared field (undefined) is removed by Dexie.
   await db.projects.update(id, {
+    completedAt:
+      input.status !== 'done' ? undefined : before?.status === 'done' ? before.completedAt : new Date().toISOString(),
     title: input.title,
     description: input.description,
     color: input.color,
@@ -56,7 +62,7 @@ export async function updateMilestone(id: string, title: string, dueDate?: strin
 }
 
 export async function setMilestoneDone(id: string, done: boolean): Promise<void> {
-  await db.milestones.update(id, { done })
+  await db.milestones.update(id, { done, doneAt: done ? todayKey() : undefined })
 }
 
 export async function deleteMilestone(id: string): Promise<void> {

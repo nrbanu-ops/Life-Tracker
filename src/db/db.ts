@@ -12,6 +12,7 @@ import type {
   ProjectAchievement,
   Task,
   UnlockedAchievement,
+  XpWeek,
 } from './types'
 
 export const db = new Dexie('life-tracker') as Dexie & {
@@ -27,6 +28,7 @@ export const db = new Dexie('life-tracker') as Dexie & {
   moods: EntityTable<DayMood, 'date'>
   achievements: EntityTable<UnlockedAchievement, 'id'>
   projectAchievements: EntityTable<ProjectAchievement, 'id'>
+  xpWeeks: EntityTable<XpWeek, 'week'>
 }
 
 // Booleans can't be indexed in IndexedDB, so `archived` and `done` are filtered in memory.
@@ -84,6 +86,11 @@ db.version(8).stores({
 // v9: mood and energy per day.
 db.version(9).stores({
   moods: 'date',
+})
+
+// v10: leveling: each closed week's XP, frozen.
+db.version(10).stores({
+  xpWeeks: 'week',
 })
 
 export const META_TABLE = 'meta'

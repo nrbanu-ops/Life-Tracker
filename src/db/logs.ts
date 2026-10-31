@@ -1,4 +1,6 @@
+import { todayKey, weekRange } from '../lib/date'
 import { withAmount } from '../lib/today'
+import { markXpWeekDirty } from './leveling'
 import { db, newId } from './db'
 import type { Habit, HabitLog } from './types'
 
@@ -10,6 +12,7 @@ export async function setLog(
   date: string,
   entry: LogEntry | undefined,
 ): Promise<void> {
+  const today = todayKey()
   await db.transaction('rw', db.habitLogs, async () => {
     const existing = await db.habitLogs.where({ habitId, date }).first()
     if (!entry) {
@@ -17,10 +20,19 @@ export async function setLog(
       return
     }
     // put replaces the whole record, so a value that no longer applies disappears.
-    const log: HabitLog = { id: existing?.id ?? newId(), habitId, date, status: entry.status }
+    // loggedAt keeps the day it was first written: marking old days late earns less XP.
+    const log: HabitLog = {
+      id: existing?.id ?? newId(),
+      habitId,
+      date,
+      status: entry.status,
+      loggedAt: existing?.loggedAt ?? today,
+    }
     if (entry.value !== undefined) log.value = entry.value
     await db.habitLogs.put(log)
   })
+  // A week already frozen in the XP ledger gets worked out again.
+  if (date < weekRange(today).start) await markXpWeekDirty(weekRange(date).start)
 }
 
 /** Adds to a count/duration habit's amount for a day, e.g. minutes from the timer. */
