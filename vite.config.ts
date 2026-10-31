@@ -52,8 +52,8 @@ export default defineConfig({
         start_url: '.',
         scope: '.',
         display: 'standalone',
-        background_color: '#f8f5ec',
-        theme_color: '#f8f5ec',
+        background_color: '#dce6f3',
+        theme_color: '#dce6f3',
         icons: [
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },

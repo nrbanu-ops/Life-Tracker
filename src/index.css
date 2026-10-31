@@ -2,8 +2,8 @@
 
 /* Colors live in CSS variables so light/dark follow the system setting. */
 :root {
-  /* The background picture's paper colour, so the two meet without a seam. */
-  --color-bg: #f8f5ec;
+  /* The background picture's paper colour (tinted blue), so the two meet without a seam. */
+  --color-bg: #dce6f3;
   --color-surface: #ffffff;
   --color-text: #1d2420;
   --color-muted: #6b756f;
@@ -29,11 +29,11 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* The dark background picture's colour; cards sit a step lighter so they still stand out. */
-    --color-bg: #1c211d;
-    --color-surface: #252b27;
-    --color-text: #e6ebe8;
-    --color-muted: #949f99;
-    --color-border: #343c37;
+    --color-bg: #182030;
+    --color-surface: #222a38;
+    --color-text: #e6eaf2;
+    --color-muted: #959fb2;
+    --color-border: #323b4c;
     --color-accent: #7fb3a0;
     --color-accent-soft: #233630;
     --color-p1: #e8786b;
@@ -210,7 +210,10 @@ body,
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: var(--color-bg) url("./assets/bg-light.jpg") center / cover no-repeat;
+  /* The picture is cream; a blue "color" layer turns paper and branches blue, like ink, to go with the level card. */
+  background: linear-gradient(#5b86bd, #5b86bd), url("./assets/bg-light.jpg") center / cover no-repeat;
+  background-color: var(--color-bg);
+  background-blend-mode: color, normal;
 }
 @media (min-aspect-ratio: 3/4) {
   /* Wide screens: keep the branches at phone size in the corners instead of blowing them up. */
@@ -220,8 +223,11 @@ body,
 }
 @media (prefers-color-scheme: dark) {
   .app-backdrop {
-    /* A veil in the picture's own colour: the paper stays the same, the bright blossoms dim so icons over them stay clear. */
-    background-image: linear-gradient(rgb(28 33 29 / 0.45), rgb(28 33 29 / 0.45)), url("./assets/bg-dark.jpg");
+    /* A dark veil dims the bright blossoms so icons over them stay clear; the "color" layer turns the picture navy. */
+    background-image:
+      linear-gradient(rgb(24 32 48 / 0.45), rgb(24 32 48 / 0.45)), linear-gradient(#3a5680, #3a5680),
+      url("./assets/bg-dark.jpg");
+    background-blend-mode: normal, color, normal;
   }
 }
 
