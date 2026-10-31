@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  closestPhoto,
   fromNominatim,
   googleMapsLink,
   keepLines,
@@ -33,6 +34,26 @@ describe('sharedPlaceQueries', () => {
     expect(sharedPlaceQueries(resolved)).toEqual(['Galata Kulesi, Bereketzade, Beyoğlu', 'Galata Kulesi'])
     expect(sharedPlaceQueries(`Galata Kulesi | Beyoğlu/İstanbul | ${resolved}`)?.[0]).toBe('Galata Kulesi, Beyoğlu, İstanbul')
     expect(sharedPlaceQueries('https://www.google.com/maps?q=place_id:ChIJ123')).toEqual([])
+  })
+})
+
+describe('closestPhoto', () => {
+  const json = {
+    query: {
+      pages: {
+        '2': { index: 1, title: 'Bereketzade Çeşmesi', thumbnail: { source: 'cesme.jpg' } },
+        '1': { index: -1, title: 'Galata Kulesi', thumbnail: { source: 'kule.jpg' } },
+        '3': { index: 0, title: 'Nardis Jazz Club' },
+      },
+    },
+  }
+
+  it('takes the closest article with a photo, or the one named like the place', () => {
+    expect(closestPhoto(json)).toBe('kule.jpg')
+    expect(closestPhoto(json, 'Bereketzade çeşmesi')).toBe('cesme.jpg')
+    // A café beside the tower gets no photo rather than the tower's.
+    expect(closestPhoto(json, 'Kahve Dünyası')).toBeUndefined()
+    expect(closestPhoto({ batchcomplete: '' })).toBeUndefined()
   })
 })
 

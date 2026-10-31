@@ -170,6 +170,55 @@ export async function areaAt(latitude: number, longitude: number, signal?: Abort
   }
 }
 
+/**
+ * Photo of the closest Wikipedia article with one, within a short walk of a position (Turkish
+ * Wikipedia first, then English), e.g. for a place shared from Google Maps. Google's own place
+ * photos need a paid key, so ordinary shops and cafés usually get none.
+ */
+export async function nearbyPhoto(
+  latitude: number,
+  longitude: number,
+  name?: string,
+  signal?: AbortSignal,
+): Promise<string | undefined> {
+  for (const lang of ['tr', 'en']) {
+    try {
+      const res = await fetch(
+        `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=geosearch&ggscoord=${latitude}|${longitude}&ggsradius=${NEARBY_METERS}&ggslimit=10&prop=pageimages&piprop=thumbnail&pithumbsize=600`,
+        { signal },
+      )
+      const photo = closestPhoto(await res.json(), name)
+      if (photo) return photo
+    } catch {
+      if (signal?.aborted) return undefined
+    }
+  }
+  return undefined
+}
+
+const NEARBY_METERS = 100
+
+type GeoPage = { index?: number; title?: string; thumbnail?: { source?: string } }
+
+/**
+ * The geosearch's pages come keyed by id; `index` is their order by distance. With the place's
+ * name only an article of that name counts, so a café beside a monument doesn't get its photo.
+ */
+export function closestPhoto(json: unknown, name?: string): string | undefined {
+  const pages = (json as { query?: { pages?: Record<string, GeoPage> } })?.query?.pages
+  if (!pages) return undefined
+  const simple = (s: string) => s.toLocaleLowerCase('tr').replace(/\s*\(.*\)$/, '').trim()
+  const wanted = name && simple(name)
+  return Object.values(pages)
+    .filter((page) => page.thumbnail?.source)
+    .filter((page) => {
+      if (!wanted) return true
+      const title = simple(page.title ?? '')
+      return !!title && (title.includes(wanted) || wanted.includes(title))
+    })
+    .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))[0]?.thumbnail?.source
+}
+
 /** Lead photo of a Wikipedia article given as "lang:Title"; undefined when there is none. */
 export async function wikipediaPhoto(tag: string | undefined, signal?: AbortSignal): Promise<string | undefined> {
   const match = tag?.match(/^([a-z-]{2,12}):(.+)$/)

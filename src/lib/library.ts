@@ -1,6 +1,6 @@
 import type { LibraryInput } from '../db/library'
 import type { LibraryGoal, LibraryItem, LibraryKind, LibraryStatus } from '../db/types'
-import { areaAt, parseGoogleMapsUrl, searchPlaces, sharedPlaceQueries } from './places'
+import { areaAt, nearbyPhoto, parseGoogleMapsUrl, plainTitle, searchPlaces, sharedPlaceQueries } from './places'
 
 /** Every kind, in the order the app lists them. */
 export const LIBRARY_KINDS: LibraryKind[] = ['book', 'movie', 'series', 'place', 'other']
@@ -232,9 +232,16 @@ export async function searchLibrary(
 async function searchPlace(query: string, signal?: AbortSignal): Promise<SearchResult[]> {
   const fromLink = parseGoogleMapsUrl(query)
   if (fromLink) {
-    const creator = await areaAt(fromLink.latitude, fromLink.longitude, signal)
-    const title = fromLink.title ?? creator?.split(',')[0] ?? 'Google Haritalar konumu'
-    return [{ kind: 'place', title, creator, latitude: fromLink.latitude, longitude: fromLink.longitude, source: 'google-link' }]
+    // Shared from the app, the name is also on its own line before the link.
+    const name = fromLink.title ?? (plainTitle(query) || undefined)
+    const [creator, posterUrl] = await Promise.all([
+      areaAt(fromLink.latitude, fromLink.longitude, signal),
+      nearbyPhoto(fromLink.latitude, fromLink.longitude, name, signal),
+    ])
+    const title = name ?? creator?.split(',')[0] ?? 'Google Haritalar konumu'
+    return [
+      { kind: 'place', title, creator, posterUrl, latitude: fromLink.latitude, longitude: fromLink.longitude, source: 'google-link' },
+    ]
   }
   // Shared from the Google Maps app: search by its name and address, one try at a time.
   const shared = sharedPlaceQueries(query)
