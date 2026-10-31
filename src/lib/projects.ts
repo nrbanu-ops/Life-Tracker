@@ -2,15 +2,18 @@ import { differenceInCalendarDays } from 'date-fns'
 import type { Milestone, Project, ProjectStatus } from '../db/types'
 import { fromDateKey } from './date'
 
-/** Colors offered for projects; readable in both light and dark themes. */
+/**
+ * Colors offered for projects; readable in both light and dark themes. New projects take them
+ * in order, so the app's own green comes last: a habit's tick in that colour looks unlinked.
+ */
 export const PROJECT_COLORS = [
-  '#3f6b5c',
   '#4a78b5',
-  '#3a9aa3',
-  '#8a5cb5',
   '#c25b8f',
-  '#c4473a',
   '#d08a2e',
+  '#8a5cb5',
+  '#3a9aa3',
+  '#c4473a',
+  '#3f6b5c',
   '#6b756f',
 ]
 

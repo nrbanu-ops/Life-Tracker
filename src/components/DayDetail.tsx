@@ -55,6 +55,7 @@ export function DayDetail({ date, today, habits, logs, tasks, projects }: Props)
               <HabitCheckRow
                 key={item.habit.id}
                 item={item}
+                projectColor={item.habit.projectId ? projectColor.get(item.habit.projectId) : undefined}
                 onTap={() => setLog(item.habit.id, date, tapResult(item.habit, item))}
                 onMore={() => setActionHabitId(item.habit.id)}
               />

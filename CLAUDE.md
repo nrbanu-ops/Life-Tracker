@@ -54,7 +54,7 @@ Bu hesaplamalar `src/lib/stats.ts` içinde saf fonksiyonlar olarak yazılır ve 
 - Sade, sakin, minimalist; açık ve koyu tema (sistem ayarına göre)
 - Bir habit'i işaretlemek en fazla 1 dokunuş olmalı
 - Arayüz dili: Türkçe
-- Habit satırları projenin rengine boyanmaz (kullanıcı istemiyor); hepsi uygulamanın vurgu renginde. Proje rengi sadece proje kartı/detayı ve görevlerdeki küçük noktada.
+- Proje rengi habit'lerde "renkli tik" olarak görünür: satır ve işaretlenmemiş daire tek tip kalır, işaretlenince (yapıldı / minimum / kısmi halka) daire projenin rengini alır. Satırları boyama (kullanıcı beğenmedi). Proje rengi ayrıca proje kartı/detayında ve görevlerdeki küçük noktada.
 
 ## MVP'de OLMAYACAKLAR (sonraki aşamalar)
 Vardiya/gün tipleri, ruh hali/enerji takibi, bulut senkronu (ileride Supabase), bildirimler, haftalık otomatik rapor. Veri modelini bunların sonradan eklenmesini zorlaştırmayacak şekilde tut, ama şimdi kodlama.

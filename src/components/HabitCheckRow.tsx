@@ -5,6 +5,8 @@ import type { TodayItem } from '../lib/today'
 
 type Props = {
   item: TodayItem
+  /** Colour of the habit's project: the check mark fills with it once marked. */
+  projectColor?: string
   onTap: () => void
   /** Long press or the ⋯ button: minimum, skip, exact amount. */
   onMore: () => void
@@ -12,7 +14,7 @@ type Props = {
 
 const LONG_PRESS_MS = 500
 
-export function HabitCheckRow({ item, onTap, onMore }: Props) {
+export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
   const { habit, status, value, weekCount, countsToday } = item
   const timer = useRef<number | undefined>(undefined)
   const longPressed = useRef(false)
@@ -60,7 +62,7 @@ export function HabitCheckRow({ item, onTap, onMore }: Props) {
         aria-label={`${habit.title}: ${statusLabel(status)}`}
         className="flex min-w-0 flex-1 touch-manipulation items-center gap-3 py-3.5 pl-4 text-left select-none"
       >
-        <CheckMark status={status} progress={progress} countable={habit.kind !== 'check'} />
+        <CheckMark status={status} progress={progress} countable={habit.kind !== 'check'} color={projectColor} />
         <span className="min-w-0 flex-1">
           <span className={`block truncate font-medium ${status ? 'text-muted' : ''}`}>
             {habit.title}
@@ -102,15 +104,21 @@ type CheckMarkProps = {
   /** 0–1 toward the target, for count/duration habits. */
   progress: number
   countable: boolean
+  /** Project colour for the marked states; the app's accent when absent. Unmarked stays neutral. */
+  color?: string
 }
 
 const RING_RADIUS = 13
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS
 
-function CheckMark({ status, progress, countable }: CheckMarkProps) {
+function CheckMark({ status, progress, countable, color }: CheckMarkProps) {
   if (status === 'done') {
     return (
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-surface">
+      <span
+        className="flex h-8 w-8 shrink-0 animate-[mark-in_220ms_ease-out] items-center justify-center rounded-full bg-accent text-surface"
+        // Project colours are mid-tones in both themes, so the tick on them is always white.
+        style={color ? { background: color, color: '#fff' } : undefined}
+      >
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={3}>
           <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -119,7 +127,14 @@ function CheckMark({ status, progress, countable }: CheckMarkProps) {
   }
   if (status === 'minimum') {
     return (
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-accent bg-accent-soft text-[10px] font-bold text-accent">
+      <span
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-accent bg-accent-soft text-[10px] font-bold text-accent"
+        style={
+          color
+            ? { borderColor: color, color, background: `color-mix(in oklab, ${color} 14%, var(--color-surface))` }
+            : undefined
+        }
+      >
         MIN
       </span>
     )
@@ -134,7 +149,10 @@ function CheckMark({ status, progress, countable }: CheckMarkProps) {
   if (countable) {
     // Empty or partial: a ring that fills toward the target, with + to hint at tapping.
     return (
-      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center text-accent">
+      <span
+        className="relative flex h-8 w-8 shrink-0 items-center justify-center text-accent"
+        style={color ? { color } : undefined}
+      >
         <svg viewBox="0 0 32 32" className="absolute inset-0" aria-hidden>
           <circle cx="16" cy="16" r={RING_RADIUS} fill="none" stroke="var(--color-border)" strokeWidth={3} />
           <circle
