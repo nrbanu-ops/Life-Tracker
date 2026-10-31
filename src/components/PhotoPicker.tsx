@@ -18,7 +18,7 @@ export function PhotoPicker({ label, onPick, maxSize }: Props) {
       <button
         type="button"
         onClick={() => input.current?.click()}
-        className="rounded-xl bg-bg px-4 py-2.5 text-sm"
+        className="rounded-xl border border-border bg-bg px-4 py-2.5 text-sm"
       >
         {label}
       </button>

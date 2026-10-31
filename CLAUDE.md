@@ -93,6 +93,9 @@ Vardiya/gün tipleri, ruh hali/enerji takibi, bulut senkronu (ileride Supabase),
 
 10. ✅ Başarımlar (`/basarimlar`, üst kupa ikonu): genel başarımlar kod içinde tanımlı ve verilerden hesaplanır (`src/lib/achievements.ts`, testli; seriler, toplam, mükemmel gün, bırakma, projeler, kütüphane, görev/günlük; basamaklı olanlardan kazanılanlar + sıradaki gösterilir). Kazanılanlar `achievements` tablosunda kalır (seri bozulsa da gitmez); kazanılınca üstte kısa bildirim (`AchievementWatcher`). Projelere özel başarımları kullanıcı girmez: her projede otomatik 4 tane (ilk adım, yarı yol, tamamlandı, erken bitirme) + yapay zekanın belirledikleri (`projectAchievements`; koşullar: adım, habit serisi/toplamı, ilerleme %, görev sayısı). Plan json'undaki `achievements` içe aktarılırken başlıklar id'ye çevrilir; plansız projelerde Gemini açıksa proje detayı ilk açılışta bir kez sorar, "Yeniden belirle" kazanılmamışları değiştirir.
 
+11. ✅ Günlük eklentileri: günlük ruh hali ve enerji (1–5, `moods` tablosu, Bugün ve gün detayında `MoodPicker`; İstatistik'te ortalama, çizgi grafik ve habit'lerle bağlantısı `src/lib/mood.ts` → `habitEffects`, her iki tarafta en az 3 gün); günlük yazısına fotoğraf (`photo` Blob, 1200 px); günlükte arama; Bugün'de "1 yıl / 6 ay / 1 ay / 1 hafta önce bugün" kartı (`memoryFor`); Gemini haftalık bakış (`src/lib/review.ts`, günlüğe `kind: 'review'` olarak kaydedilir; Günlük sayfasında buton, Pazar günleri Bugün'de hatırlatma).
+   - Yer ekleme: Google Haritalar uygulamasında Paylaş → Kopyala metni yapıştırılabilir; kısa link (maps.app.goo.gl) açılamadığı için metindeki ad ve adres OpenStreetMap'te aranır (`sharedPlaceQueries`).
+
 Depo herkese açık: hiçbir API anahtarı, şifre ya da imza anahtarı commit'lenmez (iş akışında gizli bilgi taraması var). Kullanıcı anahtarları sadece cihazda (localStorage), imza anahtarı GitHub Secrets'ta.
 
 Sonraki: "Buradayım" ile anlık konum.
