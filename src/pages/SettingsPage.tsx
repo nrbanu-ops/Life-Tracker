@@ -9,6 +9,7 @@ import { setAiSettings, useAiSettings } from '../lib/assistant'
 import { copyText } from '../lib/clipboard'
 import { askGemini } from '../lib/gemini'
 import { getTmdbKey, setTmdbKey } from '../lib/library'
+import { checkForUpdate, type UpdateResult } from '../lib/update'
 
 export function SettingsPage() {
   const navigate = useNavigate()
@@ -103,12 +104,7 @@ export function SettingsPage() {
 
         <TmdbKeySection />
 
-        <p className="py-2 text-center text-xs text-muted">
-          Sürüm {__APP_VERSION__}
-          {androidBridge && ` · Android uygulaması ${androidBridge.version()}`}
-          <br />
-          Yeni sürümler kendiliğinden yüklenir.
-        </p>
+        <UpdateSection />
 
       </div>
     </>
@@ -116,6 +112,43 @@ export function SettingsPage() {
 }
 
 /** In-app planning chat with the user's own Gemini key; the key never leaves this device except to Google. */
+const UPDATE_MESSAGES: Record<UpdateResult, string> = {
+  latest: 'Son sürümü kullanıyorsun ✓',
+  updating: 'Yeni sürüm yükleniyor, uygulama birazdan yenilenecek…',
+  offline: 'İnternet yok. Bağlanınca tekrar dene.',
+  unsupported: 'Bu ortamda güncelleme yok (geliştirme sürümü).',
+  failed: 'Kontrol edilemedi, biraz sonra tekrar dene.',
+}
+
+function UpdateSection() {
+  const [result, setResult] = useState<UpdateResult | 'checking'>()
+
+  async function check() {
+    setResult('checking')
+    setResult(await checkForUpdate())
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2 py-2 text-center text-xs text-muted">
+      <p>
+        Sürüm {__APP_VERSION__}
+        {androidBridge && ` · Android uygulaması ${androidBridge.version()}`}
+        <br />
+        Yeni sürümler kendiliğinden yüklenir.
+      </p>
+      <button
+        type="button"
+        onClick={check}
+        disabled={result === 'checking' || result === 'updating'}
+        className="rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-text disabled:opacity-60"
+      >
+        {result === 'checking' ? 'Kontrol ediliyor…' : 'Güncellemeleri kontrol et'}
+      </button>
+      {result && result !== 'checking' && <p className="text-sm">{UPDATE_MESSAGES[result]}</p>}
+    </div>
+  )
+}
+
 function GeminiSection() {
   const ai = useAiSettings()
   const [key, setKey] = useState(ai.geminiKey)
