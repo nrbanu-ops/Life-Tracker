@@ -100,6 +100,8 @@ Vardiya/gün tipleri, ruh hali/enerji takibi, bulut senkronu (ileride Supabase),
    - Zorluk = bir seferlik efor (Hafif 5 / Orta 12 / Ağır 25 / Zorlu 40 XP); sıklık zorluğa girmez. Uygulama karar verir: süreli habit'te dakika (fiziksel ise bir kademe yukarı), yoksa addaki kelime, yoksa Orta. Kullanıcı habit formunda değiştirebilir; değişiklik `effortLog` ile o günden itibaren geçerli.
    - Adalet kuralları: düşük başarı XP'yi artırmaz (plan şişirme ödüllenmez), sadece ustalık (90 gün ≥%95) azaltır; seri bonusu en fazla +%50; geri dönüş bonusu (3 planlı gün kaçırınca) haftada bir; günlük habit XP'si 150'den sonra yarım; haftalık hedefin üstü yarım; geç işaretleme (`HabitLog.loggedAt`) son 7 gün %75, daha eskisi %25.
    - Biten haftalar `xpWeeks` tablosunda dondurulur (habit silinse ya da kurallar değişse de XP gitmez); eski bir gün değişirse o hafta yeniden hesaplanır. Arayüz: Bugün'de `LevelCard`, `LevelWatcher` (+XP, seviye/rank bildirimi), `/profil`.
+   - Haftalık acil görev (son 4 haftada en çok aksatılan habit ya da 4 gün günlük, +100 XP) ve 14 unvan.
+   - Görünüm "sistem penceresi": seviye parçaları iki temada da koyu lacivert, köşeli, mavi çizgili (`SystemWindow`, `.sys-window`, `--color-sys-*` renkleri `index.css`'te); rank rozeti rank rengindeki eşkenar dörtgen (`src/lib/levelingUi.ts`). Uygulamanın geri kalanı sakin temada kalır.
 
 Depo herkese açık: hiçbir API anahtarı, şifre ya da imza anahtarı commit'lenmez (iş akışında gizli bilgi taraması var). Kullanıcı anahtarları sadece cihazda (localStorage), imza anahtarı GitHub Secrets'ta.
 

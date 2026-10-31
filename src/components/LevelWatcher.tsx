@@ -1,19 +1,21 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import { syncXpLedger, useLeveling } from '../db/leveling'
 import type { Rank } from '../lib/leveling'
 import { useLevelingOn } from '../lib/levelingSetting'
 import { useTodayKey } from '../lib/useTodayKey'
+import { levelText, RANK_COLOR, RANK_TITLE } from '../lib/levelingUi'
 import { RankBadge } from './LevelCard'
 
 const GAIN_MS = 1600
 const TOAST_MS = 5000
+const LEVEL_UP_MS = 4000
 
 type Seen = { total: number; level: number; rank: Rank; titles: Set<string> }
 
 /**
  * Freezes closed weeks into the XP ledger, and shows what XP does: a small "+14 XP" as it comes
- * in, a system message on a level up or a new title and a bigger card on a new rank.
+ * in, a system message on a new title, a window on a level up and a bigger one on a new rank.
  */
 export function LevelWatcher() {
   const on = useLevelingOn()
@@ -22,6 +24,7 @@ export function LevelWatcher() {
   const seen = useRef<Seen>(undefined)
   const [gain, setGain] = useState(0)
   const [message, setMessage] = useState<string>()
+  const [levelUp, setLevelUp] = useState<number>()
   const [rankUp, setRankUp] = useState<Rank>()
 
   useEffect(() => {
@@ -41,7 +44,7 @@ export function LevelWatcher() {
     if (fresh) setMessage(`Unvan kazandın · ${fresh.name}`)
     if (state.level > before.level) {
       if (state.rank !== before.rank) setRankUp(state.rank)
-      else setMessage(`Seviye atladın · Lv ${state.level}`)
+      else setLevelUp(state.level)
     }
   }, [state, on])
 
@@ -57,12 +60,18 @@ export function LevelWatcher() {
     return () => window.clearTimeout(timer)
   }, [message])
 
+  useEffect(() => {
+    if (levelUp === undefined) return
+    const timer = window.setTimeout(() => setLevelUp(undefined), LEVEL_UP_MS)
+    return () => window.clearTimeout(timer)
+  }, [levelUp])
+
   if (!on) return null
   return (
     <>
       {gain > 0 && (
         <div
-          className="pointer-events-none fixed inset-x-0 z-40 mx-auto w-fit animate-[toast-in_200ms_ease-out] rounded-full bg-accent px-3 py-1 text-sm font-medium text-surface shadow-md tabular-nums"
+          className="pointer-events-none fixed inset-x-0 z-40 mx-auto w-fit animate-[toast-in_200ms_ease-out] border border-sys-edge bg-sys-bg px-3 py-1 font-mono text-sm font-semibold text-sys-glow shadow-[0_0_12px_rgb(58_166_255/0.45)] tabular-nums"
           style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}
           aria-live="polite"
         >
@@ -75,26 +84,52 @@ export function LevelWatcher() {
           to="/profil"
           onClick={() => setMessage(undefined)}
           role="status"
-          className="fixed inset-x-4 z-40 mx-auto flex max-w-sm animate-[toast-in_260ms_ease-out] items-center gap-3 rounded-2xl border border-accent bg-surface px-4 py-3 shadow-lg"
+          className="sys-window fixed inset-x-4 z-40 mx-auto flex max-w-sm animate-[sys-open_260ms_ease-out] flex-col gap-0.5 px-4 py-3"
           style={{ top: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
         >
-          <span className="font-mono text-xs text-accent">[SİSTEM]</span>
+          <span className="sys-label">◆ Bildirim</span>
           <span className="font-medium">{message}</span>
         </Link>
+      )}
+
+      {levelUp !== undefined && !rankUp && (
+        <button
+          type="button"
+          onClick={() => setLevelUp(undefined)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-6"
+          aria-label="Kapat"
+        >
+          <span role="status" className="sys-window flex w-full max-w-xs animate-[sys-open_320ms_ease-out] flex-col items-center gap-2 p-6 text-center">
+            <span className="sys-label">◆ Sistem</span>
+            <span className="font-mono text-2xl font-bold tracking-[0.12em] text-sys-glow [text-shadow:0_0_12px_var(--color-sys-edge)]">
+              SEVİYE ATLADIN
+            </span>
+            <span className="font-mono text-lg">{levelText(levelUp)}</span>
+          </span>
+        </button>
       )}
 
       {rankUp && (
         <button
           type="button"
           onClick={() => setRankUp(undefined)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6"
           aria-label="Kapat"
         >
-          <span className="flex w-full max-w-xs animate-[toast-in_300ms_ease-out] flex-col items-center gap-3 rounded-3xl border-2 border-accent bg-surface p-6 text-center shadow-xl">
-            <span className="font-mono text-xs text-accent">[SİSTEM]</span>
+          <span
+            role="status"
+            className="sys-window flex w-full max-w-xs animate-[sys-open_360ms_ease-out] flex-col items-center gap-3 p-6 text-center"
+            style={{ '--sys-accent': RANK_COLOR[rankUp] } as CSSProperties}
+          >
+            <span className="sys-label">◆ Sistem</span>
             <RankBadge rank={rankUp} size="lg" />
-            <span className="text-xl font-semibold">{rankUp}-Rank oldun</span>
-            <span className="text-sm text-muted">{state && `Lv ${state.level}`} · Yükselmeye devam.</span>
+            <span className="font-mono text-xl font-bold tracking-[0.1em]" style={{ color: RANK_COLOR[rankUp] }}>
+              {rankUp}-RANK OLDUN
+            </span>
+            <span className="text-sm text-sys-muted">
+              {RANK_TITLE[rankUp]}
+              {state && ` · ${levelText(state.level)}`}
+            </span>
           </span>
         </button>
       )}

@@ -14,6 +14,15 @@
   --color-p1: #c4473a;
   --color-p2: #d08a2e;
   --color-p3: #4a78b5;
+  /* Leveling "system window": dark in both themes, like the game's status screen. */
+  --color-sys-bg: #0b1020;
+  --color-sys-panel: #121b34;
+  --color-sys-line: #263a63;
+  --color-sys-edge: #3aa6ff;
+  --color-sys-glow: #7cc8ff;
+  --color-sys-text: #dbe8ff;
+  --color-sys-muted: #8597bb;
+  --color-sys-warn: #ff8a4c;
   color-scheme: light;
 }
 
@@ -55,6 +64,66 @@
   --color-p1: var(--color-p1);
   --color-p2: var(--color-p2);
   --color-p3: var(--color-p3);
+  --color-sys-bg: var(--color-sys-bg);
+  --color-sys-panel: var(--color-sys-panel);
+  --color-sys-line: var(--color-sys-line);
+  --color-sys-edge: var(--color-sys-edge);
+  --color-sys-glow: var(--color-sys-glow);
+  --color-sys-text: var(--color-sys-text);
+  --color-sys-muted: var(--color-sys-muted);
+  --color-sys-warn: var(--color-sys-warn);
+}
+
+/* A leveling window: square edges, a thin blue line and brackets on two corners. In a layer so utilities can override. */
+@layer components {
+.sys-window {
+  --sys-accent: var(--color-sys-edge);
+  position: relative;
+  background: var(--color-sys-bg);
+  color: var(--color-sys-text);
+  border: 1px solid color-mix(in oklab, var(--sys-accent) 70%, transparent);
+  border-radius: 3px;
+  box-shadow:
+    0 0 14px color-mix(in oklab, var(--sys-accent) 22%, transparent),
+    inset 0 0 22px color-mix(in oklab, var(--sys-accent) 12%, transparent);
+}
+.sys-window::before,
+.sys-window::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  border-color: var(--sys-accent);
+  border-style: solid;
+}
+.sys-window::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+}
+.sys-window::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 2px 2px 0;
+}
+.sys-window.sys-warn {
+  --sys-accent: var(--color-sys-warn);
+}
+.sys-label {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sys-accent, var(--color-sys-glow));
+}
+}
+
+@keyframes sys-open {
+  from {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0.3;
+  }
 }
 
 @keyframes sheet-up {
