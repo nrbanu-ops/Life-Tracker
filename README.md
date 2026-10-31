@@ -15,7 +15,7 @@ cihazında kalır (IndexedDB).
 | Nerede | Nasıl |
 |---|---|
 | Telefon (Android) | [Releases](../../releases/latest) → `LifeTracker.apk` kur. Ayrıntılar: [docs/ANDROID.md](docs/ANDROID.md) |
-| Bilgisayar / iPhone | GitHub Pages adresini aç, tarayıcıdan "Uygulamayı yükle / Ana ekrana ekle" |
+| Bilgisayar / iPhone | [nrbanu-ops.github.io/Life-Tracker](https://nrbanu-ops.github.io/Life-Tracker/) adresini aç, tarayıcıdan "Uygulamayı yükle / Ana ekrana ekle" |
 
 Güncellemeler kendiliğinden gelir: `main`'e her push siteyi yeniden yayınlar, uygulama yeni sürüme kendisi geçer.
 
