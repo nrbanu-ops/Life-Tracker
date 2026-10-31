@@ -2,7 +2,7 @@ export type UpdateResult = 'latest' | 'updating' | 'offline' | 'unsupported' | '
 
 /**
  * Asks the service worker to look for a new version right now.
- * A new version installs and activates by itself; the page then reloads (see `registerSW` in main.tsx).
+ * A new version installs and activates by itself; the page then reloads.
  */
 export async function checkForUpdate(): Promise<UpdateResult> {
   const registration = await navigator.serviceWorker?.getRegistration().catch(() => undefined)
@@ -13,8 +13,12 @@ export async function checkForUpdate(): Promise<UpdateResult> {
   } catch {
     return 'failed'
   }
-  if (!registration.installing && !registration.waiting) return 'latest'
-  // Normally the reload comes on its own within a second or two; this is only a safety net.
+  const fresh = registration.installing ?? registration.waiting
+  if (!fresh) return 'latest'
+  // Older builds' workers wait for this message instead of taking over on their own.
+  fresh.postMessage({ type: 'SKIP_WAITING' })
+  navigator.serviceWorker.addEventListener('controllerchange', () => location.reload(), { once: true })
+  // Safety net in case the switch is missed.
   window.setTimeout(() => location.reload(), 10_000)
   return 'updating'
 }

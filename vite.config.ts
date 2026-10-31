@@ -35,6 +35,8 @@ export default defineConfig({
       // A new version takes over as soon as it's downloaded; main.tsx checks for one regularly.
       registerType: 'autoUpdate',
       injectRegister: false,
+      // Without these the new worker waits for a SKIP_WAITING message nobody sends, and updates never apply.
+      workbox: { skipWaiting: true, clientsClaim: true, cleanupOutdatedCaches: true },
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Life Tracker',
