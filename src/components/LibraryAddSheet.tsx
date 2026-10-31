@@ -15,6 +15,7 @@ import {
   type SearchableKind,
   type SearchResult,
 } from '../lib/library'
+import { keepLines } from '../lib/places'
 import { LanguageSelect } from './LanguageSelect'
 import { BottomSheet } from './BottomSheet'
 import { LibraryEntryFields } from './LibraryEntryFields'
@@ -199,6 +200,13 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
         type="search"
         value={query}
         onChange={(e) => onQuery(e.target.value)}
+        onPaste={(e) => {
+          const pasted = e.clipboardData.getData('text')
+          if (kind === 'place' && pasted.includes('\n')) {
+            e.preventDefault()
+            onQuery(keepLines(pasted))
+          }
+        }}
         placeholder={placeholder}
         aria-label="Ara"
         className={inputClass}
@@ -223,7 +231,7 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
       ) : search.results.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">
           {/goo\.gl/.test(trimmed)
-            ? 'Kısa paylaşım linkleri okunamıyor. Yeri Google Haritalar’da açıp adres çubuğundaki uzun linki yapıştır.'
+            ? 'Bu paylaşımdan yer bulunamadı. Google Haritalar’da Paylaş → Kopyala ile gelen metnin tamamını yapıştır ya da yerin adını yaz.'
             : 'Sonuç bulunamadı.'}
         </p>
       ) : kind === 'place' ? (
@@ -262,7 +270,8 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
 
       {kind === 'place' && trimmed.length < 2 && (
         <p className="text-xs text-muted">
-          İpucu: Google Haritalar’da bir yeri açıp adres çubuğundaki linki buraya yapıştırabilirsin.
+          İpucu: Google Haritalar’da bir yeri açıp <b>Paylaş → Kopyala</b> de ve buraya yapıştır. Bilgisayarda adres
+          çubuğundaki uzun link de olur.
         </p>
       )}
 

@@ -1,5 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { fromNominatim, googleMapsLink, parseGoogleMapsUrl, placeArea } from './places'
+import { fromNominatim, googleMapsLink, keepLines, parseGoogleMapsUrl, placeArea, sharedPlaceQueries } from './places'
+
+describe('sharedPlaceQueries', () => {
+  const shared = 'Galata Kulesi\nBereketzade, Galata Kulesi, 34421 Beyoğlu/İstanbul\n\nhttps://maps.app.goo.gl/abc123'
+
+  it('turns the Google Maps app share text into searches, most exact first', () => {
+    expect(sharedPlaceQueries(shared)).toEqual([
+      'Galata Kulesi, Beyoğlu, İstanbul',
+      'Galata Kulesi, Bereketzade, Galata Kulesi, 34421 Beyoğlu/İstanbul',
+      'Galata Kulesi',
+    ])
+    // The same text after a single-line input flattened it.
+    expect(sharedPlaceQueries(keepLines(shared))?.[0]).toBe('Galata Kulesi, Beyoğlu, İstanbul')
+  })
+
+  it('handles a bare name with a link, and ignores text without a short link', () => {
+    expect(sharedPlaceQueries('Kapadokya https://maps.app.goo.gl/x')).toEqual(['Kapadokya'])
+    expect(sharedPlaceQueries('https://maps.app.goo.gl/x')).toEqual([])
+    expect(sharedPlaceQueries('Galata Kulesi')).toBeUndefined()
+  })
+})
 
 describe('fromNominatim', () => {
   it('reads name, area, position and the Wikipedia tag', () => {

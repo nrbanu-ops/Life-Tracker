@@ -1,6 +1,6 @@
 import type { LibraryInput } from '../db/library'
 import type { LibraryGoal, LibraryItem, LibraryKind, LibraryStatus } from '../db/types'
-import { areaAt, parseGoogleMapsUrl, searchPlaces } from './places'
+import { areaAt, parseGoogleMapsUrl, searchPlaces, sharedPlaceQueries } from './places'
 
 /** Every kind, in the order the app lists them. */
 export const LIBRARY_KINDS: LibraryKind[] = ['book', 'movie', 'series', 'place', 'other']
@@ -236,11 +236,22 @@ async function searchPlace(query: string, signal?: AbortSignal): Promise<SearchR
     const title = fromLink.title ?? creator?.split(',')[0] ?? 'Google Haritalar konumu'
     return [{ kind: 'place', title, creator, latitude: fromLink.latitude, longitude: fromLink.longitude, source: 'google-link' }]
   }
-  // The Wikipedia tag only served to find a photo.
-  return (await searchPlaces(query, signal)).map((result) => {
-    const { wikipedia: _, ...place } = result
-    return place
-  })
+  // Shared from the Google Maps app: search by its name and address, one try at a time.
+  const shared = sharedPlaceQueries(query)
+  for (const [i, q] of (shared ?? [query]).entries()) {
+    // OpenStreetMap asks for at most one search a second.
+    if (i > 0) await new Promise((resolve) => setTimeout(resolve, 1100))
+    if (signal?.aborted) break
+    const results = await searchPlaces(q, signal)
+    // The Wikipedia tag only served to find a photo.
+    if (results.length > 0) {
+      return results.map((result) => {
+        const { wikipedia: _, ...place } = result
+        return place
+      })
+    }
+  }
+  return []
 }
 
 const TMDB_KEY = 'life-tracker:tmdb-key'

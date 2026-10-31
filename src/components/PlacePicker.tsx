@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { searchLibrary, type SearchResult } from '../lib/library'
+import { keepLines } from '../lib/places'
 
 type Props = {
   initialQuery: string
@@ -37,6 +38,13 @@ export function PlacePicker({ initialQuery, onPick, onCancel }: Props) {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onPaste={(e) => {
+          const pasted = e.clipboardData.getData('text')
+          if (pasted.includes('\n')) {
+            e.preventDefault()
+            setQuery(keepLines(pasted))
+          }
+        }}
         placeholder="Yer adı ya da Google Haritalar linki"
         aria-label="Konum ara"
         className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 outline-none focus:border-accent"

@@ -80,6 +80,29 @@ export function parseGoogleMapsUrl(text: string): { title?: string; latitude: nu
   return { title: title && !/^-?\d+(\.\d+)?,/.test(title) ? title : undefined, latitude, longitude }
 }
 
+/**
+ * Text shared from the Google Maps app ("Share → Copy"): the place's name, its address and a
+ * short maps.app.goo.gl link. The link can't be opened from the app (no CORS), so this returns
+ * searches to try instead, most exact first: name and city, name and address, name alone.
+ * Undefined when the text has no short link.
+ */
+export function sharedPlaceQueries(text: string): string[] | undefined {
+  if (!/maps\.app\.goo\.gl|goo\.gl\/maps/i.test(text)) return undefined
+  const lines = text
+    .split(/\n+|\s\|\s/)
+    .map((line) => line.replace(/https?:\/\/\S+/g, '').trim())
+    .filter(Boolean)
+  if (lines.length === 0) return []
+  const [name, ...rest] = lines
+  const address = rest.join(', ')
+  // "34421 Beyoğlu/İstanbul" → "Beyoğlu, İstanbul": OpenStreetMap doesn't like postcodes and slashes.
+  const area = address.split(',').at(-1)?.replace(/\d{4,}/g, '').replace(/\//g, ', ').trim()
+  return [...new Set([area && `${name}, ${area}`, address && `${name}, ${address}`, name].filter((q): q is string => !!q))]
+}
+
+/** Single-line inputs drop line breaks, which would glue the shared name onto the address. */
+export const keepLines = (pasted: string): string => pasted.trim().replace(/\s*\n+\s*/g, ' | ')
+
 /** Opens the place in Google Maps: at its position when known, else by name. */
 export function googleMapsLink(item: Pick<LibraryItem, 'title' | 'creator' | 'latitude' | 'longitude'>): string {
   const query =
