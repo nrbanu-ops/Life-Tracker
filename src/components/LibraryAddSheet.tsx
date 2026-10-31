@@ -178,14 +178,20 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
         if (controller.signal.aborted) return
         setSearch({ state: 'error', missingKey: e instanceof MissingKeyError, message: (e as Error).message })
       }
-    }, 400)
+      // OpenStreetMap asks for at most one search a second, so places wait a little longer.
+    }, kind === 'place' ? 800 : 400)
     return () => {
       clearTimeout(timer)
       controller.abort()
     }
   }, [kind, trimmed])
 
-  const placeholder = { book: 'Kitap adı ya da yazar', movie: 'Film adı', series: 'Dizi adı' }[kind]
+  const placeholder = {
+    book: 'Kitap adı ya da yazar',
+    movie: 'Film adı',
+    series: 'Dizi adı',
+    place: 'Yer adı ya da Google Haritalar linki',
+  }[kind]
 
   return (
     <>
@@ -215,7 +221,29 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
           )}
         </div>
       ) : search.results.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted">Sonuç bulunamadı.</p>
+        <p className="py-6 text-center text-sm text-muted">
+          {/goo\.gl/.test(trimmed)
+            ? 'Kısa paylaşım linkleri okunamıyor. Yeri Google Haritalar’da açıp adres çubuğundaki uzun linki yapıştır.'
+            : 'Sonuç bulunamadı.'}
+        </p>
+      ) : kind === 'place' ? (
+        <ul className="flex max-h-[45dvh] flex-col divide-y divide-border overflow-y-auto rounded-xl bg-bg">
+          {search.results.map((result, i) => (
+            <li key={`${result.externalId}-${i}`}>
+              <button
+                type="button"
+                onClick={() => onPick(result)}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
+              >
+                <Poster item={result} compact className="w-12 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">{result.title}</span>
+                  <span className="block truncate text-xs text-muted">{result.creator}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       ) : (
         <ul className="grid max-h-[45dvh] grid-cols-3 gap-3 overflow-y-auto">
           {search.results.map((result, i) => (
@@ -230,6 +258,12 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
             </li>
           ))}
         </ul>
+      )}
+
+      {kind === 'place' && trimmed.length < 2 && (
+        <p className="text-xs text-muted">
+          İpucu: Google Haritalar’da bir yeri açıp adres çubuğundaki linki buraya yapıştırabilirsin.
+        </p>
       )}
 
       <button type="button" onClick={onManual} className="py-1 text-sm text-muted">

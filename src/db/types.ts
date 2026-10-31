@@ -105,6 +105,9 @@ export type LibraryItem = {
   /** Author for books, network for series, city/country for places. */
   creator?: string
   year?: number
+  /** Places: where it is on the map. */
+  latitude?: number
+  longitude?: number
   /** Books: the language the user read it in, a code like 'en' or free text. */
   language?: string
   /** Poster from a search result. */

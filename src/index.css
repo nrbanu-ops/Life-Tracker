@@ -68,6 +68,30 @@
   }
 }
 
+/* Library map: dots in the app's colours (CSS beats Leaflet's SVG attributes). */
+.place-dot {
+  stroke: var(--color-accent);
+}
+.place-dot.is-visited {
+  fill: var(--color-accent);
+  fill-opacity: 1;
+  stroke: var(--color-surface);
+}
+.place-dot.is-wish {
+  fill: var(--color-surface);
+  fill-opacity: 1;
+}
+.leaflet-container {
+  font-family: inherit;
+  background: var(--color-bg);
+}
+@media (prefers-color-scheme: dark) {
+  /* OpenStreetMap only has light tiles; this turns them into a calm dark map. */
+  .map-tiles {
+    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9);
+  }
+}
+
 /* A light press on every button, so taps feel answered. */
 button:not(:disabled) {
   transition:

@@ -1,13 +1,13 @@
 import type { LibraryInput } from '../db/library'
 import type { LibraryGoal, LibraryItem, LibraryKind, LibraryStatus } from '../db/types'
+import { areaAt, parseGoogleMapsUrl, searchPlaces } from './places'
 
 /** Every kind, in the order the app lists them. */
 export const LIBRARY_KINDS: LibraryKind[] = ['book', 'movie', 'series', 'place', 'other']
 
-/** Kinds with a poster search; the rest are added by hand. */
-export type SearchableKind = 'book' | 'movie' | 'series'
-export const isSearchable = (kind: LibraryKind): kind is SearchableKind =>
-  kind === 'book' || kind === 'movie' || kind === 'series'
+/** Kinds with a search; 'other' is added by hand. */
+export type SearchableKind = Exclude<LibraryKind, 'other'>
+export const isSearchable = (kind: LibraryKind): kind is SearchableKind => kind !== 'other'
 
 export const KIND_LABEL: Record<LibraryKind, string> = {
   book: 'Kitap',
@@ -211,6 +211,7 @@ export async function searchLibrary(
     const res = await fetch(`https://openlibrary.org/search.json?q=${q}&limit=18&fields=${fields}`, { signal })
     return fromOpenLibrary(await res.json())
   }
+  if (kind === 'place') return searchPlace(query, signal)
   if (kind === 'series') {
     const res = await fetch(`https://api.tvmaze.com/search/shows?q=${q}`, { signal })
     return fromTvmaze(await res.json())
@@ -225,6 +226,21 @@ export async function searchLibrary(
   )
   if (res.status === 401) throw new MissingKeyError('TMDB anahtarı geçersiz.')
   return fromTmdb(await res.json(), 'movie')
+}
+
+/** OpenStreetMap search, or a single result read from a pasted Google Maps link. */
+async function searchPlace(query: string, signal?: AbortSignal): Promise<SearchResult[]> {
+  const fromLink = parseGoogleMapsUrl(query)
+  if (fromLink) {
+    const creator = await areaAt(fromLink.latitude, fromLink.longitude, signal)
+    const title = fromLink.title ?? creator?.split(',')[0] ?? 'Google Haritalar konumu'
+    return [{ kind: 'place', title, creator, latitude: fromLink.latitude, longitude: fromLink.longitude, source: 'google-link' }]
+  }
+  // The Wikipedia tag only served to find a photo.
+  return (await searchPlaces(query, signal)).map((result) => {
+    const { wikipedia: _, ...place } = result
+    return place
+  })
 }
 
 const TMDB_KEY = 'life-tracker:tmdb-key'

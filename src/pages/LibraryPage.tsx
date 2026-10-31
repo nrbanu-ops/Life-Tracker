@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { EmptyState } from '../components/EmptyState'
 import { BackIcon } from '../components/icons'
@@ -39,7 +39,7 @@ export function LibraryPage() {
   const [filter, setFilter] = useState<LibraryKind | 'all'>('all')
   const [adding, setAdding] = useState(false)
   const [selectedId, setSelectedId] = useState<string>()
-  const [view, setView] = useState<'shelf' | 'calendar'>('shelf')
+  const [view, setView] = useState<'shelf' | 'calendar' | 'map'>('shelf')
 
   const [languageFilter, setLanguageFilter] = useState<string>()
 
@@ -74,6 +74,7 @@ export function LibraryPage() {
           options={[
             { value: 'shelf', label: 'Raf' },
             { value: 'calendar', label: 'Takvim' },
+            { value: 'map', label: 'Harita' },
           ]}
           value={view}
           onChange={setView}
@@ -114,7 +115,9 @@ export function LibraryPage() {
         </div>
       )}
 
-      {items === undefined ? null : view === 'calendar' ? (
+      {items === undefined ? null : view === 'map' ? (
+        <MapView items={filter === 'all' || filter === 'place' ? shown.filter((i) => i.kind === 'place') : []} onSelect={setSelectedId} />
+      ) : view === 'calendar' ? (
         <LibraryCalendar
           items={filter === 'all' ? shown : shown.filter((i) => i.kind === filter)}
           today={today}
@@ -177,6 +180,36 @@ export function LibraryPage() {
       />
       <LibraryItemSheet item={selected} today={today} onClose={() => setSelectedId(undefined)} />
     </>
+  )
+}
+
+// Leaflet is only downloaded when the map is first opened.
+const LibraryMap = lazy(() => import('../components/LibraryMap'))
+
+function MapView({ items, onSelect }: { items: LibraryItem[]; onSelect: (id: string) => void }) {
+  const placed = items.filter((i) => i.latitude !== undefined && i.longitude !== undefined)
+  const missing = items.length - placed.length
+  return (
+    <div className="flex flex-col gap-2">
+      <Suspense fallback={<div className="h-[60dvh] rounded-2xl border border-border bg-surface" />}>
+        <LibraryMap items={placed} onSelect={onSelect} />
+      </Suspense>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-muted">
+        <span className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-full bg-accent" /> Gittim
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded-full border-2 border-accent bg-surface" /> Gitmek istiyorum
+        </span>
+        <span className="flex-1 text-right">
+          {items.length === 0
+            ? 'Henüz yer eklemedin.'
+            : missing > 0
+              ? `${missing} yerin konumu yok; detayından "Konum ekle" diyebilirsin.`
+              : `${placed.length} yer`}
+        </span>
+      </div>
+    </div>
   )
 }
 

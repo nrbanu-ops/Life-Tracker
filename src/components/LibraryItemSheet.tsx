@@ -6,7 +6,9 @@ import type { LibraryItem } from '../db/types'
 import { fromDateKey } from '../lib/date'
 import { CREATOR_LABEL, KIND_LABEL, languageLabel } from '../lib/library'
 import { BottomSheet } from './BottomSheet'
+import { googleMapsLink } from '../lib/places'
 import { LanguageSelect } from './LanguageSelect'
+import { PlacePicker } from './PlacePicker'
 import { LibraryEntryFields } from './LibraryEntryFields'
 import { PhotoPicker } from './PhotoPicker'
 import { Poster } from './Poster'
@@ -45,6 +47,12 @@ function ItemDetail({ item, today, onClose }: { item: LibraryItem; today: string
   const [year, setYear] = useState(item.year?.toString() ?? '')
   const [photo, setPhoto] = useState(item.posterBlob)
   const [language, setLanguage] = useState(item.language)
+  const [position, setPosition] = useState(
+    item.latitude !== undefined && item.longitude !== undefined
+      ? { latitude: item.latitude, longitude: item.longitude }
+      : undefined,
+  )
+  const [pickingPlace, setPickingPlace] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -126,6 +134,36 @@ function ItemDetail({ item, today, onClose }: { item: LibraryItem; today: string
         </div>
       )}
 
+      {item.kind === 'place' &&
+        (pickingPlace ? (
+          <PlacePicker
+            initialQuery={title}
+            onPick={(place) => {
+              if (place.latitude !== undefined && place.longitude !== undefined) {
+                setPosition({ latitude: place.latitude, longitude: place.longitude })
+              }
+              if (!creator.trim() && place.creator) setCreator(place.creator)
+              setPickingPlace(false)
+            }}
+            onCancel={() => setPickingPlace(false)}
+          />
+        ) : (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-bg px-3 py-2.5 text-sm">
+            <span className="flex-1 text-muted">{position ? '📍 Haritada işaretli' : '📍 Konum yok'}</span>
+            <button type="button" onClick={() => setPickingPlace(true)} className="text-muted underline">
+              {position ? 'Konumu değiştir' : 'Konum ekle'}
+            </button>
+            <a
+              href={googleMapsLink({ title, creator, ...position })}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-accent"
+            >
+              Google Haritalar’da aç ↗
+            </a>
+          </div>
+        ))}
+
       <LibraryEntryFields kind={item.kind} value={entry} onChange={setEntry} today={today} />
 
       <button
@@ -138,6 +176,8 @@ function ItemDetail({ item, today, onClose }: { item: LibraryItem; today: string
             creator: creator.trim() || undefined,
             year: yearValue > 0 ? yearValue : undefined,
             language: trimmedLanguage,
+            latitude: position?.latitude,
+            longitude: position?.longitude,
             posterBlob: photo,
           })
           await updateLibraryEntry(item.id, entry, today)

@@ -4,7 +4,17 @@ import type { LibraryItem, LibraryKind, LibraryStatus } from './types'
 /** What the item is: from a search result or typed in by hand. */
 export type LibraryInput = Pick<
   LibraryItem,
-  'kind' | 'title' | 'creator' | 'year' | 'language' | 'posterUrl' | 'posterBlob' | 'source' | 'externalId'
+  | 'kind'
+  | 'title'
+  | 'creator'
+  | 'year'
+  | 'language'
+  | 'latitude'
+  | 'longitude'
+  | 'posterUrl'
+  | 'posterBlob'
+  | 'source'
+  | 'externalId'
 >
 
 /** The user's own record of it. */
@@ -53,7 +63,10 @@ export async function updateLibraryEntry(id: string, entry: LibraryEntry, today:
 }
 
 /** Facts the user can correct; posterBlob undefined removes their own photo. */
-export type LibraryDetails = Pick<LibraryItem, 'title' | 'creator' | 'year' | 'language' | 'posterBlob'>
+export type LibraryDetails = Pick<
+  LibraryItem,
+  'title' | 'creator' | 'year' | 'language' | 'latitude' | 'longitude' | 'posterBlob'
+>
 
 export async function updateLibraryDetails(id: string, details: LibraryDetails): Promise<void> {
   await db.library.update(id, {
@@ -61,6 +74,8 @@ export async function updateLibraryDetails(id: string, details: LibraryDetails):
     creator: details.creator,
     year: details.year,
     language: details.language,
+    latitude: details.latitude,
+    longitude: details.longitude,
     posterBlob: details.posterBlob,
   })
 }
