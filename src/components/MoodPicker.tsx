@@ -9,19 +9,25 @@ const ROWS: { key: MoodKey; title: string; emoji: Record<Level, string>; label: 
   { key: 'energy', title: 'Enerji', emoji: ENERGY_EMOJI, label: ENERGY_LABEL },
 ]
 
-/** One tap per row for the day's mood and energy; tapping the chosen one again clears it. */
+/**
+ * One tap per row for the day's mood and energy; tapping the chosen one again clears it. Small grey
+ * faces so the row stays as calm as the rest of the screen; the chosen one is ringed and named.
+ */
 export function MoodPicker({ date }: { date: string }) {
   const day = useLiveQuery(async () => (await db.moods.get(date)) ?? null, [date])
   if (day === undefined) return null
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+    <div className="flex flex-col gap-1 rounded-2xl border border-border bg-surface px-3 py-2">
       {ROWS.map((row) => {
         const value = day?.[row.key]
         return (
           <div key={row.key} className="flex items-center justify-between gap-2">
-            <span className="w-16 shrink-0 text-sm text-muted">{row.title}</span>
-            <div className="flex flex-1 justify-between" role="radiogroup" aria-label={row.title}>
+            <span className="min-w-0 truncate text-sm text-muted">
+              {row.title}
+              {value && <span className="text-text"> · {row.label[value]}</span>}
+            </span>
+            <div className="flex shrink-0 gap-1" role="radiogroup" aria-label={row.title}>
               {LEVELS.map((level) => (
                 <button
                   key={level}
@@ -31,12 +37,8 @@ export function MoodPicker({ date }: { date: string }) {
                   aria-label={row.label[level]}
                   title={row.label[level]}
                   onClick={() => setDayLevel(date, row.key, value === level ? undefined : level)}
-                  className={`flex h-10 w-10 items-center justify-center rounded-full text-xl transition-all ${
-                    value === level
-                      ? 'scale-110 bg-accent-soft ring-2 ring-accent'
-                      : value
-                        ? 'opacity-40 grayscale'
-                        : ''
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-base grayscale transition-all ${
+                    value === level ? 'bg-accent-soft opacity-100 ring-1 ring-accent' : 'opacity-65'
                   }`}
                 >
                   {row.emoji[level]}
