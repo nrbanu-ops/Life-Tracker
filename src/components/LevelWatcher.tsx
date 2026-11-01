@@ -131,7 +131,10 @@ export function LevelWatcher() {
             <ul className="flex flex-col gap-1 text-sm">
               {penalties.map((p) => (
                 <li key={p.habitId} className="flex justify-between gap-3">
-                  <span className="truncate">{p.title}</span>
+                  <span className="truncate">
+                    {p.title}
+                    {p.weekly && <span className="text-sys-muted"> · haftalık hedef</span>}
+                  </span>
                   <span className="font-mono tabular-nums" style={{ color: PENALTY_RED }}>
                     {Math.round(p.xp)} XP
                   </span>

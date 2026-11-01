@@ -10,7 +10,7 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
   Atlanan gün ve minimum cezasız, kısmi yarı ceza; haftalık hedefte eksik kalan her kez hafta bitince.
   Dünü sonradan işaretlersen ceza kalkıyor. Seviye ve rank düşebilir, statlar düşmüyor. Sabah
   "Görev tamamlanmadı" penceresi dünün cezasını gösteriyor. Ayarlar'dan kapatılabilir; açıldığı günden
-  itibaren sayılıyor.
+  itibaren sayılıyor. Haftalık hedef cezası pencerede "haftalık hedef" diye işaretli.
 - Seviye eğrisi yavaşladı, eskisinin yaklaşık yarı hızında (`xpToNext` = 60·n^1,1).
   Düzenli bir kullanıcı 1 haftada Lv 3, 1 ayda 6, 3 ayda ~11 (D-Rank), 1 yılda ~23 (C-Rank) oluyor.
   Kazanılmış XP değişmez; seviye yeni eğriye göre yeniden hesaplanır.
@@ -24,11 +24,14 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 - Arka plan resmi kartla uyumlu olsun diye maviye boyandı (iki temada da).
 
 ### Kütüphane
+- Harita bütün yerleri gösteriyor: raf filtreleri (tür, dil) haritada gizli; önceden bir dil ya da "Kitap"
+  seçiliyken yerler haritadan kayboluyordu. Tek yer varken daha geniş açı; haritadan "Ekle" yer ekler.
 - Yeni tür: **Oyun**. Arama İngilizce Wikipedia'dan (anahtarsız), bitince 20 XP (Zekâ).
 - Kütüphane takvimi bütün türleri birlikte gösteriyor: biten günler dolu, başlanan günler halka nokta,
   tür rengiyle; gün listesi "Bitirdin / Başladın" olarak ayrılıyor.
 
 ### Diğer
+- Geçmiş bir haftadaki güne sayı/süre eklemek hata verip kaydı geri alıyordu (XP defteri işlemi); düzeldi.
 - Ayarlar → **Bütün verileri sil** (SİL yazarak onaylanır; otomatik yedek de kapanır).
 - Ruh hali ve enerji seçici küçüldü ve sadeleşti: gri yüzler, seçilenin adı yanında.
 - Projeler sayfasındaki "Gemini ile planla" kartı anahtar yokken de görünüyor ve Ayarlar'a götürüyor

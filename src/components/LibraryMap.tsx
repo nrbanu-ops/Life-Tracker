@@ -54,7 +54,8 @@ export default function LibraryMap({ items, onSelect }: Props) {
     }
     if (placed.length > 0) {
       const bounds = L.latLngBounds(placed.map((i) => [i.latitude as number, i.longitude as number]))
-      map.current.fitBounds(bounds, { padding: [32, 32], maxZoom: 12 })
+      // A single place shows its surroundings rather than its streets.
+      map.current.fitBounds(bounds, { padding: [32, 32], maxZoom: placed.length === 1 ? 9 : 12 })
     }
     // `items` is read through the signature on purpose.
     // eslint-disable-next-line react-hooks/exhaustive-deps

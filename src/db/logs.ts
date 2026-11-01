@@ -41,7 +41,8 @@ export async function addAmount(
   date: string,
   amount: number,
 ): Promise<Habit | undefined> {
-  return db.transaction('rw', db.habits, db.habitLogs, async () => {
+  // meta too: a day in a frozen week marks that week for the XP ledger.
+  return db.transaction('rw', db.habits, db.habitLogs, db.meta, async () => {
     const habit = await db.habits.get(habitId)
     if (!habit) return undefined
     const existing = await db.habitLogs.where({ habitId, date }).first()

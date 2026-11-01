@@ -110,7 +110,7 @@ export type LevelState = LevelInfo & {
   emergency: EmergencyQuest & { done: number; met: boolean }
   titles: Title[]
   /** What yesterday's misses cost, per habit. */
-  penalties: { habitId: string; title: string; xp: number }[]
+  penalties: { habitId: string; title: string; weekly: boolean; xp: number }[]
 }
 
 /** The user's level, rank, stats and today's quest, kept live; undefined while loading. */
@@ -145,11 +145,10 @@ export function useLeveling(): LevelState | undefined {
       quest: questState(data.habits, data.logs, today),
       emergency: { ...emergency, done: progress.done, met: !!progress.metOn },
       titles: titles({ level: info.level, summary, habits: data.habits, logs: data.logs, library: data.library, today }),
-      penalties: penaltiesOn(data, shift(today, -1), today).map((e) => ({
-        habitId: e.habitId!,
-        title: data.habits.find((h) => h.id === e.habitId)?.title ?? '',
-        xp: e.xp,
-      })),
+      penalties: penaltiesOn(data, shift(today, -1), today).map((e) => {
+        const habit = data.habits.find((h) => h.id === e.habitId)
+        return { habitId: e.habitId!, title: habit?.title ?? '', weekly: habit?.frequency.type === 'timesPerWeek', xp: e.xp }
+      }),
     }
   }, [today])
 }

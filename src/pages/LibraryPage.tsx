@@ -91,8 +91,8 @@ export function LibraryPage() {
         />
       </div>
 
-      {/* The calendar always shows every kind together. */}
-      <div className={`-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 ${view === 'calendar' ? 'hidden' : ''}`}>
+      {/* The calendar always shows every kind together, the map every place: the filters are for the shelf. */}
+      <div className={`-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 ${view !== 'shelf' ? 'hidden' : ''}`}>
         {FILTERS.map((f) => (
           <button
             key={f}
@@ -108,7 +108,7 @@ export function LibraryPage() {
         ))}
       </div>
 
-      {showLanguages && view !== 'calendar' && (
+      {showLanguages && view === 'shelf' && (
         <div className="-mx-4 -mt-2 mb-5 flex gap-2 overflow-x-auto px-4 pb-1">
           {[undefined, ...languages].map((language) => (
             <button
@@ -127,7 +127,7 @@ export function LibraryPage() {
       )}
 
       {items === undefined ? null : view === 'map' ? (
-        <MapView items={filter === 'all' || filter === 'place' ? shown.filter((i) => i.kind === 'place') : []} onSelect={setSelectedId} />
+        <MapView items={items.filter((i) => i.kind === 'place')} onSelect={setSelectedId} />
       ) : view === 'calendar' ? (
         <LibraryCalendar items={items} today={today} onSelect={setSelectedId} />
       ) : (
@@ -182,7 +182,7 @@ export function LibraryPage() {
       <LibraryAddSheet
         open={adding || shared !== undefined}
         today={today}
-        defaultKind={shared !== undefined ? 'place' : filter === 'all' ? 'book' : filter}
+        defaultKind={shared !== undefined || view === 'map' ? 'place' : filter === 'all' ? 'book' : filter}
         initialQuery={shared}
         onClose={() => {
           setAdding(false)
