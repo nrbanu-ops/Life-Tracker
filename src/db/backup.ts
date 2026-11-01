@@ -1,5 +1,18 @@
-import { androidBridge } from '../lib/android'
-import { BACKUP_APP, BACKUP_FORMAT, decodeRecord, encodeRecord, type Backup } from '../lib/backup'
+import { addDays } from 'date-fns'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { androidBridge, saveFile } from '../lib/android'
+import {
+  BACKUP_APP,
+  BACKUP_FORMAT,
+  backupFileName,
+  backupReminder,
+  decodeRecord,
+  encodeRecord,
+  SNOOZE_DAYS,
+  type Backup,
+} from '../lib/backup'
+import { fromDateKey, toDateKey } from '../lib/date'
+import { useTodayKey } from '../lib/useTodayKey'
 import { db, META_TABLE } from './db'
 
 const dataTables = () => db.tables.filter((t) => t.name !== META_TABLE)
@@ -156,4 +169,47 @@ export async function noteDownloadedBackup(): Promise<void> {
   const autoOn = supportsAndroidBackup ? await androidBackupOn() : supportsFileBackup && Boolean(await getBackupHandle())
   if (!autoOn) dirty = false
   await db.meta.put({ key: 'lastBackupAt', value: new Date().toISOString() })
+}
+
+/** Saves a backup file the user keeps (Downloads on Android); false if it couldn't be saved. */
+export async function downloadBackup(today: string): Promise<boolean> {
+  const blob = new Blob([await exportBackup()], { type: 'application/json' })
+  if (!(await saveFile(backupFileName(today), blob))) return false
+  await noteDownloadedBackup()
+  return true
+}
+
+// --- Reminder on the Today screen when no backup was taken for a while.
+
+const SNOOZE = 'backupSnoozedUntil'
+
+export async function snoozeBackupReminder(today: string): Promise<void> {
+  await db.meta.put({ key: SNOOZE, value: toDateKey(addDays(fromDateKey(today), SNOOZE_DAYS)) })
+}
+
+/** Days since the last backup when it's time to remind (null: never backed up), else undefined. */
+export function useBackupReminder(): number | null | undefined {
+  const today = useTodayKey()
+  return useLiveQuery(async () => {
+    const [last, snoozed, handle, android, habits, project, item, entry] = await Promise.all([
+      db.meta.get('lastBackupAt'),
+      db.meta.get(SNOOZE),
+      db.meta.get('backupHandle'),
+      db.meta.get('androidBackup'),
+      db.habits.toArray(),
+      db.projects.orderBy('createdAt').first(),
+      db.library.orderBy('createdAt').first(),
+      db.journal.orderBy('createdAt').first(),
+    ])
+    const firstUse = [...habits.map((h) => h.createdAt), project?.createdAt, item?.createdAt, entry?.createdAt]
+      .filter((d): d is string => !!d)
+      .sort()[0]
+    return backupReminder({
+      today,
+      firstUse: firstUse && toDateKey(new Date(firstUse)),
+      lastBackupAt: last?.value as string | undefined,
+      autoOn: supportsAndroidBackup ? Boolean(android?.value) : supportsFileBackup && Boolean(handle?.value),
+      snoozedUntil: snoozed?.value as string | undefined,
+    })
+  }, [today])
 }

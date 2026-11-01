@@ -1,3 +1,6 @@
+import { differenceInCalendarDays } from 'date-fns'
+import { fromDateKey, toDateKey } from './date'
+
 /**
  * Backup file format: every table as plain JSON. Blobs (the user's own photos) can't go into
  * JSON, so they are stored as data URLs under a `__blob` marker and turned back on import.
@@ -80,3 +83,28 @@ export function parseBackup(text: string): ParsedBackup {
 
 /** "life-tracker-yedek-2026-10-31.json" */
 export const backupFileName = (today: string) => `life-tracker-yedek-${today}.json`
+
+export type ReminderInput = {
+  today: string
+  /** Day key of the first thing entered; undefined while the app is empty. */
+  firstUse?: string
+  lastBackupAt?: string
+  /** An automatic backup is set up: it keeps itself fresh, or shows its own "resume" strip. */
+  autoOn: boolean
+  /** Day key until which "Sonra" hides the reminder. */
+  snoozedUntil?: string
+}
+
+export const REMIND_AFTER_DAYS = 7
+export const FIRST_REMIND_DAYS = 3
+export const SNOOZE_DAYS = 3
+
+const daysBetween = (from: string, to: string) => differenceInCalendarDays(fromDateKey(to), fromDateKey(from))
+
+/** Days since the last backup when it's time to remind (null if never backed up), else undefined. */
+export function backupReminder({ today, firstUse, lastBackupAt, autoOn, snoozedUntil }: ReminderInput): number | null | undefined {
+  if (autoOn || !firstUse || (snoozedUntil && today < snoozedUntil)) return undefined
+  if (!lastBackupAt) return daysBetween(firstUse, today) >= FIRST_REMIND_DAYS ? null : undefined
+  const since = daysBetween(toDateKey(new Date(lastBackupAt)), today)
+  return since >= REMIND_AFTER_DAYS ? since : undefined
+}

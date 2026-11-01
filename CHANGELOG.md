@@ -31,6 +31,8 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
   tür rengiyle; gün listesi "Bitirdin / Başladın" olarak ayrılıyor.
 
 ### Diğer
+- **Yedek hatırlatması:** otomatik yedek kapalıyken son yedek 7 günden eskiyse (hiç alınmadıysa ilk
+  kullanımdan 3 gün sonra) Bugün ekranında kart: "Yedeği indir" ya da "Sonra" (3 gün gizler).
 - Geçmiş bir haftadaki güne sayı/süre eklemek hata verip kaydı geri alıyordu (XP defteri işlemi); düzeldi.
 - Ayarlar → **Bütün verileri sil** (SİL yazarak onaylanır; otomatik yedek de kapanır).
 - Ruh hali ve enerji seçici küçüldü ve sadeleşti: gri yüzler, seçilenin adı yanında.

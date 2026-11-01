@@ -7,8 +7,7 @@ import {
   androidBackupOn,
   backupNow,
   chooseBackupFile,
-  exportBackup,
-  noteDownloadedBackup,
+  downloadBackup,
   restoreBackup,
   setAndroidBackup,
   stopAutoBackup,
@@ -16,8 +15,7 @@ import {
   supportsFileBackup,
 } from '../db/backup'
 import { db } from '../db/db'
-import { saveFile } from '../lib/android'
-import { backupFileName, parseBackup, type Backup } from '../lib/backup'
+import { parseBackup, type Backup } from '../lib/backup'
 import { useTodayKey } from '../lib/useTodayKey'
 
 type Message = { kind: 'ok' | 'error'; text: string }
@@ -45,9 +43,7 @@ export function BackupSection() {
 
   const download = () =>
     run(async () => {
-      const blob = new Blob([await exportBackup()], { type: 'application/json' })
-      if (!(await saveFile(backupFileName(today), blob))) return { kind: 'error', text: 'Dosya kaydedilemedi.' }
-      await noteDownloadedBackup()
+      if (!(await downloadBackup(today))) return { kind: 'error', text: 'Dosya kaydedilemedi.' }
       if (supportsAndroidBackup) return { kind: 'ok', text: 'İndirilenler/LifeTracker klasörüne kaydedildi ✓' }
     })
 

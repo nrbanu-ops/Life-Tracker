@@ -3,6 +3,7 @@ import { tr } from 'date-fns/locale'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router'
 import { useState } from 'react'
+import { BackupReminder } from '../components/BackupReminder'
 import { DayJournal } from '../components/DayJournal'
 import { LevelCard } from '../components/LevelCard'
 import { MemoryCard } from '../components/MemoryCard'
@@ -57,6 +58,8 @@ export function TodayPage() {
       <PageHeader title="Bugün" subtitle={subtitle} />
 
       <LevelCard />
+
+      <BackupReminder />
 
       <TodayTasks today={today} projectColor={projectColor} />
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decodeRecord, encodeRecord, parseBackup } from './backup'
+import { backupReminder, decodeRecord, encodeRecord, parseBackup } from './backup'
 
 describe('backup records', () => {
   it('round-trips a photo through JSON', async () => {
@@ -29,5 +29,30 @@ describe('parseBackup', () => {
     expect(parseBackup('{"tables":{}}')).toMatchObject({ ok: false, error: 'Bu bir Life Tracker yedeği değil.' })
     expect(parseBackup('{"app":"life-tracker","format":99,"tables":{}}')).toMatchObject({ ok: false })
     expect(parseBackup('{"app":"life-tracker","format":1,"tables":{"habits":{}}}')).toMatchObject({ ok: false })
+  })
+})
+
+describe('backupReminder', () => {
+  const base = { today: '2026-11-20', firstUse: '2026-11-01', autoOn: false }
+  const at = (day: string) => new Date(`${day}T21:30:00`).toISOString()
+
+  it('stays quiet in an empty app and with an automatic backup', () => {
+    expect(backupReminder({ ...base, firstUse: undefined })).toBeUndefined()
+    expect(backupReminder({ ...base, autoOn: true })).toBeUndefined()
+  })
+
+  it('reminds a few days after first use when never backed up', () => {
+    expect(backupReminder({ ...base, firstUse: '2026-11-18' })).toBeUndefined()
+    expect(backupReminder({ ...base, firstUse: '2026-11-17' })).toBeNull()
+  })
+
+  it('reminds a week after the last backup, counting calendar days', () => {
+    expect(backupReminder({ ...base, lastBackupAt: at('2026-11-14') })).toBeUndefined()
+    expect(backupReminder({ ...base, lastBackupAt: at('2026-11-13') })).toBe(7)
+  })
+
+  it('stays hidden while snoozed', () => {
+    expect(backupReminder({ ...base, snoozedUntil: '2026-11-21' })).toBeUndefined()
+    expect(backupReminder({ ...base, snoozedUntil: '2026-11-20' })).toBeNull()
   })
 })
