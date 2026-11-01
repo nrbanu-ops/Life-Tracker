@@ -109,3 +109,4 @@ Depo herkese açık: hiçbir API anahtarı, şifre ya da imza anahtarı commit'l
 Sonraki: "Buradayım" ile anlık konum.
 
 Git: depo `main` dalında; her adımdan sonra commit at, push'la (push = yayın).
+Her kullanıcıya görünen değişiklikten sonra `CHANGELOG.md`'nin en üstüne (bugünün tarihi altına) kısa bir Türkçe madde ekle. Başka cihazdan çalışma: `docs/GELISTIRME.md`. APK imzası GitHub Actions'ta Secrets'taki anahtarla yapılır; yerelde anahtar gerekmez.

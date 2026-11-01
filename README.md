@@ -6,9 +6,12 @@ cihazında kalır (IndexedDB).
 - **Bugün:** günlük ve haftalık hedefleri tek dokunuşla işaretle, minimum versiyon, günü atlama
 - **Projeler:** hedefler, adımlar (milestone), bağlı habit'ler. **Claude** ya da **Gemini** ile sohbet ederek planla
 - **Takvim, Görevler, Günlük, Zamanlayıcı**
-- **Kütüphane:** kitap, film, dizi ve gittiğin yerler; afişler, puan, harita
-- **İstatistik:** ısı haritası, seriler, haftalık/aylık oranlar
-- **Yedekleme:** JSON indir/geri yükle, otomatik yedek
+- **Kütüphane:** kitap, film, dizi, oyun ve gittiğin yerler; afişler, puan, harita, ortak takvim
+- **İstatistik:** ısı haritası, seriler, haftalık/aylık oranlar, ruh hali ve enerji
+- **Seviye sistemi:** XP, seviye, rank (E→S), statlar, günlük ve haftalık acil görev, unvanlar, başarımlar
+- **Yedekleme:** JSON indir/geri yükle, otomatik yedek, bütün verileri silme
+
+Neler değişti: [CHANGELOG.md](CHANGELOG.md).
 
 ## Kullanım
 
@@ -31,6 +34,8 @@ Anahtarlar (Gemini, TMDB) **sadece cihazında** saklanır, yedeğe ve depoya gir
 
 ## Geliştirme
 
+Başka bir bilgisayardan çalışmak (kurulum, push, Claude Code): [docs/GELISTIRME.md](docs/GELISTIRME.md).
+
 ```bash
 npm install
 npm run dev      # http://localhost:5173
@@ -45,4 +50,5 @@ vite-plugin-pwa. Proje kuralları ve mimari: [CLAUDE.md](CLAUDE.md).
 |---|---|
 | `src/` | Web uygulaması (`components`, `pages`, `db`, `lib`) |
 | `android/` | Android kabuğu (WebView + küçük köprü) |
-| `.github/workflows/` | `deploy` (Pages), `android` (APK → Release) |
+| `.github/workflows/` | `deploy` (tarama + test + Pages), `android` (APK, Secrets'taki anahtarla imzalanır → Release) |
+| `docs/` | Android kurulumu ve imza, başka cihazdan geliştirme |

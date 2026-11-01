@@ -41,7 +41,11 @@ Ayarlar → **Yedekten geri yükle**.
 Sadece `android/` klasörü değişince (`android` iş akışı). Her derleme yeni bir Release
 (`android-v<numara>`) ve daha yüksek bir sürüm kodu üretir; telefonda eskisinin üzerine kurulur.
 
-## İmza anahtarı (isteğe bağlı ama önerilir)
+## İmza anahtarı
+
+**Durum:** anahtar GitHub Secrets'ta (`ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`).
+`android-v2` ve sonraki bütün APK'lar GitHub Actions'ta bu anahtarla imzalanır; imzalama için
+hiçbir bilgisayarda bir şey yapmak gerekmez. Aşağısı anahtarı yenilemek ya da yeniden kurmak için.
 
 Android, bir uygulamanın güncellemesini sadece **aynı anahtarla** imzalanmışsa üzerine kurar.
 Depo herkese açık olduğu için anahtar depoda **değil**, GitHub'ın şifreli *Secrets* alanında durur.
