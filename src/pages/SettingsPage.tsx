@@ -4,6 +4,7 @@ import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
 import { resetAllData } from '../db/backup'
+import { setPenaltyOn, usePenaltyOn } from '../db/leveling'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
 import { androidBridge } from '../lib/android'
 import { setAiSettings, useAiSettings } from '../lib/assistant'
@@ -12,6 +13,7 @@ import { askGemini } from '../lib/gemini'
 import { getTmdbKey, setTmdbKey } from '../lib/library'
 import { setLevelingOn, useLevelingOn } from '../lib/levelingSetting'
 import { checkForUpdate, type UpdateResult } from '../lib/update'
+import { useTodayKey } from '../lib/useTodayKey'
 
 export function SettingsPage() {
   const navigate = useNavigate()
@@ -111,6 +113,7 @@ export function SettingsPage() {
             Habit'ler, görevler ve günlük XP kazandırır; seviye, rank ve statlar Bugün ekranında ve Profil'de.
             Kapatınca hiçbir yerde görünmez.
           </p>
+          {levelingOn && <PenaltySwitch />}
         </section>
 
         <TmdbKeySection />
@@ -383,5 +386,20 @@ function TmdbKeySection() {
       </div>
       <p className="mt-2 text-xs text-muted">Anahtar sadece bu cihazda saklanır.</p>
     </section>
+  )
+}
+
+function PenaltySwitch() {
+  const on = usePenaltyOn()
+  const today = useTodayKey()
+  if (on === undefined) return null
+  return (
+    <div className="mt-4 border-t border-border pt-4">
+      <Switch label="Ceza" checked={on} onChange={(value) => void setPenaltyOn(value, today)} />
+      <p className="mt-1 text-sm text-muted">
+        Planlanıp yapılmayan habit, yapınca kazandıracağı kadar XP götürür (günde en fazla 100). Atlanan gün ve
+        minimum cezasız, kısmi yarı ceza. Seviye düşebilir. Açtığın günden itibaren sayılır.
+      </p>
+    </div>
   )
 }

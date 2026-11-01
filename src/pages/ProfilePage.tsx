@@ -249,6 +249,14 @@ export function ProfilePage() {
                   <SystemBar ratio={xp / topSource} />
                 </li>
               ))}
+              {(summary.sources.penalty ?? 0) <= -1 && (
+                <li className="flex justify-between border-t border-sys-line pt-2 text-sm">
+                  <span>{SOURCE_LABEL.penalty}</span>
+                  <span className="font-mono text-sys-danger tabular-nums">
+                    {Math.round(summary.sources.penalty!).toLocaleString('tr')}
+                  </span>
+                </li>
+              )}
             </ul>
           </SystemWindow>
         )}
@@ -293,6 +301,11 @@ export function ProfilePage() {
             <li>Bir günün habit XP'sinin 150'yi aşan kısmı yarım sayılır.</li>
             <li>Geçmişi işaretlemek: dün tam, son 7 gün %75, daha eskisi %25.</li>
             <li>90 gün boyunca %95'in üstünde yaptığın habit ustalaşmış sayılır, biraz daha az XP verir.</li>
+            <li>
+              Ceza (Ayarlar'dan kapatılabilir): planlanıp yapılmayan habit, yapınca kazandıracağı kadar XP götürür;
+              günde en fazla 100. Atlanan gün ve minimum cezasız, kısmi yarı ceza; haftalık hedefte eksik kalan her kez
+              hafta bitince. Dünü sonradan işaretlersen ceza kalkar. Seviye düşebilir, statlar düşmez.
+            </li>
             <li>Biten haftalar kaydedilir; habit silsen de o XP kalır.</li>
           </ul>
         </details>

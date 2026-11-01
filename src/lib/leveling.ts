@@ -173,6 +173,7 @@ export type XpSource =
   | 'library'
   | 'achievement'
   | 'emergency'
+  | 'penalty'
 
 export const SOURCE_LABEL: Record<XpSource, string> = {
   habit: "Habit'ler",
@@ -186,6 +187,7 @@ export const SOURCE_LABEL: Record<XpSource, string> = {
   library: 'Kütüphane',
   achievement: 'Başarımlar',
   emergency: 'Acil görev',
+  penalty: 'Ceza',
 }
 
 export type XpTag = 'quest' | 'questWeek' | 'emergency' | 'comeback'
@@ -202,6 +204,8 @@ export type XpData = {
   moods: DayMood[]
   library: LibraryItem[]
   achievements: UnlockedAchievement[]
+  /** Missed habits cost XP from this day on; undefined while penalties are off. */
+  penaltyFrom?: string
 }
 
 export const XP = {
@@ -218,6 +222,7 @@ export const XP = {
   library: { book: 40, movie: 10, series: 10, game: 20, place: 10, other: 10 } as Record<LibraryItem['kind'], number>,
   achievement: 25,
   emergency: 100,
+  penaltyDayCap: 100,
   quit: [
     [1, 10],
     [3, 20],
@@ -261,7 +266,7 @@ const COMEBACK = 0.5
 /** Planned days missed in a row before doing it again counts as a comeback. */
 const COMEBACK_AFTER = 3
 
-function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, today: string): XpEvent[] {
+function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, today: string, penaltyFrom?: string): XpEvent[] {
   if (habit.kind === 'quit') return []
   const own = logs.filter((l) => l.habitId === habit.id)
   const byDate = new Map(own.map((l) => [l.date, l]))
@@ -279,6 +284,14 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
     if (date >= from && date <= to && xp > 0) events.push({ date, xp, source: 'habit', stat, habitId: habit.id, tag })
   }
   const base = (day: string) => TIER_XP[tierOn(habit, day)] * masteryOn(day)
+  // A missed planned day costs what doing it would have earned, without bonuses. Only finished
+  // days, only from the day penalties were switched on, never for archived habits.
+  const fined = (day: string) => !!penaltyFrom && !habit.archived && day >= penaltyFrom && day < today
+  const fine = (date: string, xp: number) => {
+    if (fined(date) && date >= from && date <= to && xp > 0) {
+      events.push({ date, xp: -xp, source: 'penalty', stat, habitId: habit.id })
+    }
+  }
 
   if (habit.frequency.type === 'timesPerWeek') {
     const { count } = habit.frequency
@@ -289,10 +302,12 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
       let comebackUsed = false
       const bonus = weekStreakBonus(run)
       let anyPlanned = false
+      let skipped = 0
       for (let i = 0; i < 7; i++) {
         const day = shift(week, i)
         if (day < created || day > last) continue
         const log = byDate.get(day)
+        if (log?.status === 'skipped') skipped++
         if (log?.status !== 'skipped') anyPlanned = true
         if (!log || log.status === 'skipped') continue
         const factor = statusFactor(habit, log)
@@ -309,7 +324,12 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
         // Reaching the target: a fifth on top of the week's planned goes.
         if (isCompleted(log.status) && completed === count) emit(day, base(day) * count * 0.2 * lateFactor(day, log.loggedAt))
       }
-      const weekOver = weekRange(week).end < today
+      const weekEnd = weekRange(week).end
+      const weekOver = weekEnd < today
+      // Weekly goals are fined on the week's last day for each go short; skipped days lower the goal.
+      if (weekOver && week >= created && penaltyFrom && week >= penaltyFrom) {
+        fine(weekEnd, base(weekEnd) * Math.max(0, Math.min(count, 7 - skipped) - completed))
+      }
       if (completed >= count) run++
       else if (weekOver) run = 0
       previousEmpty = weekOver && anyPlanned && completed === 0
@@ -342,6 +362,8 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
       )
     } else {
       if (log?.status === 'partial') emit(day, base(day) * statusFactor(habit, log) * lateFactor(day, log.loggedAt))
+      // Partly done costs half.
+      fine(day, base(day) * (log?.status === 'partial' ? 0.5 : 1))
       if (day < today) {
         run = 0
         missed++
@@ -496,7 +518,17 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
   const events: XpEvent[] = []
 
   for (const habit of data.habits) {
-    events.push(...habitEvents(habit, data.logs, from, last, today), ...quitEvents(habit, from, last, today))
+    events.push(
+      ...habitEvents(habit, data.logs, from, last, today, data.penaltyFrom),
+      ...quitEvents(habit, from, last, today),
+    )
+  }
+  // A bad day costs at most a capped amount, shared out over its misses.
+  const penaltyDay = new Map<string, number>()
+  for (const e of events) if (e.source === 'penalty') penaltyDay.set(e.date, (penaltyDay.get(e.date) ?? 0) - e.xp)
+  for (const e of events) {
+    const sum = penaltyDay.get(e.date) ?? 0
+    if (e.source === 'penalty' && sum > XP.penaltyDayCap) e.xp *= XP.penaltyDayCap / sum
   }
   // Past a soft cap a day's habit XP counts half: twenty easy habits don't beat five real ones.
   const habitDay = new Map<string, number>()
@@ -556,6 +588,11 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
   return events
 }
 
+/** What the misses of `day` cost, per habit (negative XP), after the daily cap. */
+export function penaltiesOn(data: XpData, day: string, today: string): XpEvent[] {
+  return xpEvents(data, day, day, today).filter((e) => e.source === 'penalty')
+}
+
 /** The first day anything could have earned XP. */
 export function firstDay(data: XpData, today: string): string {
   const days = [
@@ -591,6 +628,8 @@ export function summarize(events: XpEvent[], into: XpSummary = emptySummary()): 
     into.days[e.date] = (into.days[e.date] ?? 0) + e.xp
     into.sources[e.source] = (into.sources[e.source] ?? 0) + e.xp
     if (e.tag) into.counts[e.tag] = (into.counts[e.tag] ?? 0) + 1
+    // Penalties take from the total only; stats keep what was earned.
+    if (e.source === 'penalty') continue
     if (e.source === 'habit' && e.stat !== 'dis') {
       into.stats[e.stat] = (into.stats[e.stat] ?? 0) + e.xp * 0.8
       into.stats.dis = (into.stats.dis ?? 0) + e.xp * 0.2
@@ -707,7 +746,7 @@ export function nextRank(rank: Rank): Rank | undefined {
 }
 
 /** A stat's value grows with the square root of its XP, so no single one runs away. */
-export const statValue = (xp: number | undefined) => Math.floor(Math.sqrt(xp ?? 0))
+export const statValue = (xp: number | undefined) => Math.floor(Math.sqrt(Math.max(0, xp ?? 0)))
 
 /** XP for one "done" today, for showing why a habit is worth what it is. */
 export function xpPerDone(habit: Habit, logs: HabitLog[], today: string): number {

@@ -23,6 +23,7 @@
   --color-sys-text: #dbe8ff;
   --color-sys-muted: #8597bb;
   --color-sys-warn: #ff8a4c;
+  --color-sys-danger: #ff4d5e;
   color-scheme: light;
 }
 
@@ -72,6 +73,7 @@
   --color-sys-text: var(--color-sys-text);
   --color-sys-muted: var(--color-sys-muted);
   --color-sys-warn: var(--color-sys-warn);
+  --color-sys-danger: var(--color-sys-danger);
 }
 
 /* A leveling window: square edges, a thin blue line and brackets on two corners. In a layer so utilities can override. */

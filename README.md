@@ -8,7 +8,7 @@ cihazında kalır (IndexedDB).
 - **Takvim, Görevler, Günlük, Zamanlayıcı**
 - **Kütüphane:** kitap, film, dizi, oyun ve gittiğin yerler; afişler, puan, harita, ortak takvim
 - **İstatistik:** ısı haritası, seriler, haftalık/aylık oranlar, ruh hali ve enerji
-- **Seviye sistemi:** XP, seviye, rank (E→S), statlar, günlük ve haftalık acil görev, unvanlar, başarımlar
+- **Seviye sistemi:** XP, seviye, rank (E→S), statlar, günlük ve haftalık acil görev, unvanlar, başarımlar, yapılmayan habit'e ceza
 - **Yedekleme:** JSON indir/geri yükle, otomatik yedek, bütün verileri silme
 
 Neler değişti: [CHANGELOG.md](CHANGELOG.md).

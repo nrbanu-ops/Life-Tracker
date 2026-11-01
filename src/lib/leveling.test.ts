@@ -278,3 +278,62 @@ describe('titles', () => {
     expect(earned).toEqual(['awakened', 'chosen', 'unchained'])
   })
 })
+
+describe('penalties', () => {
+  const fines = (d: XpData, from: string, to: string, today: string) =>
+    xpEvents(d, from, to, today).filter((e) => e.source === 'penalty')
+  const total = (events: { xp: number }[]) => events.reduce((sum, e) => sum + e.xp, 0)
+
+  it('costs a missed planned day what doing it would have earned', () => {
+    const run = habit('Koşu') // heavy, 25 XP
+    const d = data([run], [], { penaltyFrom: START })
+    expect(total(fines(d, START, day(2), day(3)))).toBe(-75)
+  })
+
+  it('never fines today, before penaltyFrom, or without it', () => {
+    const run = habit('Koşu')
+    expect(fines(data([run], [], { penaltyFrom: START }), START, day(0), day(0))).toEqual([])
+    expect(fines(data([run], [], { penaltyFrom: day(2) }), START, day(3), day(4))).toHaveLength(2)
+    expect(fines(data([run], []), START, day(3), day(4))).toEqual([])
+  })
+
+  it('spares skipped and minimum days, halves partly done ones', () => {
+    const read = habit('Kitap oku', { kind: 'count', target: 20 }) // medium, 12 XP
+    const logs = [
+      done(read, day(0), { status: 'skipped' }),
+      done(read, day(1), { status: 'minimum' }),
+      done(read, day(2), { status: 'partial', value: 10 }),
+    ]
+    expect(total(fines(data([read], logs, { penaltyFrom: START }), START, day(2), day(3)))).toBe(-6)
+  })
+
+  it('lifts the fine once a day is marked late', () => {
+    const run = habit('Koşu')
+    const late = done(run, day(0), { loggedAt: day(2) })
+    expect(fines(data([run], [late], { penaltyFrom: START }), START, day(0), day(3))).toEqual([])
+  })
+
+  it('fines a weekly goal per missing go when the week is over', () => {
+    const gym = habit('Spor', { frequency: { type: 'timesPerWeek', count: 3 } }) // heavy, 25 XP
+    const d = data([gym], [done(gym, day(1))], { penaltyFrom: START })
+    expect(fines(d, START, day(6), day(6))).toEqual([])
+    const after = fines(d, START, day(6), day(7))
+    expect(after).toHaveLength(1)
+    expect(after[0]).toMatchObject({ date: day(6), xp: -50 })
+  })
+
+  it('caps a day, leaves archived habits and stats alone, and can lower the level', () => {
+    const many = ['Maraton', 'Uzun koşu', 'Triatlon', 'Derin çalışma'].map((t) => habit(t)) // 4 × 40
+    expect(total(fines(data(many, [], { penaltyFrom: START }), START, day(0), day(1)))).toBeCloseTo(-XP.penaltyDayCap)
+    const old = habit('Koşu', { archived: true })
+    expect(fines(data([old], [], { penaltyFrom: START }), START, day(3), day(4))).toEqual([])
+    const s = summarize([
+      { date: day(0), xp: 100, source: 'habit', stat: 'str' },
+      { date: day(1), xp: -60, source: 'penalty', stat: 'str' },
+    ])
+    expect(s.xp).toBe(40)
+    expect(s.stats.str).toBe(80)
+    expect(levelFor(xpToNext(1) + 10).level).toBe(2)
+    expect(levelFor(xpToNext(1) + 10 - 25).level).toBe(1)
+  })
+})

@@ -7,6 +7,7 @@ import {
   firstDay,
   levelFor,
   mergeSummaries,
+  penaltiesOn,
   questState,
   rankFor,
   summarize,
@@ -24,9 +25,11 @@ import { useTodayKey } from '../lib/useTodayKey'
 import { db } from './db'
 
 const DIRTY = 'xpDirtyWeeks'
+/** The day penalties were switched on, or 'off'. Missing means never set: they start on first run. */
+const PENALTY = 'penaltyFrom'
 
 export async function loadXpData(): Promise<XpData> {
-  const [habits, logs, tasks, milestones, projects, journal, moods, library, achievements] = await Promise.all([
+  const [habits, logs, tasks, milestones, projects, journal, moods, library, achievements, penalty] = await Promise.all([
     db.habits.toArray(),
     db.habitLogs.toArray(),
     db.tasks.toArray(),
@@ -36,9 +39,21 @@ export async function loadXpData(): Promise<XpData> {
     db.moods.toArray(),
     db.library.toArray(),
     db.achievements.toArray(),
+    db.meta.get(PENALTY),
   ])
-  return { habits, logs, tasks, milestones, projects, journal, moods, library, achievements }
+  const penaltyFrom = typeof penalty?.value === 'string' && penalty.value !== 'off' ? penalty.value : undefined
+  return { habits, logs, tasks, milestones, projects, journal, moods, library, achievements, penaltyFrom }
 }
+
+/** Penalties for missed habits start today (switching them on again never fines the past). */
+export async function setPenaltyOn(on: boolean, today: string): Promise<void> {
+  await db.meta.put({ key: PENALTY, value: on ? today : 'off' })
+}
+
+export function usePenaltyOn(): boolean | undefined {
+  return useLiveQuery(async () => (await db.meta.get(PENALTY))?.value !== 'off')
+}
+
 
 /** A day of a frozen week changed (e.g. a late mark): that week is worked out again. */
 export async function markXpWeekDirty(week: string): Promise<void> {
@@ -56,6 +71,7 @@ const shift = (day: string, days: number) => toDateKey(addDays(fromDateKey(day),
  * deleting a habit or tuning the rules never takes away XP already earned.
  */
 export async function syncXpLedger(today: string): Promise<void> {
+  if (!(await db.meta.get(PENALTY))) await setPenaltyOn(true, today)
   const current = weekRange(today).start
   const [data, stored, dirtyEntry] = await Promise.all([loadXpData(), db.xpWeeks.toArray(), db.meta.get(DIRTY)])
   const dirty = new Set((dirtyEntry?.value as string[] | undefined) ?? [])
@@ -93,6 +109,8 @@ export type LevelState = LevelInfo & {
   quest: QuestState
   emergency: EmergencyQuest & { done: number; met: boolean }
   titles: Title[]
+  /** What yesterday's misses cost, per habit. */
+  penalties: { habitId: string; title: string; xp: number }[]
 }
 
 /** The user's level, rank, stats and today's quest, kept live; undefined while loading. */
@@ -127,6 +145,11 @@ export function useLeveling(): LevelState | undefined {
       quest: questState(data.habits, data.logs, today),
       emergency: { ...emergency, done: progress.done, met: !!progress.metOn },
       titles: titles({ level: info.level, summary, habits: data.habits, logs: data.logs, library: data.library, today }),
+      penalties: penaltiesOn(data, shift(today, -1), today).map((e) => ({
+        habitId: e.habitId!,
+        title: data.habits.find((h) => h.id === e.habitId)?.title ?? '',
+        xp: e.xp,
+      })),
     }
   }, [today])
 }

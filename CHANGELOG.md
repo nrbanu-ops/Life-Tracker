@@ -6,6 +6,11 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 ## 2026-11-01
 
 ### Seviye sistemi
+- **Ceza:** planlanıp yapılmayan habit, yapınca kazandıracağı kadar XP götürüyor (günde en fazla 100).
+  Atlanan gün ve minimum cezasız, kısmi yarı ceza; haftalık hedefte eksik kalan her kez hafta bitince.
+  Dünü sonradan işaretlersen ceza kalkıyor. Seviye ve rank düşebilir, statlar düşmüyor. Sabah
+  "Görev tamamlanmadı" penceresi dünün cezasını gösteriyor. Ayarlar'dan kapatılabilir; açıldığı günden
+  itibaren sayılıyor.
 - Seviye eğrisi yavaşladı, eskisinin yaklaşık yarı hızında (`xpToNext` = 60·n^1,1).
   Düzenli bir kullanıcı 1 haftada Lv 3, 1 ayda 6, 3 ayda ~11 (D-Rank), 1 yılda ~23 (C-Rank) oluyor.
   Kazanılmış XP değişmez; seviye yeni eğriye göre yeniden hesaplanır.
