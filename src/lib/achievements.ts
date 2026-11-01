@@ -138,14 +138,16 @@ export function evaluateAchievements(
   const finished = (kind: LibraryItem['kind']) => library.filter((i) => i.kind === kind && i.status === 'done').length
   const goalYears = [...new Set(libraryGoals.map((g) => g.year))]
   const goalReached = goalYears.some((year) => goalProgress(library, libraryGoals, year).some((g) => g.done >= g.target))
-  const journalDays = new Set(journal.map((e) => e.date)).size
+  // Gemini's weekly reviews are read, not written: they don't count as journal days.
+  const written = journal.filter((e) => e.kind !== 'review')
+  const journalDays = new Set(written.map((e) => e.date)).size
   const doneTasks = tasks.filter((t) => t.done).length
 
   const drafts: Draft[] = [
     single('first-habit', 'start', '🌱', 'İlk tohum', 'İlk habit’ini ekle', habits.length > 0),
     single('first-check', 'start', '✔️', 'İlk adım', 'Bir habit’i ilk kez işaretle', completedLogs.length > 0),
     single('first-project', 'start', '🗺️', 'Yol haritası', 'İlk projeni oluştur', projects.length > 0),
-    single('first-journal', 'start', '✍️', 'Sevgili günlük', 'İlk günlük yazını yaz', journal.length > 0),
+    single('first-journal', 'start', '✍️', 'Sevgili günlük', 'İlk günlük yazını yaz', written.length > 0),
 
     ...ladder('streak', 'streak', dayStreak, [
       { target: 3, emoji: '✨', title: 'Kıvılcım', description: 'Bir habit’te 3 günlük seri' },
@@ -275,7 +277,8 @@ function projectDrafts(
       title: a.title,
       description: a.description ?? measured.description,
       current: measured.current,
-      target: measured.target,
+      // An AI goal of 0 would be earned the moment the project is added.
+      target: Math.max(1, measured.target),
       percent: a.rule.type === 'progress' || undefined,
     })
   }

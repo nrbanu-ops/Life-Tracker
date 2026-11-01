@@ -216,7 +216,7 @@ export const XP = {
   journal: 5,
   mood: 2,
   library: { book: 40, movie: 10, series: 10, game: 20, place: 10, other: 10 } as Record<LibraryItem['kind'], number>,
-  achievement: 50,
+  achievement: 25,
   emergency: 100,
   quit: [
     [1, 10],
@@ -485,6 +485,8 @@ function emergencyEvents(data: XpData, from: string, last: string): XpEvent[] {
   return events
 }
 
+const ADDING_ONLY = new Set(['first-habit', 'first-project'])
+
 const LIBRARY_STAT: Record<LibraryItem['kind'], StatKey> = { book: 'int', movie: 'sen', series: 'sen', game: 'int', place: 'str', other: 'sen' }
 
 /** Every XP event between `from` and `to` (inclusive), never past today. */
@@ -546,7 +548,10 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
   }
   events.push(...emergencyEvents(data, from, last))
   for (const a of data.achievements) {
-    if (inRange(a.unlockedAt)) events.push({ date: a.unlockedAt, xp: XP.achievement, source: 'achievement', stat: 'dis' })
+    // Achievements for only adding something (a first habit, a first project) give no XP: doing does.
+    if (inRange(a.unlockedAt) && !ADDING_ONLY.has(a.id)) {
+      events.push({ date: a.unlockedAt, xp: XP.achievement, source: 'achievement', stat: 'dis' })
+    }
   }
   return events
 }

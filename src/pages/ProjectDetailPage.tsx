@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { BottomSheet } from '../components/BottomSheet'
+import { HabitForm } from '../components/HabitForm'
 import { BackIcon } from '../components/icons'
 import { LinkHabitsSheet } from '../components/LinkHabitsSheet'
 import { MilestoneList } from '../components/MilestoneList'
@@ -55,6 +56,7 @@ export function ProjectDetailPage() {
 
   const [editingProject, setEditingProject] = useState(false)
   const [linking, setLinking] = useState(false)
+  const [editingHabit, setEditingHabit] = useState<Habit>()
   const [planning, setPlanning] = useState(false)
   const ai = useAiSettings()
   const [taskEditing, setTaskEditing] = useState<TaskEditing>(null)
@@ -177,7 +179,15 @@ export function ProjectDetailPage() {
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
             {linkedHabits.map((habit) => (
-              <LinkedHabitRow key={habit.id} habit={habit} logs={logs} from={from} today={today} color={project.color} />
+              <LinkedHabitRow
+                key={habit.id}
+                habit={habit}
+                logs={logs}
+                from={from}
+                today={today}
+                color={project.color}
+                onEdit={() => setEditingHabit(habit)}
+              />
             ))}
           </ul>
         )}
@@ -233,6 +243,17 @@ export function ProjectDetailPage() {
         onClose={() => setPlanning(false)}
         onImported={() => setPlanning(false)}
       />
+      <BottomSheet open={editingHabit !== undefined} title="Habit'i düzenle" onClose={() => setEditingHabit(undefined)}>
+        {editingHabit && (
+          <HabitForm
+            key={editingHabit.id}
+            habit={editingHabit}
+            projects={projects.filter((p) => p.status !== 'done' || p.id === editingHabit.projectId)}
+            onDone={() => setEditingHabit(undefined)}
+          />
+        )}
+      </BottomSheet>
+
       <LinkHabitsSheet
         open={linking}
         project={project}
@@ -257,17 +278,20 @@ type RowProps = {
   from: string
   today: string
   color: string
+  /** Opens the habit form, e.g. to rename a habit that came with an AI plan. */
+  onEdit: () => void
 }
 
-function LinkedHabitRow({ habit, logs, from, today, color }: RowProps) {
-  if (habit.kind === 'quit') return <QuitHabitRow habit={habit} />
+function LinkedHabitRow({ habit, logs, from, today, color, onEdit }: RowProps) {
+  if (habit.kind === 'quit') return <QuitHabitRow habit={habit} onEdit={onEdit} />
   const subtitle = [describeAmount(habit), describeFrequency(habit.frequency)]
     .filter(Boolean)
     .join(' · ')
 
   const { done, planned, rate } = successRate(habit, logs, from, today, today)
   return (
-    <li className="px-4 py-3">
+    <li>
+      <button type="button" onClick={onEdit} className="block w-full px-4 py-3 text-left">
       <span className="flex items-baseline justify-between gap-3">
         <span className="truncate font-medium">{habit.title}</span>
         <span className="shrink-0 text-sm font-medium tabular-nums">
@@ -279,15 +303,17 @@ function LinkedHabitRow({ habit, logs, from, today, color }: RowProps) {
         {planned > 0 && <span className="shrink-0 tabular-nums">{done}/{planned} gün</span>}
       </span>
       <ProgressBar ratio={rate ?? 0} color={color} />
+      </button>
     </li>
   )
 }
 
 /** Quit habits have no daily rate; they show time since quitting instead. */
-function QuitHabitRow({ habit }: { habit: Habit }) {
+function QuitHabitRow({ habit, onEdit }: { habit: Habit; onEdit: () => void }) {
   const now = useNow()
   return (
-    <li className="flex items-center justify-between gap-3 px-4 py-3">
+    <li>
+      <button type="button" onClick={onEdit} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
       <span className="min-w-0">
         <span className="block truncate font-medium">{habit.title}</span>
         <span className="block text-sm text-muted">Bırakma</span>
@@ -295,6 +321,7 @@ function QuitHabitRow({ habit }: { habit: Habit }) {
       <span className="shrink-0 text-sm font-medium">
         {formatElapsed(quitStats(habit, now).currentMs)}
       </span>
+      </button>
     </li>
   )
 }

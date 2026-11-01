@@ -13,6 +13,8 @@ const LEVEL_UP_MS = 4000
 
 type Seen = { total: number; level: number; rank: Rank; titles: Set<string> }
 
+const RANK_ORDER: Rank[] = ['E', 'D', 'C', 'B', 'A', 'S']
+
 /**
  * Freezes closed weeks into the XP ledger, and shows what XP does: a small "+14 XP" as it comes
  * in, a system message on a new title, a window on a level up and a bigger one on a new rank.
@@ -35,7 +37,14 @@ export function LevelWatcher() {
     if (!state) return
     const before = seen.current
     const earned = new Set(state.titles.filter((t) => t.earned).map((t) => t.id))
-    seen.current = { total: state.total, level: state.level, rank: state.rank, titles: earned }
+    // The highest point reached so far: unticking a habit and ticking it again only gets back
+    // there, so it shows no new "+XP" and no second level-up.
+    seen.current = {
+      total: Math.max(state.total, before?.total ?? 0),
+      level: Math.max(state.level, before?.level ?? 0),
+      rank: before && RANK_ORDER.indexOf(before.rank) > RANK_ORDER.indexOf(state.rank) ? before.rank : state.rank,
+      titles: new Set([...earned, ...(before?.titles ?? [])]),
+    }
     // The first value is where the user already is: nothing to celebrate.
     if (!before || !on) return
     const delta = state.total - before.total
@@ -43,7 +52,7 @@ export function LevelWatcher() {
     const fresh = state.titles.find((t) => t.earned && !before.titles.has(t.id))
     if (fresh) setMessage(`Unvan kazandın · ${fresh.name}`)
     if (state.level > before.level) {
-      if (state.rank !== before.rank) setRankUp(state.rank)
+      if (RANK_ORDER.indexOf(state.rank) > RANK_ORDER.indexOf(before.rank)) setRankUp(state.rank)
       else setLevelUp(state.level)
     }
   }, [state, on])
