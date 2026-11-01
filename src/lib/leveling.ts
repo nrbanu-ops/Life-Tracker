@@ -669,9 +669,9 @@ export function titles({ level, summary, habits, logs, library, today }: TitleIn
 
 /**
  * XP from level n to n + 1, a little more every level. Tuned with the year simulation in the
- * tests: a steady user reaches about Lv 5 in a week, 10 in a month, 35–40 in a year.
+ * tests: a steady user reaches about Lv 3 in a week, 6 in a month, 11 in three months and 23 in a year.
  */
-export const xpToNext = (level: number) => Math.round(30 * level ** 1.05)
+export const xpToNext = (level: number) => Math.round(60 * level ** 1.1)
 
 export type LevelInfo = { level: number; into: number; needed: number }
 

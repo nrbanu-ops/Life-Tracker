@@ -212,7 +212,7 @@ describe('levels', () => {
     expect(rankFor(65)).toBe('S')
   })
 
-  it('takes a steady user to about Lv 35–40 in a year', () => {
+  it('takes a steady user to about Lv 3 in a week and 23 in a year', () => {
     const habits = [
       habit('Diş fırçalama'),
       habit('Su iç'),
@@ -236,12 +236,12 @@ describe('levels', () => {
     const week = levelFor(total(7)).level
     const month = levelFor(total(30)).level
     const year = levelFor(total(365)).level
-    expect(week).toBeGreaterThanOrEqual(3)
-    expect(week).toBeLessThanOrEqual(7)
-    expect(month).toBeGreaterThanOrEqual(8)
-    expect(month).toBeLessThanOrEqual(14)
-    expect(year).toBeGreaterThanOrEqual(30)
-    expect(year).toBeLessThanOrEqual(45)
+    expect(week).toBeGreaterThanOrEqual(2)
+    expect(week).toBeLessThanOrEqual(4)
+    expect(month).toBeGreaterThanOrEqual(5)
+    expect(month).toBeLessThanOrEqual(8)
+    expect(year).toBeGreaterThanOrEqual(20)
+    expect(year).toBeLessThanOrEqual(28)
   })
 })
 
