@@ -43,7 +43,7 @@ export default defineConfig({
         // jpg too, so the background picture works offline.
         globPatterns: ['**/*.{js,wasm,css,html,jpg}'],
       },
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'],
       manifest: {
         name: 'Life Tracker',
         short_name: 'Life Tracker',
@@ -56,7 +56,10 @@ export default defineConfig({
         theme_color: '#dce6f3',
         icons: [
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          // Full-bleed square: a launcher that masks the icon crops its own shape out of this.
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
     }),

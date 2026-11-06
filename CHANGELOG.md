@@ -3,6 +3,15 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-06
+
+### iPhone / iPad
+- **Ana ekran ikonu düzeldi.** iOS, SVG ikonları yok saydığı için uygulamayı ana ekrana ekleyince
+  ikon yerine sayfanın ekran görüntüsü çıkıyordu; artık PNG `apple-touch-icon` var.
+  Ana ekranda adı "Life Tracker" görünüyor, durum çubuğu tema rengine uyuyor.
+- Android/Chrome için de PNG ikonlar eklendi (192, 512 ve maskeli 512); maskeli ikon artık
+  köşeleri kırpılmayacak şekilde tam kare.
+
 ## 2026-11-01
 
 ### Seviye sistemi
