@@ -36,6 +36,8 @@ function saveTimer(timer: TimerState | undefined) {
 /** Three short beeps. Browsers only allow sound after a tap, so the context is created on start. */
 function beep(audio: AudioContext | undefined) {
   if (!audio) return
+  // iOS suspends the context while the app is in the background; without this the beep is silent.
+  if (audio.state === 'suspended') void audio.resume().catch(() => {})
   for (let i = 0; i < 3; i++) {
     const osc = audio.createOscillator()
     const gain = audio.createGain()
@@ -78,6 +80,19 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     },
     [setTimer],
   )
+
+  // iOS freezes everything in the background and suspends the audio context with it. Waking it
+  // as soon as the app is on screen gives the beep a chance to play when the countdown ends.
+  useEffect(() => {
+    const wake = () => {
+      const audio = audioRef.current
+      if (document.visibilityState === 'visible' && audio?.state === 'suspended') {
+        void audio.resume().catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', wake)
+    return () => document.removeEventListener('visibilitychange', wake)
+  }, [])
 
   // Tick while running; a countdown that ran out (even while the app was closed) completes itself.
   useEffect(() => {

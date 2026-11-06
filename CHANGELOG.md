@@ -11,6 +11,17 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
   Ana ekranda adı "Life Tracker" görünüyor, durum çubuğu tema rengine uyuyor.
 - Android/Chrome için de PNG ikonlar eklendi (192, 512 ve maskeli 512); maskeli ikon artık
   köşeleri kırpılmayacak şekilde tam kare.
+- **Yedek kaydetme iPhone'da çalışıyor:** iOS'ta otomatik yedek mümkün olmadığı için "Yedeği kaydet"
+  artık paylaşım sayfasını açıyor; oradan "Dosyalara Kaydet", iCloud Drive, AirDrop ya da e-posta
+  seçebilirsin. Ayarlar'da bu cihazda otomatik yedek olmadığını anlatan bir not var.
+- **Yedek alınmadığı halde "alındı" denmiyor:** dosya kaydetme artık gerçekten ne olduğunu bildiriyor.
+  Paylaşım sayfasını kapatırsan yedek sayılmıyor, hatırlatma sıfırlanmıyor. Tarayıcı indirmesi de
+  daha sağlam: bağlantı sayfaya ekleniyor ve indirme başlamadan iptal edilmiyor.
+  (Android'de hiçbir şey değişmedi: kabuk uygulaması İndirilenler'e, Chrome doğrudan indirmeye devam.)
+
+### Zamanlayıcı
+- Geri sayım bitiş sesi, uygulama arka plandan döndüğünde de çalmaya çalışıyor (iOS ses motorunu
+  arka planda donduruyordu). Süre hesabı zaten doğruydu, değişmedi.
 
 ## 2026-11-01
 

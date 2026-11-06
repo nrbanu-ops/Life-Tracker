@@ -1,6 +1,6 @@
 import { addDays } from 'date-fns'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { androidBridge, saveFile } from '../lib/android'
+import { androidBridge, saveFile, type SaveResult } from '../lib/android'
 import {
   BACKUP_APP,
   BACKUP_FORMAT,
@@ -171,12 +171,15 @@ export async function noteDownloadedBackup(): Promise<void> {
   await db.meta.put({ key: 'lastBackupAt', value: new Date().toISOString() })
 }
 
-/** Saves a backup file the user keeps (Downloads on Android); false if it couldn't be saved. */
-export async function downloadBackup(today: string): Promise<boolean> {
+/**
+ * Saves a backup file the user keeps (Downloads on Android, the share sheet on iOS).
+ * Only a real save counts as a backup: a cancelled share sheet must not reset the reminder.
+ */
+export async function downloadBackup(today: string): Promise<SaveResult> {
   const blob = new Blob([await exportBackup()], { type: 'application/json' })
-  if (!(await saveFile(backupFileName(today), blob))) return false
-  await noteDownloadedBackup()
-  return true
+  const result = await saveFile(backupFileName(today), blob)
+  if (result === 'saved') await noteDownloadedBackup()
+  return result
 }
 
 // --- Reminder on the Today screen when no backup was taken for a while.

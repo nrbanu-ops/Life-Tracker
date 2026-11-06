@@ -15,6 +15,7 @@ import {
   supportsFileBackup,
 } from '../db/backup'
 import { db } from '../db/db'
+import { savesWithShareSheet } from '../lib/android'
 import { parseBackup, type Backup } from '../lib/backup'
 import { useTodayKey } from '../lib/useTodayKey'
 
@@ -43,8 +44,12 @@ export function BackupSection() {
 
   const download = () =>
     run(async () => {
-      if (!(await downloadBackup(today))) return { kind: 'error', text: 'Dosya kaydedilemedi.' }
+      const result = await downloadBackup(today)
+      // Closing the share sheet is a decision, not a failure: say nothing.
+      if (result === 'cancelled') return
+      if (result === 'failed') return { kind: 'error', text: 'Dosya kaydedilemedi.' }
       if (supportsAndroidBackup) return { kind: 'ok', text: 'İndirilenler/LifeTracker klasörüne kaydedildi ✓' }
+      if (savesWithShareSheet) return { kind: 'ok', text: 'Yedek kaydedildi ✓' }
     })
 
   const button = 'rounded-xl bg-bg px-4 py-2.5 text-sm'
@@ -160,9 +165,24 @@ export function BackupSection() {
         </div>
       )}
 
+      {!supportsAndroidBackup && !supportsFileBackup && (
+        <div className="mt-4 rounded-xl bg-bg p-3">
+          <p className="text-sm">Bu cihazda otomatik yedek yok.</p>
+          <p className="mt-1 text-xs text-muted">
+            {savesWithShareSheet
+              ? `iPhone ve iPad'de tarayıcı, uygulamanın bir dosyayı kendiliğinden güncellemesine izin
+                 vermiyor. Aşağıdaki "Yedeği kaydet" ile ara ara kendin al: açılan paylaşım sayfasından
+                 "Dosyalara Kaydet" ya da iCloud Drive'ı seçebilirsin. Uygulamayı ana ekrandan silersen
+                 verilerin de silinir, önce yedek al.`
+              : `Bu tarayıcı otomatik yedeklemeyi desteklemiyor. Aşağıdaki "Yedeği indir" ile ara ara
+                 kendin al, ya da Chrome'dan aç.`}
+          </p>
+        </div>
+      )}
+
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" onClick={download} className={button}>
-          ⬇️ Yedeği indir
+          {savesWithShareSheet ? '💾 Yedeği kaydet' : '⬇️ Yedeği indir'}
         </button>
         <button type="button" onClick={() => fileInput.current?.click()} className={button}>
           ⬆️ Yedekten geri yükle

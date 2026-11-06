@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { downloadBackup, snoozeBackupReminder, supportsAndroidBackup, useBackupReminder } from '../db/backup'
+import { savesWithShareSheet } from '../lib/android'
 import { useTodayKey } from '../lib/useTodayKey'
 
 /** A quiet card on Today when no backup was taken for a week (or ever, a few days in). */
@@ -13,7 +14,7 @@ export function BackupReminder() {
   const download = async () => {
     setFailed(false)
     try {
-      if (!(await downloadBackup(today))) setFailed(true)
+      if ((await downloadBackup(today)) === 'failed') setFailed(true)
     } catch {
       setFailed(true)
     }
@@ -35,7 +36,7 @@ export function BackupReminder() {
       {failed && <p className="mt-2 text-sm text-p1">Dosya kaydedilemedi, tekrar dene.</p>}
       <div className="mt-3 flex gap-2">
         <button type="button" onClick={download} className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-surface">
-          {supportsAndroidBackup ? "İndirilenler'e kaydet" : 'Yedeği indir'}
+          {supportsAndroidBackup ? "İndirilenler'e kaydet" : savesWithShareSheet ? 'Yedeği kaydet' : 'Yedeği indir'}
         </button>
         <button type="button" onClick={() => void snoozeBackupReminder(today)} className="rounded-xl px-4 py-2 text-sm text-muted">
           Sonra
