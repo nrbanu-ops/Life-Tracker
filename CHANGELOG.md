@@ -3,6 +3,19 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-07
+
+### Renk teması
+- **Ayarlar'da 7 renk teması:** Orman (eskisi, varsayılan), Şeker, Pembe, Gün batımı, Turkuaz,
+  Okyanus, Lavanta. Açık ve koyu mod telefonun ayarını takip etmeye devam ediyor; tema sadece
+  renkleri seçiyor, her ikisinde de. Arka plandaki çiçek fotoğrafı da temanın rengini alıyor.
+- **Seviye kartları da temanın rengini alıyor.** Köşeli, çizgili "sistem penceresi" görünümü
+  duruyor ama lacivert yerine seçtiğin rengin koyu tonunda ve o renkte parlıyor — koyu modda
+  ekran baştan aşağı tek koyu renk olmuyor.
+- Koyu moddaki renkler genel olarak daha canlı: yüzeyler renge çalıyor, vurgu renkleri parlak.
+- Seçim cihaza özel (yedeğe girmiyor) ve sayfa açılır açılmaz uygulanıyor, renk parlaması yok.
+  iPhone'da durum çubuğu rengi de temaya uyuyor.
+
 ## 2026-11-06
 
 ### iPhone / iPad

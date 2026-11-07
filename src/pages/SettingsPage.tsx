@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
+import { ThemeSection } from '../components/ThemeSection'
 import { resetAllData } from '../db/backup'
 import { setPenaltyOn, usePenaltyOn } from '../db/leveling'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
@@ -40,6 +41,8 @@ export function SettingsPage() {
 
       <div className="flex flex-col gap-4">
         <BackupSection />
+
+        <ThemeSection />
 
         <GeminiSection />
 

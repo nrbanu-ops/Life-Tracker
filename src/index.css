@@ -24,6 +24,9 @@
   --color-sys-muted: #8597bb;
   --color-sys-warn: #ff8a4c;
   --color-sys-danger: #ff4d5e;
+  /* The solid colour blended over the background picture, and the veil that dims it in the dark. */
+  --color-backdrop-tint: #5b86bd;
+  --color-backdrop-veil: rgb(24 32 48 / 0.45);
   color-scheme: light;
 }
 
@@ -40,7 +43,208 @@
     --color-p1: #e8786b;
     --color-p2: #e3a95a;
     --color-p3: #7fa6dc;
+    --color-backdrop-tint: #3a5680;
     color-scheme: dark;
+  }
+}
+
+/*
+ * Colour palettes, chosen in Settings and written to <html data-palette>. Light or dark still
+ * follows the phone; a palette only decides the hues, in both. Anything a palette leaves out
+ * falls back to the default above — which is why the default needs no block of its own.
+ * The leveling window keeps its shape everywhere but takes the palette's colours, so that a
+ * dark theme isn't a dark page with a dark card on it.
+ */
+
+:root[data-palette='seker'] {
+  --color-bg: #fde9e2;
+  --color-surface: #ffffff;
+  --color-text: #42262a;
+  --color-muted: #8d6468;
+  --color-border: #f8d9d1;
+  --color-accent: #d2403c;
+  --color-accent-soft: #ffe0da;
+  --color-backdrop-tint: #f2745f;
+  --color-backdrop-veil: rgb(46 22 32 / 0.45);
+  /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
+  --color-sys-bg: #2b0f1a;
+  --color-sys-panel: #40182a;
+  --color-sys-line: #74304c;
+  --color-sys-edge: #ff5c8a;
+  --color-sys-glow: #ffb3c8;
+  --color-sys-text: #ffe8ef;
+  --color-sys-muted: #dba2b6;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='seker'] {
+    --color-bg: #2e1620;
+    --color-surface: #42202e;
+    --color-text: #ffe8e8;
+    --color-muted: #d79aa4;
+    --color-border: #5e2d3f;
+    --color-accent: #ff8a7a;
+    --color-accent-soft: #58272f;
+    --color-backdrop-tint: #a8455a;
+  }
+}
+
+:root[data-palette='okyanus'] {
+  --color-bg: #dceef5;
+  --color-surface: #ffffff;
+  --color-text: #13282f;
+  --color-muted: #587680;
+  --color-border: #cfe4ec;
+  --color-accent: #0e7f99;
+  --color-accent-soft: #d7eff5;
+  --color-backdrop-tint: #3aa8c4;
+  --color-backdrop-veil: rgb(7 32 42 / 0.45);
+  /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
+  --color-sys-bg: #04212b;
+  --color-sys-panel: #0a3140;
+  --color-sys-line: #11566b;
+  --color-sys-edge: #22d3ee;
+  --color-sys-glow: #7ff0ff;
+  --color-sys-text: #dcfaff;
+  --color-sys-muted: #89c6d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='okyanus'] {
+    --color-bg: #07202a;
+    --color-surface: #11323e;
+    --color-text: #dcf5fd;
+    --color-muted: #86b3c2;
+    --color-border: #22505f;
+    --color-accent: #3fd0ee;
+    --color-accent-soft: #0f3c4a;
+    --color-backdrop-tint: #2a7d99;
+  }
+}
+
+:root[data-palette='lavanta'] {
+  --color-bg: #ece6f8;
+  --color-surface: #ffffff;
+  --color-text: #2b2340;
+  --color-muted: #6f6589;
+  --color-border: #e0d8f1;
+  --color-accent: #6d3fd4;
+  --color-accent-soft: #ebe2fc;
+  --color-backdrop-tint: #9272e0;
+  --color-backdrop-veil: rgb(31 22 54 / 0.45);
+  /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
+  --color-sys-bg: #180b2e;
+  --color-sys-panel: #261140;
+  --color-sys-line: #4a2378;
+  --color-sys-edge: #a855f7;
+  --color-sys-glow: #d6b4fe;
+  --color-sys-text: #f0e6ff;
+  --color-sys-muted: #b8a4da;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='lavanta'] {
+    --color-bg: #1f1636;
+    --color-surface: #2e2149;
+    --color-text: #efe6ff;
+    --color-muted: #a999cc;
+    --color-border: #433463;
+    --color-accent: #b58cff;
+    --color-accent-soft: #352752;
+    --color-backdrop-tint: #6b50ad;
+  }
+}
+
+:root[data-palette='gunbatimi'] {
+  --color-bg: #ffeada;
+  --color-surface: #ffffff;
+  --color-text: #3d2817;
+  --color-muted: #85684b;
+  --color-border: #f7dcc4;
+  --color-accent: #bf5a10;
+  --color-accent-soft: #ffe3cb;
+  --color-backdrop-tint: #f58a3c;
+  --color-backdrop-veil: rgb(42 23 9 / 0.45);
+  /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
+  --color-sys-bg: #251104;
+  --color-sys-panel: #3a1d09;
+  --color-sys-line: #6b3a18;
+  --color-sys-edge: #ff9f1c;
+  --color-sys-glow: #ffd08a;
+  --color-sys-text: #fff0dc;
+  --color-sys-muted: #d8b088;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='gunbatimi'] {
+    --color-bg: #2a1709;
+    --color-surface: #3d2412;
+    --color-text: #ffeeda;
+    --color-muted: #c79e76;
+    --color-border: #573418;
+    --color-accent: #ffa64d;
+    --color-accent-soft: #4a2c13;
+    --color-backdrop-tint: #9c5a1e;
+  }
+}
+
+:root[data-palette='pembe'] {
+  --color-bg: #ffe7f2;
+  --color-surface: #ffffff;
+  --color-text: #40213a;
+  --color-muted: #8e6279;
+  --color-border: #fad4e5;
+  --color-accent: #cc1a71;
+  --color-accent-soft: #ffdcec;
+  --color-backdrop-tint: #f261a4;
+  --color-backdrop-veil: rgb(46 15 34 / 0.45);
+  /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
+  --color-sys-bg: #2b0820;
+  --color-sys-panel: #420d31;
+  --color-sys-line: #76215a;
+  --color-sys-edge: #ff4d9d;
+  --color-sys-glow: #ffa6ce;
+  --color-sys-text: #ffe6f3;
+  --color-sys-muted: #e0a0c4;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='pembe'] {
+    --color-bg: #2e0f22;
+    --color-surface: #431a31;
+    --color-text: #ffe6f3;
+    --color-muted: #d79ab8;
+    --color-border: #5e2a47;
+    --color-accent: #ff6fb3;
+    --color-accent-soft: #55213c;
+    --color-backdrop-tint: #a63a73;
+  }
+}
+
+:root[data-palette='turkuaz'] {
+  --color-bg: #d9f5f0;
+  --color-surface: #ffffff;
+  --color-text: #10302c;
+  --color-muted: #527a73;
+  --color-border: #c7ebe4;
+  --color-accent: #0b7d73;
+  --color-accent-soft: #d2f2ec;
+  --color-backdrop-tint: #2fc0ad;
+  --color-backdrop-veil: rgb(4 35 31 / 0.45);
+  /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
+  --color-sys-bg: #022423;
+  --color-sys-panel: #073634;
+  --color-sys-line: #0f6961;
+  --color-sys-edge: #2dd4bf;
+  --color-sys-glow: #8af0e4;
+  --color-sys-text: #dcfffb;
+  --color-sys-muted: #88cec4;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='turkuaz'] {
+    --color-bg: #04231f;
+    --color-surface: #0d3833;
+    --color-text: #d8fff7;
+    --color-muted: #80c4b9;
+    --color-border: #1c564e;
+    --color-accent: #2ee6c6;
+    --color-accent-soft: #0c423a;
+    --color-backdrop-tint: #1f8a79;
   }
 }
 
@@ -213,7 +417,9 @@ body,
   z-index: -1;
   pointer-events: none;
   /* The picture is cream; a blue "color" layer turns paper and branches blue, like ink, to go with the level card. */
-  background: linear-gradient(#5b86bd, #5b86bd), url("./assets/bg-light.jpg") center / cover no-repeat;
+  background:
+    linear-gradient(var(--color-backdrop-tint), var(--color-backdrop-tint)),
+    url("./assets/bg-light.jpg") center / cover no-repeat;
   background-color: var(--color-bg);
   background-blend-mode: color, normal;
 }
@@ -227,7 +433,8 @@ body,
   .app-backdrop {
     /* A dark veil dims the bright blossoms so icons over them stay clear; the "color" layer turns the picture navy. */
     background-image:
-      linear-gradient(rgb(24 32 48 / 0.45), rgb(24 32 48 / 0.45)), linear-gradient(#3a5680, #3a5680),
+      linear-gradient(var(--color-backdrop-veil), var(--color-backdrop-veil)),
+      linear-gradient(var(--color-backdrop-tint), var(--color-backdrop-tint)),
       url("./assets/bg-dark.jpg");
     background-blend-mode: normal, color, normal;
   }
