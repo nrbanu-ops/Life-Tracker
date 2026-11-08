@@ -5,6 +5,13 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-08
 
+### Kütüphane takvimi
+- **Takvim artık kapakları gösteriyor.** Gün hücresinde küçük renkli noktalar yerine o gün
+  bitirdiğin (ya da başladığın) şeyin kapağı duruyor; aynı güne birden fazlaysa üst üste
+  diziliyor, fazlası köşede "+2" olarak. Puan verdiysen kapağın altında yıldızlar.
+  Başladıkların soluk ve türünün renginde çerçeveli.
+- Bir şey olmayan haftalar kısaldı, ay bir ekrana sığıyor.
+
 ### Günlük
 - **Yarım kalan yazı artık kaybolmuyor.** Yazdıkların kaydetmeden sayfadan çıksan da,
   uygulama yeni sürüme geçip kendini yenilese de, telefon uygulamayı arka planda kapatsa da

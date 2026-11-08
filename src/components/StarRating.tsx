@@ -10,7 +10,10 @@ export function StarRating({ value = 0, onChange, size = 'lg' }: Props) {
   const stars = [1, 2, 3, 4, 5]
   if (!onChange) {
     return (
-      <span className="text-xs tracking-tight text-p2" aria-label={`${value} yıldız`}>
+      <span
+        className={`${size === 'sm' ? 'text-[8px]' : 'text-xs'} leading-none tracking-tight text-p2`}
+        aria-label={`${value} yıldız`}
+      >
         {stars.map((n) => (n <= value ? '★' : '☆')).join('')}
       </span>
     )

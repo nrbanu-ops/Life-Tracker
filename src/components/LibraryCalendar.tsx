@@ -15,11 +15,12 @@ type Props = {
   onSelect: (id: string) => void
 }
 
-const MAX_DOTS = 4
+/** Covers shown stacked in one day; the rest are a "+n". */
+const MAX_COVERS = 3
 
 /**
- * Month view of the whole library: on each day a dot per thing finished (filled) or started
- * (ring) in its kind's colour, and the day's list below. Only shown inside the library.
+ * Month view of the whole library: each day wears the covers of what you finished (full) or
+ * started (faded, in its kind's colour) that day, with the day's list below. Only in the library.
  */
 export function LibraryCalendar({ items, today, onSelect }: Props) {
   const [month, setMonth] = useState(() => monthOf(today))
@@ -80,14 +81,16 @@ export function LibraryCalendar({ items, today, onSelect }: Props) {
             </span>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-x-0.5 gap-y-1">
           {days.map((day) => {
             const entry = byDay.get(day)
-            const dots = [
+            // Finished first: that's the cover on top, and whose stars the day shows.
+            const covers = [
               ...(entry?.finished ?? []).map((item) => ({ item, done: true })),
               ...(entry?.started ?? []).map((item) => ({ item, done: false })),
             ]
-            const cover = entry?.finished[0]
+            const shown = covers.slice(0, MAX_COVERS)
+            const rating = entry?.finished.find((i) => i.rating !== undefined)?.rating
             return (
               <button
                 key={day}
@@ -97,32 +100,46 @@ export function LibraryCalendar({ items, today, onSelect }: Props) {
                 aria-label={`${day}${entry?.finished.length ? `, ${entry.finished.length} bitirdiğin` : ''}${
                   entry?.started.length ? `, ${entry.started.length} başladığın` : ''
                 }`}
-                className={`flex min-h-16 flex-col items-center gap-0.5 rounded-lg p-0.5 ${
+                // A week with nothing in it stays short; a row grows to the covers it holds.
+                className={`flex min-h-11 flex-col items-center gap-0.5 rounded-lg px-0.5 pt-1 pb-1.5 ${
                   monthOf(day) === month ? '' : 'opacity-35'
                 } ${day === selected ? 'bg-bg' : ''}`}
               >
                 <span
-                  className={`text-xs tabular-nums ${day === today ? 'font-semibold text-accent' : 'text-muted'}`}
+                  className={`text-xs leading-none tabular-nums ${
+                    day === today ? 'font-semibold text-accent' : 'text-muted'
+                  }`}
                 >
                   {Number(day.slice(8))}
                 </span>
-                {cover && (
-                  <span className="w-6">
-                    <Poster item={cover} compact />
-                  </span>
-                )}
-                {dots.length > 0 && (
-                  <span className="flex items-center gap-0.5">
-                    {dots.slice(0, MAX_DOTS).map(({ item, done }) => (
+                {shown.length > 0 && (
+                  <span className="relative flex items-end justify-center">
+                    {shown.map(({ item, done }, i) => (
                       <span
                         key={`${item.id}-${done}`}
-                        className="h-1.5 w-1.5 rounded-full border"
-                        style={{ borderColor: KIND_COLOR[item.kind], background: done ? KIND_COLOR[item.kind] : 'transparent' }}
-                      />
+                        // The ones behind peek out to the right; the first one stays readable.
+                        className={`relative rounded ${shown.length === 1 ? 'w-7' : 'w-6'} ${i > 0 ? '-ml-3.5' : ''}`}
+                        style={{
+                          zIndex: shown.length - i,
+                          // Started, not finished: the kind's colour draws the outline.
+                          boxShadow: done ? undefined : `0 0 0 1.5px ${KIND_COLOR[item.kind]}`,
+                        }}
+                      >
+                        <Poster item={item} compact className={done ? 'shadow-sm' : 'opacity-60'} />
+                      </span>
                     ))}
-                    {dots.length > MAX_DOTS && <span className="text-[9px] leading-none text-muted">+</span>}
+                    {covers.length > MAX_COVERS && (
+                      // On the stack, not beside it, so the covers stay centred in the day.
+                      <span
+                        className="absolute -right-1 -bottom-1 rounded-full bg-text px-1 text-[9px] leading-[1.3] font-medium text-surface"
+                        style={{ zIndex: MAX_COVERS + 1 }}
+                      >
+                        +{covers.length - MAX_COVERS}
+                      </span>
+                    )}
                   </span>
                 )}
+                {rating !== undefined && <StarRating value={rating} size="sm" />}
               </button>
             )
           })}
@@ -136,12 +153,7 @@ export function LibraryCalendar({ items, today, onSelect }: Props) {
             {KIND_LABEL[k]}
           </span>
         ))}
-        {kinds.length > 0 && (
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full border border-muted" />
-            Başladın
-          </span>
-        )}
+        {kinds.length > 0 && <span>Soluk kapak: başladın</span>}
       </div>
       <p className="mt-1 px-1 text-xs text-muted">{summary ? `Bu ay: ${summary}` : 'Bu ay henüz bir şey bitirmedin.'}</p>
 
