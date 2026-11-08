@@ -22,7 +22,7 @@ export function MemoryCard({ today }: { today: string }) {
     <section className="mb-6">
       <h2 className="mb-2 text-sm font-medium text-muted">{memory.label}</h2>
       <Link
-        to="/gunluk"
+        to={`/takvim?gun=${memory.date}`}
         className="flex gap-3 overflow-hidden rounded-2xl border border-border bg-surface p-3"
       >
         {photo && <BlobImage blob={photo} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover" />}

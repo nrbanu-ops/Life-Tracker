@@ -1,19 +1,37 @@
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { DayDetail } from '../components/DayDetail'
 import { PageHeader } from '../components/PageHeader'
 import { db } from '../db/db'
 import { dayStatus, monthGrid, monthOf, shiftMonth } from '../lib/calendar'
-import { fromDateKey } from '../lib/date'
+import { fromDateKey, isDateKey } from '../lib/date'
 import { WEEKDAY_SHORT } from '../lib/frequency'
 import { useTodayKey } from '../lib/useTodayKey'
 
 export function CalendarPage() {
   const today = useTodayKey()
-  const [selected, setSelected] = useState(today)
-  const [month, setMonth] = useState(() => monthOf(today))
+  // ?gun=YYYY-MM-DD opens a particular day: the memory card on Bugün links here.
+  const [params] = useSearchParams()
+  const asked = params.get('gun')
+  const wanted = asked && isDateKey(asked) ? asked : undefined
+  const [selected, setSelected] = useState(wanted ?? today)
+  const [month, setMonth] = useState(() => monthOf(wanted ?? today))
+  const [shownParam, setShownParam] = useState(asked)
+  if (shownParam !== asked) {
+    setShownParam(asked)
+    if (wanted) {
+      setSelected(wanted)
+      setMonth(monthOf(wanted))
+    }
+  }
+  // Arriving at a day far from today, the detail is below the fold; show it.
+  const detail = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (wanted && wanted !== today) detail.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [wanted, today])
 
   const days = monthGrid(month)
   const first = days[0]
@@ -94,16 +112,18 @@ export function CalendarPage() {
       </div>
       <Legend />
 
-      {habits && logs && tasks && (
-        <DayDetail
-          date={selected}
-          today={today}
-          habits={habits}
-          logs={logs}
-          tasks={tasks}
-          projects={projects}
-        />
-      )}
+      <div ref={detail} className="scroll-mt-4">
+        {habits && logs && tasks && (
+          <DayDetail
+            date={selected}
+            today={today}
+            habits={habits}
+            logs={logs}
+            tasks={tasks}
+            projects={projects}
+          />
+        )}
+      </div>
     </>
   )
 }

@@ -15,7 +15,8 @@ export type Memory = { label: string; date: string; entries: JournalEntry[] }
 export function memoryFor(entries: JournalEntry[], today: string): Memory | undefined {
   for (const { label, back } of LOOK_BACK) {
     const date = toDateKey(back(fromDateKey(today)))
-    const found = entries.filter((e) => e.date === date)
+    // The weekly AI review lives in the journal as well; a memory should be your own writing.
+    const found = entries.filter((e) => e.date === date && e.kind !== 'review')
     if (found.length > 0) return { label, date, entries: groupByDay(found)[0].entries }
   }
   return undefined

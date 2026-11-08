@@ -5,6 +5,15 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-08
 
+### Günlük
+- **Yarım kalan yazı artık kaybolmuyor.** Yazdıkların kaydetmeden sayfadan çıksan da,
+  uygulama yeni sürüme geçip kendini yenilese de, telefon uygulamayı arka planda kapatsa da
+  kutuda duruyor. Her gün için ayrı tutulur; kaydedince temizlenir. (Fotoğraf saklanmaz,
+  onu tekrar seçmek gerekir.)
+- **"1 yıl önce bugün" kartı yapay zekânın haftalık bakışını göstermiyor**, sadece senin
+  yazdıklarını.
+- **Anı kartına dokununca o güne gidiliyor**, günlüğün en başına değil.
+
 ### Gökkuşağı teması
 - **Yeni tema: Gökkuşağı.** Mercan, somon, krem, altın ve maviden akan dalgalar; arka plan artık
   çiçek fotoğrafı değil, bu renklerde çizilmiş bir desen.

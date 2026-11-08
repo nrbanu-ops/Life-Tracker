@@ -11,6 +11,12 @@ describe('memoryFor', () => {
     expect(memoryFor([...list, at('year', '2025-10-31')], '2026-10-31')?.label).toBe('1 yıl önce bugün')
     expect(memoryFor([at('other', '2026-10-01')], '2026-10-31')).toBeUndefined()
   })
+
+  it("skips the AI's weekly review, which is saved to the journal too", () => {
+    const review: JournalEntry = { ...at('review', '2025-10-31'), kind: 'review' }
+    expect(memoryFor([review], '2026-10-31')).toBeUndefined()
+    expect(memoryFor([review, at('mine', '2025-10-31')], '2026-10-31')?.entries.map((e) => e.id)).toEqual(['mine'])
+  })
 })
 
 describe('searchEntries', () => {

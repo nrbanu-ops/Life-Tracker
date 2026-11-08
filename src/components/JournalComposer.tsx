@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { addEntry } from '../db/journal'
+import { clearDraft, loadDraft, saveDraft } from '../lib/draft'
 import { JOURNAL_PHOTO_SIZE } from '../lib/journal'
 import { BlobImage } from './BlobImage'
 import { PhotoPicker } from './PhotoPicker'
@@ -14,15 +15,30 @@ const textareaClass =
 
 /** Free writing for a day, with an optional photo. Ctrl/Cmd+Enter saves too. */
 export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Props) {
-  const [text, setText] = useState('')
+  const [text, setText] = useState(() => loadDraft(date))
   const [photo, setPhoto] = useState<Blob>()
   const [saving, setSaving] = useState(false)
+  // The day can change under us: at midnight on the Günlük page, where there's no remount.
+  const [shownDate, setShownDate] = useState(date)
+  if (shownDate !== date) {
+    setShownDate(date)
+    setText(loadDraft(date))
+    setPhoto(undefined)
+  }
   const canSave = text.trim() !== '' || photo !== undefined
+
+  // Written on every keystroke, not in an effect, so the draft under `date` is never
+  // the text of the day before.
+  const edit = (next: string) => {
+    setText(next)
+    saveDraft(date, next)
+  }
 
   const save = async () => {
     if (!canSave || saving) return
     setSaving(true)
     await addEntry(date, text, photo)
+    clearDraft(date)
     setText('')
     setPhoto(undefined)
     setSaving(false)
@@ -33,7 +49,7 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
       <textarea
         id="journal-text"
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => edit(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
