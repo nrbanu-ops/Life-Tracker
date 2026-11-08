@@ -96,9 +96,8 @@ export type ReminderInput = {
   today: string
   /** Day key of the first thing entered; undefined while the app is empty. */
   firstUse?: string
+  /** When a backup was last really written — by the automatic one or by hand. */
   lastBackupAt?: string
-  /** An automatic backup is set up: it keeps itself fresh, or shows its own "resume" strip. */
-  autoOn: boolean
   /** Day key until which "Sonra" hides the reminder. */
   snoozedUntil?: string
 }
@@ -110,9 +109,15 @@ export const SNOOZE_DAYS = 3
 const daysBetween = (from: string, to: string) => differenceInCalendarDays(fromDateKey(to), fromDateKey(from))
 
 /** Days since the last backup when it's time to remind (null if never backed up), else undefined. */
-export function backupReminder({ today, firstUse, lastBackupAt, autoOn, snoozedUntil }: ReminderInput): number | null | undefined {
-  if (autoOn || !firstUse || (snoozedUntil && today < snoozedUntil)) return undefined
-  if (!lastBackupAt) return daysBetween(firstUse, today) >= FIRST_REMIND_DAYS ? null : undefined
+export function backupReminder({ today, firstUse, lastBackupAt, snoozedUntil }: ReminderInput): number | null | undefined {
+  if (!firstUse || (snoozedUntil && today < snoozedUntil)) return undefined
+  if (!lastBackupAt) {
+    // Switching the automatic backup on writes one at once, so a missing date means it failed.
+    return daysBetween(firstUse, today) >= FIRST_REMIND_DAYS ? null : undefined
+  }
   const since = daysBetween(toDateKey(new Date(lastBackupAt)), today)
-  return since >= REMIND_AFTER_DAYS ? since : undefined
+  if (since < REMIND_AFTER_DAYS) return undefined
+  // An automatic backup that is working rewrites the file every few minutes. If the last one is
+  // this old it is failing silently, which is exactly when the user must not be left reassured.
+  return since
 }

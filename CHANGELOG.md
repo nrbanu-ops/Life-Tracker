@@ -5,6 +5,17 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-08
 
+### Yedekleme sağlamlaştırıldı
+- **Otomatik yedek sessizce durmuyor artık.** Dosya silinmiş, yer kalmamış ya da yazma başka bir
+  sebeple olmamışsa üstte kırmızı bir şerit çıkıyor ("Otomatik yedek yazılamadı · Tekrar dene").
+  Önceden bu hatalar yutuluyordu: Ayarlar "✅ Otomatik yedek açık" derken haftalardır hiçbir şey
+  yazılmamış olabiliyordu.
+- **Yedek hatırlatması artık otomatik yedeğe değil, gerçekten alınmış yedeğe bakıyor.** Otomatik
+  yedek açık görünse bile 7 gündür dosya yazılmadıysa Bugün ekranında uyarı çıkıyor.
+- Ayarlar'da "Şimdi yedekle" başarısız olursa "Yedeklendi ✓" demiyor, ne olduğunu söylüyor.
+- Yedek alırken ve geri yüklerken butonlar "Geri yükleniyor…" olup kilitleniyor; fotoğraflı büyük
+  bir yedek yarım dakika sürebiliyor ve ekran donmuş gibi görünüyordu.
+
 ### Günlük fotoğrafları
 - **Bir yazıya birden fazla fotoğraf eklenebiliyor** (en fazla 10). Galeriden hepsini birden
   seçebilir, sonradan tek tek ekleyip çıkarabilirsin; birden fazlaysa akışta ikili ızgarada

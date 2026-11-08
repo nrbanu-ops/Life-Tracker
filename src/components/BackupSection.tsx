@@ -29,16 +29,23 @@ export function BackupSection() {
   const androidOn = useLiveQuery(androidBackupOn)
   const [message, setMessage] = useState<Message>()
   const [pending, setPending] = useState<Backup>()
+  // A backup with photos takes a while to write and longer to restore; without this the screen
+  // looks dead and a second tap would start the whole thing again.
+  const [busy, setBusy] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
 
   const run = async (task: () => Promise<Message | void>) => {
+    if (busy) return
     setMessage(undefined)
+    setBusy(true)
     try {
       const result = await task()
       if (result) setMessage(result)
     } catch (e) {
       // Closing the file picker is not an error.
       if ((e as Error).name !== 'AbortError') setMessage({ kind: 'error', text: 'Bir sorun oldu, tekrar dene.' })
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -52,7 +59,7 @@ export function BackupSection() {
       if (savesWithShareSheet) return { kind: 'ok', text: 'Yedek kaydedildi ✓' }
     })
 
-  const button = 'rounded-xl bg-bg px-4 py-2.5 text-sm'
+  const button = 'rounded-xl bg-bg px-4 py-2.5 text-sm disabled:opacity-50'
 
   return (
     <section id="yedek" className="rounded-2xl border border-border bg-surface p-4">
@@ -80,13 +87,16 @@ export function BackupSection() {
                   type="button"
                   onClick={() =>
                     run(async () => {
-                      await backupNow(true)
+                      if ((await backupNow(true)) === 'failed') {
+                        return { kind: 'error', text: 'Yedek yazılamadı. İndirilenler klasörüne erişim var mı?' }
+                      }
                       return { kind: 'ok', text: 'Yedeklendi ✓' }
                     })
                   }
-                  className="rounded-xl bg-surface px-4 py-2 text-sm"
+                  disabled={busy}
+                  className="rounded-xl bg-surface px-4 py-2 text-sm disabled:opacity-50"
                 >
-                  Şimdi yedekle
+                  {busy ? 'Yedekleniyor…' : 'Şimdi yedekle'}
                 </button>
                 <button
                   type="button"
@@ -133,12 +143,16 @@ export function BackupSection() {
                       if (result === 'needs-permission') {
                         return { kind: 'error', text: 'Üstteki "Devam ettir" ile izin ver.' }
                       }
+                      if (result === 'failed') {
+                        return { kind: 'error', text: 'Yedek dosyasına yazılamadı. Dosya duruyor mu?' }
+                      }
                       return { kind: 'ok', text: 'Yedeklendi ✓' }
                     })
                   }
-                  className="rounded-xl bg-surface px-4 py-2 text-sm"
+                  disabled={busy}
+                  className="rounded-xl bg-surface px-4 py-2 text-sm disabled:opacity-50"
                 >
-                  Şimdi yedekle
+                  {busy ? 'Yedekleniyor…' : 'Şimdi yedekle'}
                 </button>
                 <button type="button" onClick={() => run(stopAutoBackup)} className="px-2 py-2 text-sm text-muted">
                   Kapat
@@ -181,10 +195,10 @@ export function BackupSection() {
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={download} className={button}>
+        <button type="button" onClick={download} disabled={busy} className={button}>
           {savesWithShareSheet ? '💾 Yedeği kaydet' : '⬇️ Yedeği indir'}
         </button>
-        <button type="button" onClick={() => fileInput.current?.click()} className={button}>
+        <button type="button" onClick={() => fileInput.current?.click()} disabled={busy} className={button}>
           ⬆️ Yedekten geri yükle
         </button>
         <input
@@ -222,11 +236,17 @@ export function BackupSection() {
                   return { kind: 'ok', text: `Geri yüklendi ✓ (${count} kayıt)` }
                 })
               }
-              className="flex-1 rounded-xl bg-surface py-2.5 text-sm font-medium text-p1"
+              disabled={busy}
+              className="flex-1 rounded-xl bg-surface py-2.5 text-sm font-medium text-p1 disabled:opacity-50"
             >
-              Evet, geri yükle
+              {busy ? 'Geri yükleniyor…' : 'Evet, geri yükle'}
             </button>
-            <button type="button" onClick={() => setPending(undefined)} className="flex-1 py-2.5 text-sm text-muted">
+            <button
+              type="button"
+              onClick={() => setPending(undefined)}
+              disabled={busy}
+              className="flex-1 py-2.5 text-sm text-muted disabled:opacity-50"
+            >
               Vazgeç
             </button>
           </div>

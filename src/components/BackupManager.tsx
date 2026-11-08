@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
-import { backupNow, resumeAutoBackup, watchChanges } from '../db/backup'
+import { backupNow, retryAutoBackup, watchChanges } from '../db/backup'
 
 const INTERVAL_MS = 2 * 60_000
 
 /**
  * Runs the automatic backup in the background: every few minutes after a change and when the
- * app is hidden. When the browser has forgotten the permission, shows a strip to resume it.
+ * app is hidden. Shows a strip when the browser has forgotten the permission, and a louder one
+ * when a write failed — a backup that has quietly stopped is the one that costs the user data.
  */
 export function BackupManager() {
-  const [paused, setPaused] = useState(false)
+  const [trouble, setTrouble] = useState<'needs-permission' | 'failed'>()
 
   useEffect(() => {
     watchChanges()
@@ -17,8 +18,11 @@ export function BackupManager() {
 
     let cancelled = false
     const run = async () => {
-      const result = await backupNow().catch(() => 'off' as const)
-      if (!cancelled && result !== 'unchanged') setPaused(result === 'needs-permission')
+      // Anything unexpected counts as a failed write, never as "there is no backup set up":
+      // the user has to hear about it.
+      const result = await backupNow().catch(() => 'failed' as const)
+      if (cancelled || result === 'unchanged') return
+      setTrouble(result === 'needs-permission' || result === 'failed' ? result : undefined)
     }
     run()
     const id = window.setInterval(run, INTERVAL_MS)
@@ -33,18 +37,21 @@ export function BackupManager() {
     }
   }, [])
 
-  if (!paused) return null
+  if (!trouble) return null
+  const failed = trouble === 'failed'
   return (
     <button
       type="button"
       onClick={async () => {
-        if (await resumeAutoBackup().catch(() => false)) setPaused(false)
+        if (await retryAutoBackup().catch(() => false)) setTrouble(undefined)
       }}
-      className="sticky top-0 z-20 -mx-4 flex w-[calc(100%+2rem)] items-center gap-2 bg-accent-soft px-4 py-2.5 text-left text-sm text-accent"
+      className={`sticky top-0 z-20 -mx-4 flex w-[calc(100%+2rem)] items-center gap-2 px-4 py-2.5 text-left text-sm ${
+        failed ? 'bg-p1/15 text-p1' : 'bg-accent-soft text-accent'
+      }`}
     >
-      <span aria-hidden>💾</span>
-      <span className="flex-1">Otomatik yedek duraklatıldı</span>
-      <span className="font-medium underline">Devam ettir</span>
+      <span aria-hidden>{failed ? '⚠️' : '💾'}</span>
+      <span className="flex-1">{failed ? 'Otomatik yedek yazılamadı' : 'Otomatik yedek duraklatıldı'}</span>
+      <span className="font-medium underline">{failed ? 'Tekrar dene' : 'Devam ettir'}</span>
     </button>
   )
 }

@@ -45,12 +45,18 @@ describe('parseBackup', () => {
 })
 
 describe('backupReminder', () => {
-  const base = { today: '2026-11-20', firstUse: '2026-11-01', autoOn: false }
+  const base = { today: '2026-11-20', firstUse: '2026-11-01' }
   const at = (day: string) => new Date(`${day}T21:30:00`).toISOString()
 
-  it('stays quiet in an empty app and with an automatic backup', () => {
+  it('stays quiet in an empty app', () => {
     expect(backupReminder({ ...base, firstUse: undefined })).toBeUndefined()
-    expect(backupReminder({ ...base, autoOn: true })).toBeUndefined()
+  })
+
+  it('still reminds when an automatic backup has not written for a week', () => {
+    // A working automatic backup rewrites the file every few minutes, so a stale date means it
+    // is failing; staying quiet because it is "on" would leave the user with nothing.
+    expect(backupReminder({ ...base, lastBackupAt: at('2026-11-19') })).toBeUndefined()
+    expect(backupReminder({ ...base, lastBackupAt: at('2026-11-12') })).toBe(8)
   })
 
   it('reminds a few days after first use when never backed up', () => {

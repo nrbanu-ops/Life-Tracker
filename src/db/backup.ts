@@ -120,12 +120,20 @@ export async function backupPermission(): Promise<PermissionState | undefined> {
   return handle ? handle.queryPermission({ mode: 'readwrite' }) : undefined
 }
 
+/**
+ * Must run from a click: puts the automatic backup back to work after a lapsed permission or a
+ * failed write. On Android there is no permission to re-ask for, so it just writes again.
+ */
+export async function retryAutoBackup(): Promise<boolean> {
+  if (supportsAndroidBackup) return (await backupNow(true)) === 'saved'
+  return resumeAutoBackup()
+}
+
 /** Must run from a click: asks to keep writing the file, then backs up. */
 export async function resumeAutoBackup(): Promise<boolean> {
   const handle = await getBackupHandle()
   if (!handle || (await handle.requestPermission({ mode: 'readwrite' })) !== 'granted') return false
-  await writeTo(handle)
-  return true
+  return (await write(writeTo(handle))) === 'saved'
 }
 
 // --- On the Android app: automatic backup into Downloads/LifeTracker/ through the shell's bridge.
@@ -148,20 +156,34 @@ async function writeAndroid(): Promise<void> {
   await db.meta.put({ key: 'lastBackupAt', value: new Date().toISOString() })
 }
 
-/** Writes the backup if something changed and permission is still there; `force` skips the change check. */
-export async function backupNow(force = false): Promise<'saved' | 'unchanged' | 'needs-permission' | 'off'> {
+export type BackupResult = 'saved' | 'unchanged' | 'needs-permission' | 'off' | 'failed'
+
+/**
+ * Writes the backup if something changed and permission is still there; `force` skips the change
+ * check. A write that goes wrong (the file was deleted, the disk is full, the bridge refused)
+ * comes back as 'failed' rather than throwing: the caller has to tell the user, because an
+ * automatic backup nobody knows has stopped is worse than no automatic backup at all.
+ */
+export async function backupNow(force = false): Promise<BackupResult> {
   if (supportsAndroidBackup) {
     if (!(await androidBackupOn())) return 'off'
     if (!force && !dirty) return 'unchanged'
-    await writeAndroid()
-    return 'saved'
+    return write(writeAndroid())
   }
   const handle = await getBackupHandle()
   if (!handle) return 'off'
   if (!force && !dirty) return 'unchanged'
   if ((await handle.queryPermission({ mode: 'readwrite' })) !== 'granted') return 'needs-permission'
-  await writeTo(handle)
-  return 'saved'
+  return write(writeTo(handle))
+}
+
+async function write(writing: Promise<void>): Promise<'saved' | 'failed'> {
+  try {
+    await writing
+    return 'saved'
+  } catch {
+    return 'failed'
+  }
 }
 
 /** Records a manual download as a backup too, for the "last backup" line. */
@@ -194,11 +216,9 @@ export async function snoozeBackupReminder(today: string): Promise<void> {
 export function useBackupReminder(): number | null | undefined {
   const today = useTodayKey()
   return useLiveQuery(async () => {
-    const [last, snoozed, handle, android, habits, project, item, entry] = await Promise.all([
+    const [last, snoozed, habits, project, item, entry] = await Promise.all([
       db.meta.get('lastBackupAt'),
       db.meta.get(SNOOZE),
-      db.meta.get('backupHandle'),
-      db.meta.get('androidBackup'),
       db.habits.toArray(),
       db.projects.orderBy('createdAt').first(),
       db.library.orderBy('createdAt').first(),
@@ -211,7 +231,6 @@ export function useBackupReminder(): number | null | undefined {
       today,
       firstUse: firstUse && toDateKey(new Date(firstUse)),
       lastBackupAt: last?.value as string | undefined,
-      autoOn: supportsAndroidBackup ? Boolean(android?.value) : supportsFileBackup && Boolean(handle?.value),
       snoozedUntil: snoozed?.value as string | undefined,
     })
   }, [today])
