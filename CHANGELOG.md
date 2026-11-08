@@ -5,6 +5,11 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-08
 
+### Günlük fotoğrafları
+- **Bir yazıya birden fazla fotoğraf eklenebiliyor** (en fazla 10). Galeriden hepsini birden
+  seçebilir, sonradan tek tek ekleyip çıkarabilirsin; birden fazlaysa akışta ikili ızgarada
+  görünüyorlar. Eski tek fotoğraflı yazıların olduğu gibi duruyor.
+
 ### Kütüphane takvimi
 - **Takvim artık kapakları gösteriyor.** Gün hücresinde küçük renkli noktalar yerine o gün
   bitirdiğin (ya da başladığın) şeyin kapağı duruyor; aynı güne birden fazlaysa üst üste

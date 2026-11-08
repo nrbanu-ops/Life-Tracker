@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import type { Habit, JournalEntry } from '../db/types'
+import { entryPhotos } from '../lib/journal'
 import { BlobImage } from './BlobImage'
 
 type Props = {
@@ -14,6 +15,7 @@ export function JournalEntryList({ entries, habitsById, onEdit }: Props) {
     <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
       {entries.map((entry) => {
         const habit = entry.habitId ? habitsById.get(entry.habitId) : undefined
+        const photos = entryPhotos(entry)
         return (
           <li key={entry.id}>
             <button
@@ -32,8 +34,21 @@ export function JournalEntryList({ entries, habitsById, onEdit }: Props) {
                 )}
                 <span>{format(new Date(entry.createdAt), 'HH:mm')}</span>
               </span>
-              {entry.photo && (
-                <BlobImage blob={entry.photo} alt="Günlük fotoğrafı" className="mb-2 max-h-64 rounded-xl object-cover" />
+              {photos.length === 1 && (
+                <BlobImage blob={photos[0]} alt="Günlük fotoğrafı" className="mb-2 max-h-64 rounded-xl object-cover" />
+              )}
+              {photos.length > 1 && (
+                // Squares in two columns: a row of photos stays one glance, whatever their shape.
+                <span className="mb-2 grid grid-cols-2 gap-1">
+                  {photos.map((photo, i) => (
+                    <BlobImage
+                      key={i}
+                      blob={photo}
+                      alt={`${i + 1}. günlük fotoğrafı`}
+                      className="aspect-square w-full rounded-lg object-cover"
+                    />
+                  ))}
+                </span>
               )}
               {entry.text && <span className="block text-sm whitespace-pre-wrap">{entry.text}</span>}
             </button>

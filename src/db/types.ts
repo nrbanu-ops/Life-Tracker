@@ -109,7 +109,9 @@ export type JournalEntry = {
   text: string
   /** Set for habit notes; at most one note per habit per day. */
   habitId?: string
-  /** A photo, shrunk before saving. */
+  /** Photos, shrunk before saving; at most JOURNAL_PHOTO_MAX. */
+  photos?: Blob[]
+  /** Before `photos`: one photo per entry. Still read, so old data and old backups keep theirs. */
   photo?: Blob
   /** 'review': a weekly look back written by Gemini. */
   kind?: 'review'

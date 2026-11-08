@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Habit, JournalEntry } from '../db/types'
-import { filterEntries, groupByDay, memoryFor, searchEntries } from './journal'
+import { entryPhotos, filterEntries, groupByDay, memoryFor, searchEntries } from './journal'
 
 describe('memoryFor', () => {
   const at = (id: string, date: string): JournalEntry => ({ id, date, text: id, createdAt: `${date}T09:00:00` })
@@ -64,5 +64,24 @@ describe('filterEntries', () => {
     expect(filterEntries(entries, 'all')).toHaveLength(4)
     expect(filterEntries(entries, 'free').map((e) => e.id)).toEqual(['evening', 'morning', 'old'])
     expect(filterEntries(entries, 'run').map((e) => e.id)).toEqual(['note'])
+  })
+})
+
+describe('entryPhotos', () => {
+  const photo = (n: number) => new Blob([new Uint8Array([n])], { type: 'image/jpeg' })
+  const base = { id: 'a', date: '2026-11-08', text: '', createdAt: '2026-11-08T09:00:00' }
+
+  it('reads the list', () => {
+    expect(entryPhotos({ ...base, photos: [photo(1), photo(2)] })).toHaveLength(2)
+  })
+
+  it('still reads an entry written before several were allowed', () => {
+    const old = photo(1)
+    expect(entryPhotos({ ...base, photo: old })).toEqual([old])
+  })
+
+  it('is empty for an entry with no photo', () => {
+    expect(entryPhotos({})).toEqual([])
+    expect(entryPhotos({ ...base, photos: [] })).toEqual([])
   })
 })

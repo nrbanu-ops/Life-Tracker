@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { deleteEntry, updateEntry } from '../db/journal'
 import type { JournalEntry } from '../db/types'
 import { fromDateKey } from '../lib/date'
-import { JOURNAL_PHOTO_SIZE } from '../lib/journal'
-import { BlobImage } from './BlobImage'
+import { entryPhotos, JOURNAL_PHOTO_MAX, JOURNAL_PHOTO_SIZE } from '../lib/journal'
 import { BottomSheet } from './BottomSheet'
 import { PhotoPicker } from './PhotoPicker'
+import { PhotoStrip } from './PhotoStrip'
 
 type Props = {
   entry?: JournalEntry
@@ -30,33 +30,28 @@ export function EntrySheet({ entry, habitTitle, onClose }: Props) {
 
 function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => void }) {
   const [text, setText] = useState(entry.text)
-  // undefined = unchanged, null = removed.
-  const [photo, setPhoto] = useState<Blob | null | undefined>(undefined)
+  const [photos, setPhotos] = useState(() => entryPhotos(entry))
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const shownPhoto = photo === undefined ? entry.photo : photo
   // Habit notes are text only.
   const canHavePhoto = !entry.habitId
+  const full = photos.length >= JOURNAL_PHOTO_MAX
 
   return (
     <div className="flex flex-col gap-3">
-      {shownPhoto && (
-        <div className="relative self-start">
-          <BlobImage blob={shownPhoto} alt="Günlük fotoğrafı" className="max-h-72 rounded-xl" />
-          <button
-            type="button"
-            onClick={() => setPhoto(null)}
-            aria-label="Fotoğrafı kaldır"
-            className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm text-white"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-      {canHavePhoto && (
-        <div className="self-start">
-          <PhotoPicker label={shownPhoto ? '📷 Fotoğrafı değiştir' : '📷 Fotoğraf ekle'} maxSize={JOURNAL_PHOTO_SIZE} onPick={setPhoto} />
-        </div>
-      )}
+      <PhotoStrip photos={photos} onRemove={(i) => setPhotos((all) => all.filter((_, n) => n !== i))} />
+      {canHavePhoto &&
+        (full ? (
+          <p className="text-xs text-muted">En fazla {JOURNAL_PHOTO_MAX} fotoğraf.</p>
+        ) : (
+          <div className="self-start">
+            <PhotoPicker
+              label="📷 Fotoğraf ekle"
+              maxSize={JOURNAL_PHOTO_SIZE}
+              multiple
+              onPick={(photo) => setPhotos((all) => (all.length >= JOURNAL_PHOTO_MAX ? all : [...all, photo]))}
+            />
+          </div>
+        ))}
       <textarea
         id="entry-text"
         value={text}
@@ -69,10 +64,10 @@ function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => v
       <button
         type="button"
         onClick={async () => {
-          await updateEntry(entry.id, text, photo)
+          await updateEntry(entry.id, text, photos)
           onClose()
         }}
-        disabled={text.trim() === '' && !shownPhoto}
+        disabled={text.trim() === '' && photos.length === 0}
         className="rounded-xl bg-accent py-3 font-medium text-surface disabled:opacity-40"
       >
         Kaydet

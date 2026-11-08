@@ -11,6 +11,7 @@ import type {
   UnlockedAchievement,
 } from '../db/types'
 import { fromDateKey, toDateKey, weekRange } from './date'
+import { entryPhotos } from './journal'
 import { streaks, successRate } from './stats'
 import { isCompleted, isShownOn } from './today'
 
@@ -469,7 +470,7 @@ export function emergencyQuest(data: Pick<XpData, 'habits' | 'logs'>, week: stri
 }
 
 const journalDaysOf = (journal: JournalEntry[]) =>
-  new Set(journal.filter((e) => e.kind !== 'review' && (e.text.trim() || e.photo)).map((e) => e.date))
+  new Set(journal.filter((e) => e.kind !== 'review' && (e.text.trim() || entryPhotos(e).length > 0)).map((e) => e.date))
 
 /** Progress toward the week's quest up to `day`, and the day it was met. */
 export function emergencyProgress(
@@ -567,7 +568,7 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
   }
 
   const journalDays = new Set(
-    data.journal.filter((e) => e.kind !== 'review' && (e.text.trim() || e.photo)).map((e) => e.date),
+    data.journal.filter((e) => e.kind !== 'review' && (e.text.trim() || entryPhotos(e).length > 0)).map((e) => e.date),
   )
   for (const date of journalDays) if (inRange(date)) events.push({ date, xp: XP.journal, source: 'journal', stat: 'sen' })
   for (const m of data.moods) {

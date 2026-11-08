@@ -2,6 +2,18 @@ import { describe, expect, it } from 'vitest'
 import { backupReminder, decodeRecord, encodeRecord, parseBackup } from './backup'
 
 describe('backup records', () => {
+  it('round-trips a list of photos, as a journal entry holds them', async () => {
+    const photos = [new Blob([new Uint8Array([1, 2])], { type: 'image/jpeg' }), new Blob([new Uint8Array([3, 250])], { type: 'image/png' })]
+    const encoded = await encodeRecord({ id: 'a', text: 'gün', photos })
+    expect(JSON.parse(JSON.stringify(encoded))).toEqual(encoded)
+    const back = decodeRecord(JSON.parse(JSON.stringify(encoded))) as { photos: Blob[] }
+    expect(back.photos).toHaveLength(2)
+    for (const [i, blob] of back.photos.entries()) {
+      expect(blob.type).toBe(photos[i].type)
+      expect(new Uint8Array(await blob.arrayBuffer())).toEqual(new Uint8Array(await photos[i].arrayBuffer()))
+    }
+  })
+
   it('round-trips a photo through JSON', async () => {
     const photo = new Blob([new Uint8Array([1, 2, 3, 250])], { type: 'image/jpeg' })
     const encoded = await encodeRecord({ id: 'a', title: 'Kapadokya', posterBlob: photo })

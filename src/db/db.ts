@@ -93,6 +93,19 @@ db.version(10).stores({
   xpWeeks: 'week',
 })
 
+// v11: a journal entry can hold several photos; the single one becomes a list of one.
+db.version(11)
+  .stores({})
+  .upgrade((tx) =>
+    tx
+      .table('journal')
+      .toCollection()
+      .modify((entry: JournalEntry) => {
+        if (entry.photo && !entry.photos) entry.photos = [entry.photo]
+        delete entry.photo
+      }),
+  )
+
 export const META_TABLE = 'meta'
 
 export const newId = () => crypto.randomUUID()

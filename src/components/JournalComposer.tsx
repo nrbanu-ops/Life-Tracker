@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { addEntry } from '../db/journal'
 import { clearDraft, loadDraft, saveDraft } from '../lib/draft'
-import { JOURNAL_PHOTO_SIZE } from '../lib/journal'
-import { BlobImage } from './BlobImage'
+import { JOURNAL_PHOTO_MAX, JOURNAL_PHOTO_SIZE } from '../lib/journal'
 import { PhotoPicker } from './PhotoPicker'
+import { PhotoStrip } from './PhotoStrip'
 
 type Props = {
   date: string
@@ -16,16 +16,17 @@ const textareaClass =
 /** Free writing for a day, with an optional photo. Ctrl/Cmd+Enter saves too. */
 export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Props) {
   const [text, setText] = useState(() => loadDraft(date))
-  const [photo, setPhoto] = useState<Blob>()
+  const [photos, setPhotos] = useState<Blob[]>([])
   const [saving, setSaving] = useState(false)
   // The day can change under us: at midnight on the Günlük page, where there's no remount.
   const [shownDate, setShownDate] = useState(date)
   if (shownDate !== date) {
     setShownDate(date)
     setText(loadDraft(date))
-    setPhoto(undefined)
+    setPhotos([])
   }
-  const canSave = text.trim() !== '' || photo !== undefined
+  const canSave = text.trim() !== '' || photos.length > 0
+  const full = photos.length >= JOURNAL_PHOTO_MAX
 
   // Written on every keystroke, not in an effect, so the draft under `date` is never
   // the text of the day before.
@@ -37,10 +38,10 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
   const save = async () => {
     if (!canSave || saving) return
     setSaving(true)
-    await addEntry(date, text, photo)
+    await addEntry(date, text, photos)
     clearDraft(date)
     setText('')
-    setPhoto(undefined)
+    setPhotos([])
     setSaving(false)
   }
 
@@ -62,21 +63,20 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
         maxLength={5000}
         className={textareaClass}
       />
-      {photo && (
-        <div className="relative self-start">
-          <BlobImage blob={photo} alt="Eklenecek fotoğraf" className="max-h-40 rounded-xl" />
-          <button
-            type="button"
-            onClick={() => setPhoto(undefined)}
-            aria-label="Fotoğrafı kaldır"
-            className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-sm text-white"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      <PhotoStrip photos={photos} onRemove={(i) => setPhotos((all) => all.filter((_, n) => n !== i))} />
+      {full && <p className="text-xs text-muted">En fazla {JOURNAL_PHOTO_MAX} fotoğraf.</p>}
       <div className="flex items-center justify-between gap-2">
-        <PhotoPicker label={photo ? '📷 Değiştir' : '📷 Fotoğraf'} maxSize={JOURNAL_PHOTO_SIZE} onPick={setPhoto} />
+        {full ? (
+          <span />
+        ) : (
+          <PhotoPicker
+            label={photos.length > 0 ? '📷 Fotoğraf ekle' : '📷 Fotoğraf'}
+            maxSize={JOURNAL_PHOTO_SIZE}
+            multiple
+            // Several can arrive one after another; the cap holds across all of them.
+            onPick={(photo) => setPhotos((all) => (all.length >= JOURNAL_PHOTO_MAX ? all : [...all, photo]))}
+          />
+        )}
         {canSave && (
           <button
             type="button"

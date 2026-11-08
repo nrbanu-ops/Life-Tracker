@@ -39,23 +39,31 @@ function dataUrlToBlob(url: string): Blob {
   return new Blob([bytes], { type })
 }
 
-/** A record ready for JSON: top-level Blob fields become markers. */
+/** A record ready for JSON: Blob fields, and Blobs in a list, become markers. */
 export async function encodeRecord(record: unknown): Promise<unknown> {
   if (typeof record !== 'object' || record === null) return record
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(record)) {
-    out[key] = value instanceof Blob ? { __blob: await blobToDataUrl(value) } : value
+    out[key] = Array.isArray(value) ? await Promise.all(value.map(encodeValue)) : await encodeValue(value)
   }
   return out
+}
+
+async function encodeValue(value: unknown): Promise<unknown> {
+  return value instanceof Blob ? { __blob: await blobToDataUrl(value) } : value
 }
 
 export function decodeRecord(record: unknown): unknown {
   if (typeof record !== 'object' || record === null) return record
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(record)) {
-    out[key] = isBlobMarker(value) ? dataUrlToBlob(value.__blob) : value
+    out[key] = Array.isArray(value) ? value.map(decodeValue) : decodeValue(value)
   }
   return out
+}
+
+function decodeValue(value: unknown): unknown {
+  return isBlobMarker(value) ? dataUrlToBlob(value.__blob) : value
 }
 
 export type ParsedBackup = { ok: true; backup: Backup } | { ok: false; error: string }

@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router'
 import { db } from '../db/db'
 import { fromDateKey } from '../lib/date'
-import { memoryFor } from '../lib/journal'
+import { entryPhotos, memoryFor } from '../lib/journal'
 import { ENERGY_EMOJI, MOOD_EMOJI } from '../lib/mood'
 import { BlobImage } from './BlobImage'
 
@@ -15,7 +15,7 @@ export function MemoryCard({ today }: { today: string }) {
   const mood = useLiveQuery(() => (memory ? db.moods.get(memory.date) : undefined), [memory?.date])
   if (!memory) return null
 
-  const photo = memory.entries.find((e) => e.photo)?.photo
+  const photo = memory.entries.flatMap(entryPhotos)[0]
   const text = memory.entries.find((e) => e.text)?.text
 
   return (

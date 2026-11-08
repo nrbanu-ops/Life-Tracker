@@ -25,6 +25,15 @@ export function memoryFor(entries: JournalEntry[], today: string): Memory | unde
 /** Journal photos are looked at full width, so they keep more pixels than posters. */
 export const JOURNAL_PHOTO_SIZE = 1200
 
+/** Enough for a day out; a cap keeps one entry (and the backup file) from growing without end. */
+export const JOURNAL_PHOTO_MAX = 10
+
+/** An entry's photos, whichever shape it is in: the list, or the single photo of older entries. */
+export function entryPhotos(entry: Pick<JournalEntry, 'photo' | 'photos'>): Blob[] {
+  if (entry.photos?.length) return entry.photos
+  return entry.photo ? [entry.photo] : []
+}
+
 /** Entries whose text (or habit name) contains every word of the query, ignoring case. */
 export function searchEntries(entries: JournalEntry[], query: string, habitsById: Map<string, Habit>): JournalEntry[] {
   const words = query.toLocaleLowerCase('tr').split(/\s+/).filter(Boolean)
