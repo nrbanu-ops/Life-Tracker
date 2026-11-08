@@ -75,7 +75,7 @@ Vardiya/gün tipleri, ruh hali/enerji takibi, bulut senkronu (ileride Supabase),
 - B. ✅ Bırakma habit'leri: bırakılan tarihten beri sayaç, dönüm noktaları, en uzun süre
 - C. ✅ Zamanlayıcı: kronometre ve geri sayım, süreli habit'e otomatik ekleme (çalışan zamanlayıcı localStorage'da)
 - D. ✅ Yapılacaklar: tarih, saat, 4 seviye öncelik, tekrar; Bugün ekranında görünür, tümü `/gorevler` sayfasında
-- E. ✅ Takvim sekmesi: aylık görünüm, geçmiş günleri işaretleme (sekmeler: Bugün, Takvim, Projeler, Habit'ler, İstatistik)
+- E. ✅ Takvim sekmesi: aylık görünüm, geçmiş günleri işaretleme (sekmeler: Bugün, Takvim, Projeler, Habit'ler, İstatistik). Gün hücresinin altında noktalar: mavi = açık görev, sarı = o gün günlüğe bir şey yazılmış (sadece `date` indeksi okunur, kayıtlar değil — yoksa ayın bütün fotoğrafları belleğe gelirdi). `?gun=YYYY-MM-DD` ile belirli bir gün açılır (anı kartı buraya bağlanır)
 - F. ✅ Günlük ve notlar (`/gunluk`, Bugün ve takvim gün detayında da görünür): habit'e not, serbest günlük yazısı, habit'e göre filtreli akış
 
 4. ✅ Projeler ve milestone'lar, habit-proje bağlantısı (başarı oranı `src/lib/stats.ts` → `successRate`)

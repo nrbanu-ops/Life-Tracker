@@ -5,6 +5,10 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-08
 
+### Takvimde günlük işareti
+- **Günlüğe bir şey yazdığın günler takvimde sarı noktayla işaretli.** Hangi günlerde yazdığını
+  görüp doğrudan o güne gidebilirsin. Açık görev noktası mavi; ikisi varsa yan yana duruyorlar.
+
 ### Yedekleme sağlamlaştırıldı
 - **Otomatik yedek sessizce durmuyor artık.** Dosya silinmiş, yer kalmamış ya da yazma başka bir
   sebeple olmamışsa üstte kırmızı bir şerit çıkıyor ("Otomatik yedek yazılamadı · Tekrar dene").

@@ -42,6 +42,12 @@ export function CalendarPage() {
     [first, last],
   )
   const tasks = useLiveQuery(() => db.tasks.toArray())
+  // Only the date index is read, never the records: a month of entries would drag their photos in.
+  const journalDays = useLiveQuery(
+    async () => new Set(await db.journal.where('date').between(first, last, true, true).keys()),
+    [first, last],
+    new Set(),
+  )
   const projects = useLiveQuery(() => db.projects.toArray(), [], [])
 
   const goToMonth = (next: string) => {
@@ -105,6 +111,7 @@ export function CalendarPage() {
               isSelected={day === selected}
               status={habits && logs && day <= today ? dayStatus(habits, logs, day) : undefined}
               openTasks={tasks?.filter((t) => !t.done && t.date === day).length ?? 0}
+              hasJournal={journalDays.has(day)}
               onSelect={() => setSelected(day)}
             />
           ))}
@@ -136,10 +143,12 @@ type CellProps = {
   /** Habit completion; only for today and past days. */
   status?: { done: number; total: number }
   openTasks: number
+  /** Something was written in the journal that day. */
+  hasJournal: boolean
   onSelect: () => void
 }
 
-function DayCell({ day, inMonth, isToday, isSelected, status, openTasks, onSelect }: CellProps) {
+function DayCell({ day, inMonth, isToday, isSelected, status, openTasks, hasJournal, onSelect }: CellProps) {
   const complete = status !== undefined && status.total > 0 && status.done === status.total
   const partial = status !== undefined && status.done > 0 && !complete
   const number = Number(day.slice(8))
@@ -156,7 +165,7 @@ function DayCell({ day, inMonth, isToday, isSelected, status, openTasks, onSelec
     <button
       type="button"
       onClick={onSelect}
-      aria-label={`${day}${status && status.total > 0 ? `, ${status.total} habit'ten ${status.done}` : ''}${openTasks ? `, ${openTasks} açık görev` : ''}`}
+      aria-label={`${day}${status && status.total > 0 ? `, ${status.total} habit'ten ${status.done}` : ''}${openTasks ? `, ${openTasks} açık görev` : ''}${hasJournal ? ', günlük yazısı var' : ''}`}
       aria-pressed={isSelected}
       className={`flex flex-col items-center gap-0.5 rounded-xl py-1 ${inMonth ? '' : 'opacity-35'} ${
         isSelected ? 'bg-bg' : ''
@@ -169,10 +178,11 @@ function DayCell({ day, inMonth, isToday, isSelected, status, openTasks, onSelec
       >
         {number}
       </span>
-      <span
-        className={`h-1.5 w-1.5 rounded-full ${openTasks > 0 ? 'bg-p3' : 'bg-transparent'}`}
-        aria-hidden
-      />
+      {/* Fixed height so a day with marks doesn't make its week taller than the others. */}
+      <span className="flex h-1.5 items-center gap-0.5" aria-hidden>
+        {openTasks > 0 && <span className="h-1.5 w-1.5 rounded-full bg-p3" />}
+        {hasJournal && <span className="h-1.5 w-1.5 rounded-full bg-p2" />}
+      </span>
     </button>
   )
 }
@@ -188,6 +198,9 @@ function Legend() {
       </span>
       <span className="flex items-center gap-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-p3" /> Açık görev
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-p2" /> Günlük
       </span>
     </div>
   )
