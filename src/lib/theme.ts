@@ -8,13 +8,23 @@ import { useSyncExternalStore } from 'react'
 export type Palette = {
   id: string
   name: string
-  /** Two dots in Settings: the accent and the page colour. */
-  swatch: [accent: string, page: string]
+  /** The dots shown in Settings: the accent first, then colours that give the palette away. */
+  swatch: string[]
   /** Page colour for the browser's theme-color (the status bar on iOS), light and dark. */
   bg: [light: string, dark: string]
+  /** A word under the name, for anything surprising about the palette. */
+  note?: string
 }
 
 export const PALETTES: Palette[] = [
+  {
+    id: 'gokkusagi',
+    name: 'Gökkuşağı',
+    note: 'hep aydınlık',
+    swatch: ['#d93d33', '#f2cc78', '#8eafcd'],
+    // No dark version, so the status bar keeps the light colour either way.
+    bg: ['#fdf2e3', '#fdf2e3'],
+  },
   { id: 'orman', name: 'Orman', swatch: ['#3f6b5c', '#dce6f3'], bg: ['#dce6f3', '#182030'] },
   { id: 'seker', name: 'Şeker', swatch: ['#d2403c', '#fde9e2'], bg: ['#fde9e2', '#2e1620'] },
   { id: 'pembe', name: 'Pembe', swatch: ['#cc1a71', '#ffe7f2'], bg: ['#ffe7f2', '#2e0f22'] },
@@ -24,7 +34,8 @@ export const PALETTES: Palette[] = [
   { id: 'lavanta', name: 'Lavanta', swatch: ['#6d3fd4', '#ece6f8'], bg: ['#ece6f8', '#1f1636'] },
 ]
 
-export const DEFAULT_PALETTE = PALETTES[0].id
+// Not PALETTES[0]: the list is ordered for Settings, the default is a separate decision.
+export const DEFAULT_PALETTE = 'orman'
 
 // Kept in step with the small script in index.html that applies the choice before the first paint.
 const KEY = 'life-tracker:palette'

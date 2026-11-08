@@ -24,6 +24,13 @@
   --color-sys-muted: #8597bb;
   --color-sys-warn: #ff8a4c;
   --color-sys-danger: #ff4d5e;
+  /* Rank badge, grey E to gold S. Tuned for a dark window; a light palette overrides them. */
+  --color-rank-e: #9aa6bd;
+  --color-rank-d: #4ade80;
+  --color-rank-c: #3aa6ff;
+  --color-rank-b: #a78bfa;
+  --color-rank-a: #f87171;
+  --color-rank-s: #f5b941;
   /* The solid colour blended over the background picture, and the veil that dims it in the dark. */
   --color-backdrop-tint: #5b86bd;
   --color-backdrop-veil: rgb(24 32 48 / 0.45);
@@ -246,6 +253,55 @@
     --color-accent-soft: #0c423a;
     --color-backdrop-tint: #1f8a79;
   }
+}
+
+/*
+ * Gökkuşağı: the one palette that ignores the phone's dark mode and stays bright, because
+ * a dark page was the whole complaint. Its block carries every variable and has no dark
+ * counterpart; [data-palette] outweighs the bare :root inside the dark media query, so the
+ * light values win on their own. Its backdrop is drawn artwork rather than the tinted photo.
+ */
+:root[data-palette='gokkusagi'] {
+  color-scheme: light;
+  --color-bg: #fdf2e3;
+  --color-surface: #ffffff;
+  --color-text: #3b2b26;
+  /* Dark enough to stay readable straight on the deepest wave band, not just on a card. */
+  --color-muted: #6e5248;
+  --color-border: #f3dfd0;
+  --color-accent: #d93d33;
+  --color-accent-soft: #ffe2dc;
+  /* Priorities in the picture's own red, gold and blue. */
+  --color-p1: #d72a28;
+  --color-p2: #c07f05;
+  --color-p3: #23639d;
+  /* The leveling window keeps its shape but turns bright: cream paper, coral edge. */
+  --color-sys-bg: #fff8ee;
+  --color-sys-panel: #fdeedb;
+  --color-sys-line: #f0cfa8;
+  /* Blue draws the window and its ordinary labels; red is kept for the urgent quest. */
+  --color-sys-edge: #1d6fa5;
+  --color-sys-glow: #c07f05;
+  --color-sys-text: #3b2b26;
+  --color-sys-muted: #6e5248;
+  --color-sys-warn: #cf4520;
+  --color-sys-danger: #c62828;
+  --color-rank-e: #6b7a94;
+  --color-rank-d: #1f9e52;
+  --color-rank-c: #1d7fd4;
+  --color-rank-b: #7c5cd6;
+  --color-rank-a: #d6453f;
+  --color-rank-s: #b07d08;
+}
+:root[data-palette='gokkusagi'] .app-backdrop {
+  /* Flowing bands, no colour blending: the artwork already is the palette. */
+  background: url("./assets/bg-wave.svg") center / cover no-repeat;
+  background-color: var(--color-bg);
+  background-blend-mode: normal;
+}
+:root[data-palette='gokkusagi'] .map-tiles {
+  /* The page stays light, so the map must not be inverted for the phone's dark mode. */
+  filter: none;
 }
 
 /* Heatmap: one hue from light to dark (partial → minimum → done), derived per theme. */

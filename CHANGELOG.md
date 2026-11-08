@@ -3,6 +3,17 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-08
+
+### Gökkuşağı teması
+- **Yeni tema: Gökkuşağı.** Mercan, somon, krem, altın ve maviden akan dalgalar; arka plan artık
+  çiçek fotoğrafı değil, bu renklerde çizilmiş bir desen.
+- **Telefonun koyu moduna uymaz, hep aydınlık kalır.** Koyu modu açık tutup uygulamayı aydınlık
+  görmek isteyenler için; diğer temalar eskisi gibi telefonun ayarını takip ediyor.
+- Seviye kartı bu temada da aydınlık: krem zemin, mavi çerçeve, acil görev kırmızı.
+  Rank renkleri aydınlık zeminde okunacak şekilde koyulaştırıldı.
+- Görev öncelik renkleri (acil / yüksek / orta) görselin kendi kırmızı, altın ve mavisinden.
+
 ## 2026-11-07
 
 ### Renk teması

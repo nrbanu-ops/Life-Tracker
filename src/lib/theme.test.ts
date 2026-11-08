@@ -16,8 +16,8 @@ describe('paletteFrom', () => {
 })
 
 describe('PALETTES', () => {
-  it('starts with the default one', () => {
-    expect(PALETTES[0].id).toBe(DEFAULT_PALETTE)
+  it('offers the default one', () => {
+    expect(PALETTES.map((p) => p.id)).toContain(DEFAULT_PALETTE)
   })
 
   it('has unique ids and a colour for every slot', () => {
@@ -33,7 +33,7 @@ describe('palettes and the stylesheet agree', () => {
   // A palette listed here but missing from index.css would silently show the default colours.
   it('every palette but the default has a block in index.css', async () => {
     const css = await readFile(new URL('../index.css', import.meta.url), 'utf8')
-    for (const palette of PALETTES.slice(1)) {
+    for (const palette of PALETTES.filter((p) => p.id !== DEFAULT_PALETTE)) {
       expect(css, palette.id).toContain(`:root[data-palette='${palette.id}']`)
     }
   })

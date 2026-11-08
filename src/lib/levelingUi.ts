@@ -1,13 +1,16 @@
 import type { Rank } from './leveling'
 
-/** Each rank has its colour, from grey E to gold S. */
+/**
+ * Each rank has its colour, from grey E to gold S. They go through CSS variables because a
+ * light palette needs darker versions to stay legible; the values live in src/index.css.
+ */
 export const RANK_COLOR: Record<Rank, string> = {
-  E: '#9aa6bd',
-  D: '#4ade80',
-  C: '#3aa6ff',
-  B: '#a78bfa',
-  A: '#f87171',
-  S: '#f5b941',
+  E: 'var(--color-rank-e)',
+  D: 'var(--color-rank-d)',
+  C: 'var(--color-rank-c)',
+  B: 'var(--color-rank-b)',
+  A: 'var(--color-rank-a)',
+  S: 'var(--color-rank-s)',
 }
 
 export const RANK_TITLE: Record<Rank, string> = {

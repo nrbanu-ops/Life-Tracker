@@ -8,7 +8,8 @@ export function ThemeSection() {
     <section id="tema" className="rounded-2xl border border-border bg-surface p-4">
       <h2 className="font-medium">Renk teması</h2>
       <p className="mt-1 text-sm text-muted">
-        Açık ve koyu mod telefonunun ayarını takip etmeye devam eder; burada sadece renkleri seçersin.
+        Açık ve koyu mod telefonunun ayarını takip eder; burada renkleri seçersin.
+        "Hep aydınlık" yazan tema, telefonun koyu moddayken de aydınlık kalır.
       </p>
       <ul className="mt-3 grid grid-cols-2 gap-2">
         {PALETTES.map((palette) => {
@@ -24,16 +25,18 @@ export function ThemeSection() {
                 }`}
               >
                 <span className="flex shrink-0" aria-hidden>
-                  <span
-                    className="size-5 rounded-full border border-black/10"
-                    style={{ background: palette.swatch[0] }}
-                  />
-                  <span
-                    className="-ml-2 size-5 rounded-full border border-black/10"
-                    style={{ background: palette.swatch[1] }}
-                  />
+                  {palette.swatch.map((colour, i) => (
+                    <span
+                      key={colour}
+                      className={`size-5 rounded-full border border-black/10 ${i > 0 ? '-ml-2' : ''}`}
+                      style={{ background: colour }}
+                    />
+                  ))}
                 </span>
-                <span className="min-w-0 truncate">{palette.name}</span>
+                <span className="min-w-0 truncate">
+                  {palette.name}
+                  {palette.note && <span className="block text-xs text-muted">{palette.note}</span>}
+                </span>
                 {chosen && (
                   <span className="ml-auto text-accent" aria-hidden>
                     ✓
