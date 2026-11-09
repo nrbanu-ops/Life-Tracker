@@ -6,7 +6,9 @@ import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
 import { ReminderSection } from '../components/ReminderSection'
 import { StorageSection } from '../components/StorageSection'
+import { Switch } from '../components/Switch'
 import { ThemeSection } from '../components/ThemeSection'
+import { TodaySection } from '../components/TodaySection'
 import { resetAllData, saveSafetyCopy } from '../db/backup'
 import { setPenaltyOn, usePenaltyOn } from '../db/leveling'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
@@ -51,6 +53,8 @@ export function SettingsPage() {
         <StorageSection />
 
         <ThemeSection />
+
+        <TodaySection />
 
         <DiagnosticsSection />
 
@@ -329,25 +333,6 @@ function GeminiSection() {
         </>
       )}
     </section>
-  )
-}
-
-function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
-  return (
-    <label className="flex cursor-pointer items-center justify-between gap-3">
-      <span className="font-medium">{label}</span>
-      <input
-        type="checkbox"
-        role="switch"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="peer sr-only"
-      />
-      <span
-        aria-hidden
-        className="relative h-7 w-12 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent after:absolute after:top-1 after:left-1 after:h-5 after:w-5 after:rounded-full after:bg-surface after:shadow after:transition-transform peer-checked:after:translate-x-5"
-      />
-    </label>
   )
 }
 

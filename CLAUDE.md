@@ -36,6 +36,8 @@ Tipler `src/db/types.ts`, Dexie şeması `src/db/db.ts` içinde. Tarihleri her z
 
 Altta sabit sekme çubuğu (Bugün, Takvim, Projeler, Habit'ler, İstatistik). Günlük, Kütüphane, Zamanlayıcı ve Ayarlar köşede küçük ikonlar.
 
+Ayarlar → **Bugün ekranı** (`TodaySection`, `src/lib/todaySetting.ts`): cihaza özel, yedeğe girmeyen görünüm anahtarları. "Tamamlananları gizle" açıkken Bugün'de işaretlenmiş habit'ler listeden çıkar ve her grubun altında `✓ n tamamlandı · göster` satırı kalır (`splitDone`, grup grup açılır); halka ve yüzde değişmez, çünkü gizleme sadece görünümü değiştirir.
+
 ## Hesaplama kuralları
 - Proje ilerlemesi: tamamlanan milestone / toplam milestone
 - Seri (streak):

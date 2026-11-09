@@ -5,6 +5,12 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Tamamlananları gizle
+- Ayarlar'a **Bugün ekranı** bölümü geldi; ilk anahtarı "Tamamlananları gizle". Açıkken
+  işaretlediğin habit'ler listeden çıkar, yerine `✓ n tamamlandı · göster` satırı gelir —
+  yanlış işaretlediğinde oradan geri getirip geri alabilirsin.
+- Halka ve yüzde değişmez: tamamlananlar sayılmaya devam eder, sadece görünmezler.
+
 ### Ses notu kaldırıldı
 - Telefonda mikrofon hiçbir yolla açılmadı: izin verilmiş olmasına rağmen Android kaydı
   reddetti (beklemeli tekrar ve yankı engellemesiz deneme dahil). Hiç çalışmayan bir buton

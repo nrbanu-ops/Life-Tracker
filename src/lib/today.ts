@@ -102,3 +102,11 @@ export function dayProgress(items: TodayItem[]): { done: number; total: number }
   const counted = items.filter((item) => item.countsToday)
   return { done: counted.filter((item) => isCompleted(item.status)).length, total: counted.length }
 }
+
+/** Today's list split for the "hide completed" switch: still to do, and already finished. */
+export function splitDone(items: TodayItem[]): { open: TodayItem[]; done: TodayItem[] } {
+  return {
+    open: items.filter((item) => !isCompleted(item.status)),
+    done: items.filter((item) => isCompleted(item.status)),
+  }
+}

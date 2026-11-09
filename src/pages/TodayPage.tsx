@@ -22,7 +22,8 @@ import { db } from '../db/db'
 import { markMilestoneCelebrated } from '../db/habits'
 import { setLog } from '../db/logs'
 import { fromDateKey, weekRange } from '../lib/date'
-import { buildToday, dayProgress, isWeeklyGoal, tapResult, weekProgress } from '../lib/today'
+import { buildToday, dayProgress, isWeeklyGoal, splitDone, tapResult, weekProgress } from '../lib/today'
+import { useHideDone } from '../lib/todaySetting'
 import { useNow } from '../lib/useNow'
 import { useTodayKey } from '../lib/useTodayKey'
 
@@ -31,6 +32,9 @@ export function TodayPage() {
   // Only the id is kept so the sheet always shows the live item.
   const [actionHabitId, setActionHabitId] = useState<string>()
   const [quitHabitId, setQuitHabitId] = useState<string>()
+  // Which groups have their finished habits folded back open, while "hide completed" is on.
+  const [revealed, setRevealed] = useState<string[]>([])
+  const hideDone = useHideDone()
   const now = useNow()
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray())
   const projects = useLiveQuery(() => db.projects.toArray(), [], [])
@@ -106,25 +110,47 @@ export function TodayPage() {
             },
           ]
             .filter((group) => group.list.length > 0)
-            .map((group) => (
-              <section key={group.key} className="mb-6">
-                <div className="mb-2 flex items-baseline justify-between gap-3">
-                  <h2 className="text-sm font-medium text-muted">{group.title}</h2>
-                  {group.detail && <span className="text-xs text-muted">{group.detail}</span>}
-                </div>
-                <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
-                  {group.list.map((item) => (
-                    <HabitCheckRow
-                      key={item.habit.id}
-                      item={item}
-                      projectColor={item.habit.projectId ? projectColor.get(item.habit.projectId) : undefined}
-                      onTap={() => setLog(item.habit.id, today, tapResult(item.habit, item))}
-                      onMore={() => setActionHabitId(item.habit.id)}
-                    />
-                  ))}
-                </ul>
-              </section>
-            ))}
+            .map((group) => {
+              const open = revealed.includes(group.key)
+              const finished = splitDone(group.list).done
+              // Hiding only changes the list; the ring above still counts what was finished.
+              const shown = hideDone && !open ? splitDone(group.list).open : group.list
+              return (
+                <section key={group.key} className="mb-6">
+                  <div className="mb-2 flex items-baseline justify-between gap-3">
+                    <h2 className="text-sm font-medium text-muted">{group.title}</h2>
+                    {group.detail && <span className="text-xs text-muted">{group.detail}</span>}
+                  </div>
+                  {shown.length > 0 && (
+                    <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
+                      {shown.map((item) => (
+                        <HabitCheckRow
+                          key={item.habit.id}
+                          item={item}
+                          projectColor={item.habit.projectId ? projectColor.get(item.habit.projectId) : undefined}
+                          onTap={() => setLog(item.habit.id, today, tapResult(item.habit, item))}
+                          onMore={() => setActionHabitId(item.habit.id)}
+                        />
+                      ))}
+                    </ul>
+                  )}
+                  {hideDone && finished.length > 0 && (
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      onClick={() =>
+                        setRevealed((keys) =>
+                          keys.includes(group.key) ? keys.filter((k) => k !== group.key) : [...keys, group.key],
+                        )
+                      }
+                      className="mt-2 px-1 text-sm text-muted"
+                    >
+                      {open ? 'Tamamlananları gizle' : `✓ ${finished.length} tamamlandı · göster`}
+                    </button>
+                  )}
+                </section>
+              )
+            })}
 
           <HabitActionSheet
             item={items.find((item) => item.habit.id === actionHabitId)}

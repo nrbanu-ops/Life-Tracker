@@ -7,6 +7,7 @@ import {
   isShownOn,
   isWeeklyGoal,
   nextStatus,
+  splitDone,
   tapResult,
   weekProgress,
   withAmount,
@@ -165,5 +166,25 @@ describe('weekly goals', () => {
       WED,
     )
     expect(weekProgress(items)).toEqual({ done: 1, total: 2 })
+  })
+})
+
+describe('splitDone', () => {
+  const item = (id: string, status?: HabitLog['status']) => ({
+    habit: habit(id, { type: 'daily' }),
+    status,
+    countsToday: true,
+  })
+
+  it('keeps done and minimum on the finished side, everything else open', () => {
+    const items = [item('a', 'done'), item('b'), item('c', 'minimum'), item('d', 'partial'), item('e', 'skipped')]
+    const { open, done } = splitDone(items)
+    expect(open.map((i) => i.habit.id)).toEqual(['b', 'd', 'e'])
+    expect(done.map((i) => i.habit.id)).toEqual(['a', 'c'])
+  })
+
+  it('keeps the order of the list', () => {
+    const { open } = splitDone([item('a'), item('b', 'done'), item('c')])
+    expect(open.map((i) => i.habit.id)).toEqual(['a', 'c'])
   })
 })
