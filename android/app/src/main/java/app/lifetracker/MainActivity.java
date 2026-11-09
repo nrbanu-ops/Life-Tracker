@@ -1,11 +1,14 @@
 package app.lifetracker;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.webkit.GeolocationPermissions;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -30,9 +33,13 @@ import java.util.regex.Pattern;
  */
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER = 1;
+    private static final int LOCATION_PERMISSION = 2;
 
     private WebView web;
     private ValueCallback<Uri[]> pendingChooser;
+    // The page asked where it is and is waiting for Android's own permission dialog.
+    private String pendingGeoOrigin;
+    private GeolocationPermissions.Callback pendingGeoCallback;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -49,6 +56,7 @@ public class MainActivity extends Activity {
         s.setSupportZoom(false);
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(true);
+        s.setGeolocationEnabled(true);
         s.setUserAgentString(s.getUserAgentString() + " LifeTrackerAndroid/" + BuildConfig.VERSION_CODE);
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
 
@@ -151,6 +159,27 @@ public class MainActivity extends Activity {
     }
 
     private final class Chrome extends WebChromeClient {
+        /**
+         * A WebView refuses every geolocation request unless the app answers this, and it can
+         * only say yes once Android itself has given the app the permission.
+         */
+        @Override
+        public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+            if (hasLocationPermission()) {
+                callback.invoke(origin, true, false);
+                return;
+            }
+            // Only one request can be waiting; a second prompt replaces the first.
+            if (pendingGeoCallback != null) pendingGeoCallback.invoke(pendingGeoOrigin, false, false);
+            pendingGeoOrigin = origin;
+            pendingGeoCallback = callback;
+            requestPermissions(
+                    new String[] {
+                        Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION
+                    },
+                    LOCATION_PERMISSION);
+        }
+
         @Override
         public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
             if (pendingChooser != null) pendingChooser.onReceiveValue(null);
@@ -163,6 +192,24 @@ public class MainActivity extends Activity {
                 return false;
             }
         }
+    }
+
+    private boolean hasLocationPermission() {
+        return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        if (requestCode == LOCATION_PERMISSION && pendingGeoCallback != null) {
+            boolean granted = false;
+            for (int result : results) granted |= result == PackageManager.PERMISSION_GRANTED;
+            pendingGeoCallback.invoke(pendingGeoOrigin, granted, false);
+            pendingGeoCallback = null;
+            pendingGeoOrigin = null;
+            return;
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, results);
     }
 
     @Override

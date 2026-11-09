@@ -5,6 +5,13 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### "Buradayım" ile anlık konum
+- **Kütüphaneye yer eklerken "📍 Buradayım"** butonu: telefonun konumunu alıp o noktanın adını
+  (OpenStreetMap'ten) ve şehrini doldurur, "gittim" olarak işaretler. Adı istediğin gibi
+  değiştirip kaydediyorsun — "Galata Kulesi" yerine "Galata — kahve molası" gibi.
+- İnternet yoksa ya da nokta isimsizse yine de koordinat kaydediliyor, adını sen yazıyorsun.
+- Android uygulamasında konum izni ekleniyor (yeni APK gerekiyor; web sürümünde zaten çalışır).
+
 ### Geri yüklemeden önce otomatik güvenlik kopyası
 - **Yedekten geri yüklerken, şu anki verin önce ayrı bir dosyaya kaydediliyor**
   (`life-tracker-geri-yuklemeden-once-<tarih>.json`). Yanlış dosyayı seçersen eskisi duruyor:

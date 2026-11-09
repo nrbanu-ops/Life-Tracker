@@ -15,7 +15,8 @@ import {
   type SearchableKind,
   type SearchResult,
 } from '../lib/library'
-import { keepLines, plainTitle } from '../lib/places'
+import { currentPosition, HERE_MESSAGE, type HereFailure } from '../lib/geo'
+import { keepLines, placeHere, plainTitle, type PlaceResult } from '../lib/places'
 import { LanguageSelect } from './LanguageSelect'
 import { BottomSheet } from './BottomSheet'
 import { LibraryEntryFields } from './LibraryEntryFields'
@@ -53,6 +54,8 @@ function AddFlow({ today, defaultKind, initialQuery, onClose }: Props) {
   /** The user's own photo for a picked result, e.g. when it has no poster. */
   const [pickedPhoto, setPickedPhoto] = useState<Blob>()
   const [manual, setManual] = useState(!isSearchable(defaultKind))
+  // Filled by "Buradayım": a hand-editable form that already knows where you are.
+  const [prefill, setPrefill] = useState<LibraryInput>()
   // A place shared from Google Maps is more often one to visit than one already seen.
   const [entry, setEntry] = useState<LibraryEntry>({ status: initialQuery ? 'want' : 'done' })
   const [language, setLanguage] = useState<string | undefined>(() => getLastLanguage() ?? 'tr')
@@ -61,6 +64,7 @@ function AddFlow({ today, defaultKind, initialQuery, onClose }: Props) {
   const changeKind = (next: LibraryKind) => {
     setKind(next)
     setPicked(undefined)
+    setPrefill(undefined)
     setManual(!isSearchable(next))
     // e.g. "Devam" doesn't exist for places.
     if (!statusesFor(next).includes(entry.status)) setEntry((e) => ({ ...e, status: 'done' }))
@@ -129,11 +133,20 @@ function AddFlow({ today, defaultKind, initialQuery, onClose }: Props) {
       ) : manual ? (
         <ManualForm
           kind={kind}
-          initialTitle={plainTitle(query)}
+          initialTitle={prefill?.title ?? plainTitle(query)}
+          initialCreator={prefill?.creator}
+          base={prefill}
           fields={fields}
           saving={saving}
           onSave={save}
-          onSearch={isSearchable(kind) ? () => setManual(false) : undefined}
+          onSearch={
+            isSearchable(kind)
+              ? () => {
+                  setManual(false)
+                  setPrefill(undefined)
+                }
+              : undefined
+          }
         />
       ) : (
         <Search
@@ -145,7 +158,25 @@ function AddFlow({ today, defaultKind, initialQuery, onClose }: Props) {
             // Open Library often knows the page count; the user can still change it.
             if (result.pageCount) setEntry((e) => ({ ...e, pageCount: result.pageCount }))
           }}
-          onManual={() => setManual(true)}
+          onManual={() => {
+            setPrefill(undefined)
+            setManual(true)
+          }}
+          onHere={(place) => {
+            setPrefill({
+              kind: 'place',
+              title: place.title,
+              creator: place.creator,
+              latitude: place.latitude,
+              longitude: place.longitude,
+              posterUrl: place.posterUrl,
+              source: place.source,
+              externalId: place.externalId,
+            })
+            // You are standing there, so "gittim" rather than "gitmek istiyorum".
+            setEntry((e) => ({ ...e, status: 'done' }))
+            setManual(true)
+          }}
         />
       )}
     </div>
@@ -158,6 +189,8 @@ type SearchProps = {
   onQuery: (query: string) => void
   onPick: (result: SearchResult) => void
   onManual: () => void
+  /** Places only: the spot the phone is standing on. */
+  onHere: (place: PlaceResult) => void
 }
 
 type SearchState =
@@ -166,7 +199,7 @@ type SearchState =
   | { state: 'done'; results: SearchResult[] }
   | { state: 'error'; missingKey: boolean; message?: string }
 
-function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
+function Search({ kind, query, onQuery, onPick, onManual, onHere }: SearchProps) {
   const [search, setSearch] = useState<SearchState>({ state: 'idle' })
   const trimmed = query.trim()
 
@@ -272,6 +305,8 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
         </ul>
       )}
 
+      {kind === 'place' && <HereButton onHere={onHere} />}
+
       {kind === 'place' && trimmed.length < 2 && (
         <p className="text-xs text-muted">
           İpucu: Google Haritalar’da bir yeri açıp <b>Paylaş → Kopyala</b> de ve buraya yapıştır. Bilgisayarda adres
@@ -289,6 +324,9 @@ function Search({ kind, query, onQuery, onPick, onManual }: SearchProps) {
 type ManualProps = {
   kind: LibraryKind
   initialTitle: string
+  initialCreator?: string
+  /** Everything already known about it, e.g. where "Buradayım" put you. */
+  base?: LibraryInput
   fields: ReactNode
   saving: boolean
   onSave: (input: LibraryInput) => void
@@ -296,16 +334,19 @@ type ManualProps = {
   onSearch?: () => void
 }
 
-function ManualForm({ kind, initialTitle, fields, saving, onSave, onSearch }: ManualProps) {
+function ManualForm({ kind, initialTitle, initialCreator, base, fields, saving, onSave, onSearch }: ManualProps) {
   const [title, setTitle] = useState(initialTitle.trim())
-  const [creator, setCreator] = useState('')
+  const [creator, setCreator] = useState(initialCreator ?? '')
   const [photo, setPhoto] = useState<Blob>()
   const trimmed = title.trim()
 
   return (
     <>
       <div className="flex gap-3">
-        <Poster item={{ kind, title: trimmed || KIND_LABEL[kind], posterBlob: photo }} className="w-20 shrink-0" />
+        <Poster
+          item={{ kind, title: trimmed || KIND_LABEL[kind], posterUrl: base?.posterUrl, posterBlob: photo }}
+          className="w-20 shrink-0"
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <input
             value={title}
@@ -334,7 +375,9 @@ function ManualForm({ kind, initialTitle, fields, saving, onSave, onSearch }: Ma
       <button
         type="button"
         disabled={!trimmed || saving}
-        onClick={() => onSave({ kind, title: trimmed, creator: creator.trim() || undefined, posterBlob: photo })}
+        onClick={() =>
+          onSave({ ...base, kind, title: trimmed, creator: creator.trim() || undefined, posterBlob: photo })
+        }
         className="rounded-xl bg-accent py-3 font-medium text-surface disabled:opacity-40"
       >
         Ekle
@@ -345,5 +388,32 @@ function ManualForm({ kind, initialTitle, fields, saving, onSave, onSearch }: Ma
         </button>
       )}
     </>
+  )
+}
+
+/** "Buradayım": adds the spot you are standing on, without typing its name. */
+function HereButton({ onHere }: { onHere: (place: PlaceResult) => void }) {
+  const [state, setState] = useState<'idle' | 'locating' | HereFailure>('idle')
+
+  const find = async () => {
+    setState('locating')
+    const found = await currentPosition()
+    if (!found.ok) return setState(found.reason)
+    setState('idle')
+    onHere(await placeHere(found.coords.latitude, found.coords.longitude))
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        onClick={find}
+        disabled={state === 'locating'}
+        className="rounded-xl bg-bg py-2.5 text-sm font-medium disabled:opacity-60"
+      >
+        {state === 'locating' ? 'Konum alınıyor…' : '📍 Buradayım'}
+      </button>
+      {state !== 'idle' && state !== 'locating' && <p className="text-xs text-p1">{HERE_MESSAGE[state]}</p>}
+    </div>
   )
 }

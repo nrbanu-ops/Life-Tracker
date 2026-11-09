@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   closestPhoto,
   fromNominatim,
+  fromReverse,
   googleMapsLink,
   keepLines,
   parseGoogleMapsUrl,
@@ -145,5 +146,39 @@ describe('googleMapsLink', () => {
       'https://www.google.com/maps/search/?api=1&query=41%2C29',
     )
     expect(googleMapsLink({ title: 'Galata Kulesi', creator: 'İstanbul' })).toContain('Galata%20Kulesi%2C%20%C4%B0stanbul')
+  })
+})
+
+describe('fromReverse', () => {
+  const at = (json: unknown) => fromReverse(json, 41.0256, 28.9741)
+
+  it('prefers the name of the place you are standing in', () => {
+    const place = at({
+      name: 'Galata Kulesi',
+      osm_type: 'way',
+      osm_id: 42,
+      address: { city: 'İstanbul', country: 'Türkiye', road: 'Galata Kulesi Sk.' },
+      extratags: { wikipedia: 'tr:Galata Kulesi' },
+    })
+    expect(place).toMatchObject({
+      kind: 'place',
+      title: 'Galata Kulesi',
+      creator: 'İstanbul, Türkiye',
+      latitude: 41.0256,
+      longitude: 28.9741,
+      externalId: 'way/42',
+      wikipedia: 'tr:Galata Kulesi',
+    })
+  })
+
+  it('falls back through the shop, the street and the neighbourhood', () => {
+    expect(at({ address: { shop: 'Kahveci', road: 'İstiklal Cd.' } }).title).toBe('Kahveci')
+    expect(at({ address: { road: 'İstiklal Cd.', suburb: 'Beyoğlu' } }).title).toBe('İstiklal Cd.')
+    expect(at({ address: { suburb: 'Beyoğlu', city: 'İstanbul' } }).title).toBe('Beyoğlu')
+  })
+
+  it('still gives a usable place when the lookup says nothing', () => {
+    expect(at({})).toMatchObject({ title: 'Buradayım', latitude: 41.0256, longitude: 28.9741 })
+    expect(at(null).title).toBe('Buradayım')
   })
 })

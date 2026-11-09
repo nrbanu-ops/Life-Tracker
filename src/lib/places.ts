@@ -157,6 +157,59 @@ export async function searchPlaces(query: string, signal?: AbortSignal): Promise
   return Promise.all(results.map(async (r) => ({ ...r, posterUrl: await wikipediaPhoto(r.wikipedia, signal) })))
 }
 
+/**
+ * The place at a position, as OpenStreetMap names it: a venue when there is one, otherwise the
+ * street or the neighbourhood. Never empty — the user can always rename it.
+ */
+export function fromReverse(json: unknown, latitude: number, longitude: number): PlaceResult {
+  const r = (typeof json === 'object' && json !== null ? json : {}) as Json
+  const a = (typeof r.address === 'object' && r.address !== null ? r.address : {}) as Json
+  const title =
+    str(r.name) ??
+    str(a.amenity) ??
+    str(a.shop) ??
+    str(a.building) ??
+    str(a.road) ??
+    str(a.neighbourhood) ??
+    str(a.suburb) ??
+    str(a.city) ??
+    str(a.town) ??
+    str(a.village) ??
+    'Buradayım'
+  const tags = (r.extratags ?? {}) as Json
+  return {
+    kind: 'place',
+    title,
+    creator: placeArea(r.address),
+    latitude,
+    longitude,
+    source: 'osm',
+    externalId: r.osm_type && r.osm_id ? `${r.osm_type}/${r.osm_id}` : undefined,
+    wikipedia: str(tags.wikipedia),
+  }
+}
+
+/**
+ * Where you are, ready to add: the name OpenStreetMap gives the spot, the city, and a photo if
+ * something famous is within a short walk. Offline it still returns the position, unnamed.
+ */
+export async function placeHere(latitude: number, longitude: number, signal?: AbortSignal): Promise<PlaceResult> {
+  let place: PlaceResult = { kind: 'place', title: 'Buradayım', latitude, longitude, source: 'osm' }
+  try {
+    const res = await fetch(
+      `${NOMINATIM}/reverse?lat=${latitude}&lon=${longitude}&format=jsonv2&addressdetails=1&extratags=1&zoom=18&accept-language=tr`,
+      { signal },
+    )
+    place = fromReverse(await res.json(), latitude, longitude)
+  } catch {
+    // No network: the position alone is still worth keeping, the user can name it.
+    return place
+  }
+  const photo =
+    (await wikipediaPhoto(place.wikipedia, signal)) ?? (await nearbyPhoto(latitude, longitude, place.title, signal))
+  return { ...place, posterUrl: photo }
+}
+
 /** City and country for a position, e.g. one read from a Google Maps link. */
 export async function areaAt(latitude: number, longitude: number, signal?: AbortSignal): Promise<string | undefined> {
   try {
