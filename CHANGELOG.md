@@ -5,6 +5,13 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Günlük hatırlatma (Android)
+- **Ayarlar'da "Günlük hatırlatma":** seçtiğin saatte telefona bildirim gelir, dokununca uygulama
+  açılır. Telefon yeniden başlasa da kurulu kalır.
+- Pil için bildirim birkaç dakika sapabilir; karşılığında "tam alarm" izni istemiyor.
+- Sadece Android uygulamasında görünür — tarayıcıdaki sürüm telefonu uyandıramaz.
+- **Yeni APK gerekiyor:** bu özellik kabuğun içinde, web güncellemesiyle gelmiyor.
+
 ### Yıl özeti
 - **Bir yılın tamamı tek sayfada** (İstatistik → "2026 özeti"): kaç gün bir şeyler yaptığın,
   habit işaretlerin, kusursuz günlerin, biten görevlerin, günlük yazıların, XP'n, başarımların.

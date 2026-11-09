@@ -12,6 +12,11 @@ type AndroidBridge = {
   writeText(name: string, text: string): boolean
   /** The shell's own version code. */
   version(): number
+  // Daily reminder; missing in shells built before it existed, so always checked first.
+  remindersAvailable?(): boolean
+  /** Schedules one reminder a day at hour:minute, replacing any earlier one. */
+  setReminder?(hour: number, minute: number, text: string): boolean
+  clearReminder?(): boolean
 }
 
 export const androidBridge: AndroidBridge | undefined =

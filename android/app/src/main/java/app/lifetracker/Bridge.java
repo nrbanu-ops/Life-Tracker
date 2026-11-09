@@ -24,11 +24,13 @@ final class Bridge {
 
     private final Context context;
     private final Runnable retry;
+    private final Runnable askNotifications;
     private final Handler main = new Handler(Looper.getMainLooper());
 
-    Bridge(Context context, Runnable retry) {
+    Bridge(Context context, Runnable retry, Runnable askNotifications) {
         this.context = context.getApplicationContext();
         this.retry = retry;
+        this.askNotifications = askNotifications;
     }
 
     @JavascriptInterface
@@ -39,6 +41,24 @@ final class Bridge {
     @JavascriptInterface
     public void retry() {
         retry.run();
+    }
+
+    /** Older shells have no reminders; the page checks before offering them. */
+    @JavascriptInterface
+    public boolean remindersAvailable() {
+        return true;
+    }
+
+    /** One daily reminder at hour:minute. Asks for the notification permission if it is missing. */
+    @JavascriptInterface
+    public boolean setReminder(int hour, int minute, String text) {
+        main.post(askNotifications);
+        return Reminders.schedule(context, hour, minute, text);
+    }
+
+    @JavascriptInterface
+    public boolean clearReminder() {
+        return Reminders.cancel(context);
     }
 
     /** A one-off download (manual backup); always a new file. */

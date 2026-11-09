@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
+import { ReminderSection } from '../components/ReminderSection'
 import { StorageSection } from '../components/StorageSection'
 import { ThemeSection } from '../components/ThemeSection'
 import { resetAllData, saveSafetyCopy } from '../db/backup'
@@ -14,6 +15,7 @@ import { copyText } from '../lib/clipboard'
 import { askGemini } from '../lib/gemini'
 import { getTmdbKey, setTmdbKey } from '../lib/library'
 import { setLevelingOn, useLevelingOn } from '../lib/levelingSetting'
+import { supportsReminders } from '../lib/reminders'
 import { checkForUpdate, type UpdateResult } from '../lib/update'
 import { useTodayKey } from '../lib/useTodayKey'
 
@@ -41,6 +43,8 @@ export function SettingsPage() {
       />
 
       <div className="flex flex-col gap-4">
+        {supportsReminders && <ReminderSection />}
+
         <BackupSection />
 
         <StorageSection />

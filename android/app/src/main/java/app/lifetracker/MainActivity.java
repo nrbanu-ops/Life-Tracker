@@ -36,6 +36,7 @@ public class MainActivity extends Activity {
     private static final int FILE_CHOOSER = 1;
     private static final int LOCATION_PERMISSION = 2;
     private static final int MICROPHONE_PERMISSION = 3;
+    private static final int NOTIFICATION_PERMISSION = 4;
 
     private WebView web;
     private ValueCallback<Uri[]> pendingChooser;
@@ -64,7 +65,9 @@ public class MainActivity extends Activity {
         s.setUserAgentString(s.getUserAgentString() + " LifeTrackerAndroid/" + BuildConfig.VERSION_CODE);
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
 
-        web.addJavascriptInterface(new Bridge(this, this::reload), "LifeTrackerAndroid");
+        Reminders.createChannel(this);
+        web.addJavascriptInterface(
+                new Bridge(this, this::reload, this::askNotificationPermission), "LifeTrackerAndroid");
         web.setWebViewClient(new Client());
         web.setWebChromeClient(new Chrome());
 
@@ -224,6 +227,12 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Android 13 and up: a notification needs the user's word before it can be shown. */
+    private void askNotificationPermission() {
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return;
+        requestPermissions(new String[] {Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION);
+    }
+
     private boolean hasLocationPermission() {
         return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
@@ -237,6 +246,10 @@ public class MainActivity extends Activity {
             pendingGeoCallback.invoke(pendingGeoOrigin, granted, false);
             pendingGeoCallback = null;
             pendingGeoOrigin = null;
+            return;
+        }
+        if (requestCode == NOTIFICATION_PERMISSION) {
+            // Nothing to undo either way: a refused permission just means no reminder shows up.
             return;
         }
         if (requestCode == MICROPHONE_PERMISSION && pendingMedia != null) {
