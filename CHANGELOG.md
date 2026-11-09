@@ -5,6 +5,17 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Sıfırlama artık sadece habit ve projeleri siliyor
+- Ayarlar'daki sıfırlama bölümünün adı **"Habit'leri ve projeleri sıfırla"** oldu ve kapsamı
+  daraldı. **Silinir:** habit'ler, bütün işaretlemeler ve seriler, projeler ve adımları,
+  başarımlar, XP ve seviye. **Kalır:** günlük yazıların ve fotoğrafların, ruh hali, görevler,
+  kütüphane, haftalık planlar ve ayarların.
+- Habit'e yazdığın notlar da kalıyor; günlükte "Silinmiş habit" etiketiyle görünürler.
+- Günlük ve görevler de XP kazandırdığı için, sıfırlamadan sonra seviyenin kendiliğinden geri
+  gelmemesi adına XP hesabı o günden başlatılıyor.
+- Eskisi gibi, silmeden önce **bütün** verinin kopyası ayrı bir dosyaya yazılıyor; kopya
+  yazılamazsa hiçbir şey silinmiyor.
+
 ### Tanılama kaldırıldı
 - Ayarlar'daki **Tanılama** bölümü kalktı: fotoğraf sorununu bulmak için eklenmişti, sorun
   çözüldü. Gerekirse git geçmişinde duruyor.

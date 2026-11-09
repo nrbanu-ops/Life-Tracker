@@ -25,6 +25,15 @@ import { useTodayKey } from '../lib/useTodayKey'
 import { db } from './db'
 
 const DIRTY = 'xpDirtyWeeks'
+/** Set by a habits-and-projects reset: nothing before this day counts toward XP any more. */
+const XP_FROM = 'xpFrom'
+
+const xpFrom = async (): Promise<string | undefined> => (await db.meta.get(XP_FROM))?.value as string | undefined
+
+/** Starts the XP ledger over from `day`; everything earned before it is left behind. */
+export async function startXpFrom(day: string): Promise<void> {
+  await db.meta.put({ key: XP_FROM, value: day })
+}
 /** The day penalties were switched on, or 'off'. Missing means never set: they start on first run. */
 const PENALTY = 'penaltyFrom'
 
@@ -73,15 +82,21 @@ const shift = (day: string, days: number) => toDateKey(addDays(fromDateKey(day),
 export async function syncXpLedger(today: string): Promise<void> {
   if (!(await db.meta.get(PENALTY))) await setPenaltyOn(true, today)
   const current = weekRange(today).start
-  const [data, stored, dirtyEntry] = await Promise.all([loadXpData(), db.xpWeeks.toArray(), db.meta.get(DIRTY)])
+  const [data, stored, dirtyEntry, from] = await Promise.all([
+    loadXpData(),
+    db.xpWeeks.toArray(),
+    db.meta.get(DIRTY),
+    xpFrom(),
+  ])
   const dirty = new Set((dirtyEntry?.value as string[] | undefined) ?? [])
   const have = new Set(stored.filter((w) => w.counts && !dirty.has(w.week)).map((w) => w.week))
-  const first = weekRange(firstDay(data, today)).start
+  const first = weekRange(firstDay(data, today, from)).start
   const todo: string[] = []
   for (let week = first; week < current; week = shift(week, 7)) if (!have.has(week)) todo.push(week)
   if (todo.length > 0) {
     // One pass over the whole span: streaks need the history before each week anyway.
-    const summaries = byWeek(xpEvents(data, todo[0], shift(current, -1), today))
+    // The floor is a day, not a week: the days before a mid-week reset earn nothing either.
+    const summaries = byWeek(onlyFrom(xpEvents(data, todo[0], shift(current, -1), today), from))
     await db.xpWeeks.bulkPut(
       todo.map((week) => {
         const s = summaries.get(week) ?? summarize([])
@@ -91,6 +106,9 @@ export async function syncXpLedger(today: string): Promise<void> {
   }
   if (dirty.size > 0) await db.meta.delete(DIRTY)
 }
+
+const onlyFrom = <T extends { date: string }>(events: T[], from: string | undefined): T[] =>
+  from ? events.filter((e) => e.date >= from) : events
 
 function byWeek(events: ReturnType<typeof xpEvents>): Map<string, XpSummary> {
   const groups = new Map<string, ReturnType<typeof xpEvents>>()
@@ -117,13 +135,18 @@ export type LevelState = LevelInfo & {
 export function useLeveling(): LevelState | undefined {
   const today = useTodayKey()
   return useLiveQuery(async () => {
-    const [data, stored, dirtyEntry] = await Promise.all([loadXpData(), db.xpWeeks.toArray(), db.meta.get(DIRTY)])
+    const [data, stored, dirtyEntry, from] = await Promise.all([
+      loadXpData(),
+      db.xpWeeks.toArray(),
+      db.meta.get(DIRTY),
+      xpFrom(),
+    ])
     const current = weekRange(today).start
     const dirty = new Set((dirtyEntry?.value as string[] | undefined) ?? [])
     const frozen = stored.filter((w) => w.week < current && w.counts && !dirty.has(w.week))
     const frozenWeeks = new Set(frozen.map((w) => w.week))
     // Until the ledger catches up (first start, a changed week), missing weeks are worked out live.
-    const first = weekRange(firstDay(data, today)).start
+    const first = weekRange(firstDay(data, today, from)).start
     let liveFrom = current
     for (let week = first; week < current; week = shift(week, 7)) {
       if (!frozenWeeks.has(week)) {
@@ -131,7 +154,9 @@ export function useLeveling(): LevelState | undefined {
         break
       }
     }
-    const live = xpEvents(data, liveFrom, today, today).filter((e) => !frozenWeeks.has(weekRange(e.date).start))
+    const live = onlyFrom(xpEvents(data, liveFrom, today, today), from).filter(
+      (e) => !frozenWeeks.has(weekRange(e.date).start),
+    )
     const summary = mergeSummaries([...frozen.map((w) => w as unknown as XpSummary), summarize(live)])
     const info = levelFor(summary.xp)
     const emergency = emergencyQuest(data, current)

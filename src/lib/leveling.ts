@@ -596,8 +596,12 @@ export function penaltiesOn(data: XpData, day: string, today: string): XpEvent[]
   return xpEvents(data, day, day, today).filter((e) => e.source === 'penalty')
 }
 
-/** The first day anything could have earned XP. */
-export function firstDay(data: XpData, today: string): string {
+/**
+ * The first day anything could have earned XP. `from` is a floor: after a habits-and-projects
+ * reset the ledger starts again there, so the journal and tasks that were kept — which earn XP
+ * too — do not quietly hand back the level that was just cleared.
+ */
+export function firstDay(data: XpData, today: string, from?: string): string {
   const days = [
     ...data.habits.map((h) => dayOf(h.createdAt)),
     ...data.habits.flatMap((h) => (h.quitStartedAt ? [dayOf(h.quitStartedAt)] : [])),
@@ -608,7 +612,8 @@ export function firstDay(data: XpData, today: string): string {
     ...data.library.flatMap((i) => (i.finishedAt ? [i.finishedAt] : [])),
     ...data.achievements.map((a) => a.unlockedAt),
   ].filter((d) => d <= today)
-  return days.sort()[0] ?? today
+  const earliest = days.sort()[0] ?? today
+  return from && from > earliest ? from : earliest
 }
 
 // --- Totals

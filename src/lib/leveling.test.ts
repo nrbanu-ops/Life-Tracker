@@ -15,6 +15,7 @@ import {
   xpEvents,
   xpToNext,
   XP,
+  firstDay,
   type XpData,
 } from './leveling'
 
@@ -335,5 +336,28 @@ describe('penalties', () => {
     expect(s.stats.str).toBe(80)
     expect(levelFor(xpToNext(1) + 10).level).toBe(2)
     expect(levelFor(xpToNext(1) + 10 - 25).level).toBe(1)
+  })
+})
+
+describe('firstDay', () => {
+  const h = habit('Koşu')
+  const full = data([h], [], {
+    journal: [{ id: 'j1', date: START, text: 'merhaba', createdAt: `${START}T09:00:00.000Z` }],
+  })
+
+  it('starts at the oldest thing that could have earned XP', () => {
+    expect(firstDay(full, day(30))).toBe(START)
+  })
+
+  it('starts at the floor instead once a reset set one', () => {
+    expect(firstDay(full, day(30), day(10))).toBe(day(10))
+  })
+
+  it('ignores a floor older than the data: there is nothing to skip', () => {
+    expect(firstDay(full, day(30), '2000-01-01')).toBe(START)
+  })
+
+  it('falls back to today when there is nothing at all', () => {
+    expect(firstDay(data([], []), day(5))).toBe(day(5))
   })
 })
