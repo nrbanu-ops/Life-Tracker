@@ -6,6 +6,7 @@ import type { JournalEntry } from '../db/types'
 import { fromDateKey } from '../lib/date'
 import { supportsRecording } from '../lib/audio'
 import { entryPhotos, JOURNAL_PHOTO_MAX, JOURNAL_PHOTO_SIZE } from '../lib/journal'
+import { saveErrorMessage } from '../lib/saveError'
 import { AudioNote } from './AudioNote'
 import { AudioRecorder } from './AudioRecorder'
 import { BottomSheet } from './BottomSheet'
@@ -38,6 +39,7 @@ function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => v
     entry.audio ? { blob: entry.audio, seconds: entry.audioSeconds } : undefined,
   )
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [failed, setFailed] = useState<string>()
   // Habit notes are text only.
   const canHavePhoto = !entry.habitId
   const full = photos.length >= JOURNAL_PHOTO_MAX
@@ -74,11 +76,17 @@ function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => v
       <button
         type="button"
         onClick={async () => {
-          await updateEntry(entry.id, text, {
-            photos,
-            audio: audio?.blob ?? null,
-            audioSeconds: audio?.seconds,
-          })
+          setFailed(undefined)
+          try {
+            await updateEntry(entry.id, text, {
+              photos,
+              audio: audio?.blob ?? null,
+              audioSeconds: audio?.seconds,
+            })
+          } catch (error) {
+            // The sheet stays open with everything still in it, now with a reason.
+            return setFailed(saveErrorMessage(error))
+          }
           onClose()
         }}
         disabled={text.trim() === '' && photos.length === 0 && !audio}
@@ -86,6 +94,7 @@ function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => v
       >
         Kaydet
       </button>
+      {failed && <p className="text-sm text-p1">{failed}</p>}
       {confirmDelete ? (
         <div className="flex gap-2">
           <button

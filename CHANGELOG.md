@@ -5,6 +5,20 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Fotoğraf ve ses notu: sessiz hata yok (düzeltme)
+- **Kaydetme başarısız olursa artık sebebi yazıyor.** Fotoğraf ya da ses notu kaydetmek, bir
+  günlük yazısının binlerce katı yer tuttuğu için telefonda gerçekten başarısız olabiliyor
+  (dolu cihaz, küçük depolama izni). Bu durumda "Kaydet" sessizce kilitleniyordu: hiçbir şey
+  olmuyor, hiçbir şey yazmıyordu. Artık hata metniyle birlikte görünüyor, yazı ve fotoğraflar
+  ekranda kalıyor ve tekrar denenebiliyor. Yer sorunuysa ne yapılacağını da söylüyor.
+- **Ayarlar → Tanılama**: fotoğraf ve ses notunun geçtiği bütün adımları bu telefonda tek tek
+  deniyor (depolama alanı, fotoğraf boyutunda yazma, fotoğrafı çözme ve küçültme, ses kaydı
+  desteği, istenirse mikrofon izni) ve hangisinin takıldığını yazıyor. Sonuç "Sonucu kopyala"
+  ile kopyalanıp iletilebiliyor.
+- Telefonun hiç okuyamadığı bir fotoğraf (galerinin boş verdiği dosya) artık "Telefon bu
+  fotoğrafı okuyamadı" diye söylenip atlanıyor; aynı seçimdeki diğer fotoğraflar eklenmeye
+  devam ediyor.
+
 ### Günlük sayfası telefonda çökmesin (düzeltme)
 - **Fotoğraflı günlük artık sayfa sayfa yükleniyor** (son 10 gün, altta "Daha eskisini göster").
   Bir güne 10 fotoğraf girilebildiğinden beri sayfa hepsini birden açmaya çalışıyordu; 200

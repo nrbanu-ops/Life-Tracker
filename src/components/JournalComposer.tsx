@@ -3,6 +3,7 @@ import { addEntry } from '../db/journal'
 import { clearDraft, loadDraft, saveDraft } from '../lib/draft'
 import { supportsRecording } from '../lib/audio'
 import { JOURNAL_PHOTO_MAX, JOURNAL_PHOTO_SIZE } from '../lib/journal'
+import { saveErrorMessage } from '../lib/saveError'
 import { AudioNote } from './AudioNote'
 import { AudioRecorder } from './AudioRecorder'
 import { PhotoPicker } from './PhotoPicker'
@@ -23,6 +24,8 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
   // One voice note per entry; recording another replaces it.
   const [audio, setAudio] = useState<{ blob: Blob; seconds: number }>()
   const [saving, setSaving] = useState(false)
+  // A photo or a voice note is where saving can really fail (a full phone); it must be said out loud.
+  const [failed, setFailed] = useState<string>()
   // The day can change under us: at midnight on the Günlük page, where there's no remount.
   const [shownDate, setShownDate] = useState(date)
   if (shownDate !== date) {
@@ -30,6 +33,7 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
     setText(loadDraft(date))
     setPhotos([])
     setAudio(undefined)
+    setFailed(undefined)
   }
   const canSave = text.trim() !== '' || photos.length > 0 || audio !== undefined
   const full = photos.length >= JOURNAL_PHOTO_MAX
@@ -44,7 +48,15 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
   const save = async () => {
     if (!canSave || saving) return
     setSaving(true)
-    await addEntry(date, text, { photos, audio: audio?.blob, audioSeconds: audio?.seconds })
+    setFailed(undefined)
+    try {
+      await addEntry(date, text, { photos, audio: audio?.blob, audioSeconds: audio?.seconds })
+    } catch (error) {
+      // Nothing is cleared: the text and the photos stay on screen so the save can be retried.
+      setFailed(saveErrorMessage(error))
+      setSaving(false)
+      return
+    }
     clearDraft(date)
     setText('')
     setPhotos([])
@@ -73,6 +85,7 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
       <PhotoStrip photos={photos} onRemove={(i) => setPhotos((all) => all.filter((_, n) => n !== i))} />
       {audio && <AudioNote audio={audio.blob} seconds={audio.seconds} onRemove={() => setAudio(undefined)} />}
       {full && <p className="text-xs text-muted">En fazla {JOURNAL_PHOTO_MAX} fotoğraf.</p>}
+      {failed && <p className="text-sm text-p1">{failed}</p>}
       {/* Wrapping, because the recorder takes a whole line once it is running. */}
       <div className="flex flex-wrap items-center gap-2">
         {!full && (

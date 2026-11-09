@@ -36,16 +36,22 @@ export function PhotoPicker({ label, onPick, maxSize, multiple = false }: Props)
           e.target.value = ''
           let problem: string | undefined
           for (const file of files) {
+            // Some galleries hand over a file the app isn't allowed to read; it arrives empty.
+            if (file.size === 0) {
+              problem = 'Telefon bu fotoğrafı okuyamadı (boş geldi). Galeri yerine Dosyalar\'dan seçmeyi dene.'
+              continue
+            }
             try {
               onPick(await shrinkImage(file, maxSize))
             } catch (error) {
-              problem = (error as Error).message || 'Fotoğraf açılamadı'
+              const why = (error as Error).message || 'Fotoğraf açılamadı'
+              problem = `${why}. Başka bir fotoğraf dene.`
             }
           }
           setFailed(problem)
         }}
       />
-      {failed && <p className="text-sm text-p1">{failed}. Başka bir fotoğraf dene.</p>}
+      {failed && <p className="text-sm text-p1">{failed}</p>}
     </>
   )
 }
