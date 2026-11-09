@@ -18,6 +18,7 @@ const LibraryPage = page(() => import('./pages/LibraryPage'), 'LibraryPage')
 const ProjectDetailPage = page(() => import('./pages/ProjectDetailPage'), 'ProjectDetailPage')
 const ProfilePage = page(() => import('./pages/ProfilePage'), 'ProfilePage')
 const ProjectsPage = page(() => import('./pages/ProjectsPage'), 'ProjectsPage')
+const SearchPage = page(() => import('./pages/SearchPage'), 'SearchPage')
 const SettingsPage = page(() => import('./pages/SettingsPage'), 'SettingsPage')
 const StatsPage = page(() => import('./pages/StatsPage'), 'StatsPage')
 const TasksPage = page(() => import('./pages/TasksPage'), 'TasksPage')
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="basarimlar" element={<AchievementsPage />} />
             <Route path="profil" element={<ProfilePage />} />
             <Route path="ozet" element={<YearReviewPage />} />
+            <Route path="ara" element={<SearchPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

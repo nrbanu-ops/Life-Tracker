@@ -111,6 +111,8 @@ Vardiya/gün tipleri, bulut senkronu (ileride Supabase), haftalık otomatik rapo
 
 15. ✅ Günlük hatırlatma (Ayarlar → Günlük hatırlatma, **sadece Android uygulamasında**): seçilen saatte bildirim. Tercih cihazda (`src/lib/reminders.ts`, localStorage, yedeğe girmez), zamanlama kabukta: `setInexactRepeating` (saniyesi saniyesine değil — tam alarm izni istememek için), `BOOT_COMPLETED` ile yeniden kurulur, Android 13+ bildirim izni ilk açışta istenir. Köprü: `setReminder(hour, minute, text)` / `clearReminder()` / `remindersAvailable()`; eski kabuklarda yok, o yüzden bölüm `supportsReminders` ile gizlenir. Tarayıcıda hiç görünmez (bir web sayfası telefonu uyandıramaz).
 
+16. ✅ Her yerde arama (`/ara`, üstteki büyüteç): habit, proje, proje adımı, görev, günlük yazısı ve kütüphane tek kutuda. Eşleşme saf fonksiyonda (`src/lib/search.ts`, testli; sorgunun her kelimesi geçecek, Türkçe küçültme), okuma `src/db/search.ts` (günlük ve kütüphane `each` ile, fotoğraf/ses belleğe alınmadan; sayfa açılırken bir kez). Her tür en fazla 6 sonuç + "+n daha"; günlük sonucu `/takvim?gun=` ile o günü açar. Başlık ikonları altıya çıktığı için `PageHeader`'da ikon dolgusu küçüldü ve başlık `truncate`.
+
 Depo herkese açık: hiçbir API anahtarı, şifre ya da imza anahtarı commit'lenmez (iş akışında gizli bilgi taraması var). Kullanıcı anahtarları sadece cihazda (localStorage), imza anahtarı GitHub Secrets'ta.
 
 

@@ -5,6 +5,12 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Her yerde arama
+- **Üstteki büyüteç** tek kutuda her şeyi arıyor: habit'ler, projeler, proje adımları, görevler,
+  günlük yazıları ve kütüphane (adı, yazarı ve senin yorumun).
+- Sonuçlar türe göre gruplanıyor; bir günlük sonucuna dokununca takvimde o gün açılıyor.
+- Arşivlenmiş habit'ler ve biten görevler de bulunuyor, ama listenin altında.
+
 ### Günlük hatırlatma (Android)
 - **Ayarlar'da "Günlük hatırlatma":** seçtiğin saatte telefona bildirim gelir, dokununca uygulama
   açılır. Telefon yeniden başlasa da kurulu kalır.
