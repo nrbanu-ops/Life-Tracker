@@ -5,6 +5,18 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Fotoğraf eklenmemesi düzeltildi (düzeltme)
+- **Telefonda galeriden fotoğraf seçip "bitti" demek hiçbir şey eklemiyordu.** Sebebi çoklu
+  fotoğraf özelliğiydi: Android'de galeri, birden fazla seçime izin verildiğinde seçimi
+  `ClipData` içinde geri veriyor, WebView'in kendi sonuç çözücüsü ise oraya hiç bakmıyor —
+  yani sayfaya "hiçbir şey seçilmedi" diye dönüyordu. Dün tek fotoğraf seçildiği için bu
+  sorun yoktu.
+- **Hemen çalışan çözüm (APK beklemeden):** eski kabuklarda fotoğraflar tek tek seçiliyor;
+  "Fotoğraf ekle"ye tekrar basarak 10'a kadar eklenebiliyor.
+- **Yeni APK'da (v7):** kabuk seçimi artık kendisi okuyor, bir seferde birden fazla fotoğraf
+  seçilebiliyor. Kabuk bunu yapabildiğini web tarafına söylüyor (`multiPhoto`), o yüzden eski
+  ve yeni kabuk aynı sürümle doğru çalışıyor.
+
 ### Fotoğraf ve ses notu: sessiz hata yok (düzeltme)
 - **Kaydetme başarısız olursa artık sebebi yazıyor.** Fotoğraf ya da ses notu kaydetmek, bir
   günlük yazısının binlerce katı yer tuttuğu için telefonda gerçekten başarısız olabiliyor

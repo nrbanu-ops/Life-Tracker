@@ -17,6 +17,8 @@ type AndroidBridge = {
   /** Schedules one reminder a day at hour:minute, replacing any earlier one. */
   setReminder?(hour: number, minute: number, text: string): boolean
   clearReminder?(): boolean
+  /** Only in shells that read the gallery's multiple selection themselves; see canPickSeveral. */
+  multiPhoto?(): boolean
 }
 
 export const androidBridge: AndroidBridge | undefined =
@@ -42,6 +44,27 @@ const onIos =
 
 /** True where a save opens the share sheet instead of downloading, so the UI can say so. */
 export const savesWithShareSheet = onIos && !androidBridge
+
+/**
+ * Whether several photos may be picked in one go.
+ *
+ * In an Android WebView a gallery hands a multiple selection back in the intent's ClipData, and
+ * the WebView's own result parser reads only `getData()` — so it returns nothing at all and the
+ * page never learns a photo was chosen: the gallery closes and nothing appears. Shells that read
+ * ClipData themselves say so with multiPhoto(); on older ones photos are added one at a time,
+ * which works. A browser has no shell and no such problem.
+ */
+export function canPickSeveral(bridge: Pick<AndroidBridge, 'multiPhoto'> | undefined): boolean {
+  if (!bridge) return true
+  try {
+    return bridge.multiPhoto?.() === true
+  } catch {
+    // A bridge method that throws is an old shell behaving oddly; one photo at a time is safe.
+    return false
+  }
+}
+
+export const supportsMultiPhoto = canPickSeveral(androidBridge)
 
 /** Saves a file the user keeps. Tells the caller whether it really happened. */
 export async function saveFile(name: string, blob: Blob): Promise<SaveResult> {

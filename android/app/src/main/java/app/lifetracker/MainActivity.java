@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -265,11 +266,32 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == FILE_CHOOSER && pendingChooser != null) {
-            pendingChooser.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+            pendingChooser.onReceiveValue(chosenFiles(resultCode, data));
             pendingChooser = null;
             return;
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    /**
+     * The files the user picked.
+     *
+     * Read here instead of with FileChooserParams.parseResult, which looks only at the intent's
+     * own data: a gallery returns a multiple selection in ClipData, so parseResult hands back
+     * nothing at all and the page never learns anything was chosen — the gallery closes and no
+     * photo appears. Null means nothing was picked, which the WebView needs to hear as well,
+     * otherwise the input stays stuck and the next tap does nothing.
+     */
+    private static Uri[] chosenFiles(int resultCode, Intent data) {
+        if (resultCode != RESULT_OK || data == null) return null;
+        ClipData clip = data.getClipData();
+        if (clip != null && clip.getItemCount() > 0) {
+            Uri[] picked = new Uri[clip.getItemCount()];
+            for (int i = 0; i < picked.length; i++) picked[i] = clip.getItemAt(i).getUri();
+            return picked;
+        }
+        Uri single = data.getData();
+        return single == null ? null : new Uri[] {single};
     }
 
     @Override

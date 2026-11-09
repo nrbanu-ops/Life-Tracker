@@ -43,6 +43,16 @@ final class Bridge {
         retry.run();
     }
 
+    /**
+     * This shell reads the gallery's multiple selection itself (MainActivity.chosenFiles), so the
+     * web app may ask for several photos at once. Shells built before this don't have the method,
+     * and the web app then picks one photo at a time.
+     */
+    @JavascriptInterface
+    public boolean multiPhoto() {
+        return true;
+    }
+
     /** Older shells have no reminders; the page checks before offering them. */
     @JavascriptInterface
     public boolean remindersAvailable() {

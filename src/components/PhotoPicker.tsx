@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { supportsMultiPhoto } from '../lib/android'
 import { shrinkImage } from '../lib/image'
 
 type Props = {
@@ -6,7 +7,7 @@ type Props = {
   onPick: (photo: Blob) => void
   /** Longest side in px after shrinking. */
   maxSize?: number
-  /** Pick several at once; onPick is then called once per photo, in the order chosen. */
+  /** Pick several at once, where the platform can; onPick is called once per photo. */
   multiple?: boolean
 }
 
@@ -29,7 +30,7 @@ export function PhotoPicker({ label, onPick, maxSize, multiple = false }: Props)
         ref={input}
         type="file"
         accept="image/*"
-        multiple={multiple}
+        multiple={multiple && supportsMultiPhoto}
         hidden
         onChange={async (e) => {
           const files = [...(e.target.files ?? [])]
