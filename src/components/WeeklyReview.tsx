@@ -40,7 +40,7 @@ export function WeeklyReview({ today, variant, hasRecent }: Props) {
       const text = await askGemini(ai.geminiKey, REVIEW_SYSTEM, [
         { role: 'user', text: buildReviewRequest({ habits, logs, moods, journal, tasks }, today) },
       ])
-      await addEntry(today, text, undefined, 'review')
+      await addEntry(today, text, { kind: 'review' })
       setState('done')
     } catch (e) {
       setState({ error: (e as Error).message })

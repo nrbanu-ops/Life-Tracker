@@ -42,6 +42,8 @@ export type PhotoReport = {
   bytes: number
   posters: number
   posterBytes: number
+  audios: number
+  audioBytes: number
   days: DayWeight[]
 }
 
@@ -53,10 +55,16 @@ export async function photoReport(): Promise<PhotoReport> {
   const entries = await db.journal.toArray()
   let photos = 0
   let bytes = 0
+  let audios = 0
+  let audioBytes = 0
   for (const entry of entries) {
     for (const photo of entryPhotos(entry)) {
       photos++
       bytes += photo.size
+    }
+    if (entry.audio) {
+      audios++
+      audioBytes += entry.audio.size
     }
   }
   const days = heaviestDays(entries)
@@ -70,5 +78,5 @@ export async function photoReport(): Promise<PhotoReport> {
     posterBytes += item.posterBlob.size
   }
 
-  return { photos, bytes, posters, posterBytes, days }
+  return { photos, bytes, posters, posterBytes, audios, audioBytes, days }
 }

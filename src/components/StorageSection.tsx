@@ -115,6 +115,12 @@ function Report({ report }: { report: PhotoReport }) {
         Günlük: <b className="text-text">{report.photos}</b> fotoğraf ·{' '}
         <b className="text-text">{formatBytes(report.bytes)}</b>
       </p>
+      {report.audios > 0 && (
+        <p className="text-muted">
+          Ses notları: <b className="text-text">{report.audios}</b> ·{' '}
+          <b className="text-text">{formatBytes(report.audioBytes)}</b>
+        </p>
+      )}
       <p className="text-muted">
         Kütüphane afişleri: <b className="text-text">{report.posters}</b> ·{' '}
         <b className="text-text">{formatBytes(report.posterBytes)}</b>

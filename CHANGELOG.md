@@ -5,6 +5,13 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Günlüğe ses notu
+- **Yazacak hâlin yoksa konuş:** günlük kutusunda "🎤 Ses notu" ile kaydediyorsun, akışta
+  doğrudan dinleniyor. Girdi başına bir ses notu, en fazla 5 dakika.
+- Kaydederken süre görünüyor, "Vazgeç" ile atıyorsun; sonradan açıp kaldırabiliyorsun.
+- Ses notları da yedeğe giriyor ve Ayarlar'daki depolama sayımında ayrı satır olarak görünüyor.
+- Android uygulamasında mikrofon izni ekleniyor (yeni APK gerekiyor).
+
 ### "Buradayım" ile anlık konum
 - **Kütüphaneye yer eklerken "📍 Buradayım"** butonu: telefonun konumunu alıp o noktanın adını
   (OpenStreetMap'ten) ve şehrini doldurur, "gittim" olarak işaretler. Adı istediğin gibi

@@ -2,36 +2,57 @@ import { entryPhotos } from '../lib/journal'
 import { db, newId } from './db'
 import type { JournalEntry } from './types'
 
-/** Adds a free journal entry for a day: text, photos, or both. Neither is ignored. */
-export async function addEntry(
-  date: string,
-  text: string,
-  photos: Blob[] = [],
-  kind?: JournalEntry['kind'],
-): Promise<void> {
+/** Everything an entry can hold besides its text. */
+export type EntryContent = {
+  /** Left out on an update: keep the ones already there. */
+  photos?: Blob[]
+  /** A spoken note. On an update, null removes the one already there. */
+  audio?: Blob | null
+  audioSeconds?: number
+  kind?: JournalEntry['kind']
+}
+
+/** Adds a free journal entry for a day: text, photos, a voice note, or any of them. */
+export async function addEntry(date: string, text: string, content: EntryContent = {}): Promise<void> {
   const trimmed = text.trim()
-  if (!trimmed && photos.length === 0) return
+  const photos = content.photos ?? []
+  const audio = content.audio ?? undefined
+  if (!trimmed && photos.length === 0 && !audio) return
   const entry: JournalEntry = { id: newId(), date, text: trimmed, createdAt: new Date().toISOString() }
   if (photos.length > 0) entry.photos = photos
-  if (kind) entry.kind = kind
+  if (audio) {
+    entry.audio = audio
+    if (content.audioSeconds !== undefined) entry.audioSeconds = content.audioSeconds
+  }
+  if (content.kind) entry.kind = content.kind
   await db.journal.add(entry)
 }
 
 /**
- * Changes an entry's text and, when given, its photos (an empty list removes them all).
- * An entry left with neither is deleted.
+ * Changes an entry's text and, where given, its photos (an empty list removes them all) and its
+ * voice note (null removes it). An entry left with none of the three is deleted.
  */
-export async function updateEntry(id: string, text: string, photos?: Blob[]): Promise<void> {
+export async function updateEntry(id: string, text: string, content: EntryContent = {}): Promise<void> {
   const trimmed = text.trim()
   const entry = await db.journal.get(id)
   if (!entry) return
-  const next = photos ?? entryPhotos(entry)
-  if (!trimmed && next.length === 0) return deleteEntry(id)
+  const photos = content.photos ?? entryPhotos(entry)
+  const audio = content.audio === undefined ? entry.audio : (content.audio ?? undefined)
+  if (!trimmed && photos.length === 0 && !audio) return deleteEntry(id)
   const updated: JournalEntry = { ...entry, text: trimmed, updatedAt: new Date().toISOString() }
   // Written as a whole record so the old single-photo field goes away for good.
   delete updated.photo
-  if (next.length > 0) updated.photos = next
+  if (photos.length > 0) updated.photos = photos
   else delete updated.photos
+  if (audio) {
+    updated.audio = audio
+    const seconds = content.audio === undefined ? entry.audioSeconds : content.audioSeconds
+    if (seconds === undefined) delete updated.audioSeconds
+    else updated.audioSeconds = seconds
+  } else {
+    delete updated.audio
+    delete updated.audioSeconds
+  }
   await db.journal.put(updated)
 }
 

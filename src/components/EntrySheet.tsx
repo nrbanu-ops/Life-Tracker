@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { deleteEntry, updateEntry } from '../db/journal'
 import type { JournalEntry } from '../db/types'
 import { fromDateKey } from '../lib/date'
+import { supportsRecording } from '../lib/audio'
 import { entryPhotos, JOURNAL_PHOTO_MAX, JOURNAL_PHOTO_SIZE } from '../lib/journal'
+import { AudioNote } from './AudioNote'
+import { AudioRecorder } from './AudioRecorder'
 import { BottomSheet } from './BottomSheet'
 import { PhotoPicker } from './PhotoPicker'
 import { PhotoStrip } from './PhotoStrip'
@@ -31,6 +34,9 @@ export function EntrySheet({ entry, habitTitle, onClose }: Props) {
 function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => void }) {
   const [text, setText] = useState(entry.text)
   const [photos, setPhotos] = useState(() => entryPhotos(entry))
+  const [audio, setAudio] = useState<{ blob: Blob; seconds?: number } | undefined>(() =>
+    entry.audio ? { blob: entry.audio, seconds: entry.audioSeconds } : undefined,
+  )
   const [confirmDelete, setConfirmDelete] = useState(false)
   // Habit notes are text only.
   const canHavePhoto = !entry.habitId
@@ -52,6 +58,10 @@ function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => v
             />
           </div>
         ))}
+      {audio && <AudioNote audio={audio.blob} seconds={audio.seconds} onRemove={() => setAudio(undefined)} />}
+      {canHavePhoto && supportsRecording && !audio && (
+        <AudioRecorder onRecord={(blob, seconds) => setAudio({ blob, seconds })} />
+      )}
       <textarea
         id="entry-text"
         value={text}
@@ -64,10 +74,14 @@ function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => v
       <button
         type="button"
         onClick={async () => {
-          await updateEntry(entry.id, text, photos)
+          await updateEntry(entry.id, text, {
+            photos,
+            audio: audio?.blob ?? null,
+            audioSeconds: audio?.seconds,
+          })
           onClose()
         }}
-        disabled={text.trim() === '' && photos.length === 0}
+        disabled={text.trim() === '' && photos.length === 0 && !audio}
         className="rounded-xl bg-accent py-3 font-medium text-surface disabled:opacity-40"
       >
         Kaydet

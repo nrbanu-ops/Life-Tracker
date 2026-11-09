@@ -113,6 +113,10 @@ export type JournalEntry = {
   photos?: Blob[]
   /** Before `photos`: one photo per entry. Still read, so old data and old backups keep theirs. */
   photo?: Blob
+  /** A spoken note, for the days when talking is easier than writing. One per entry. */
+  audio?: Blob
+  /** Its length in seconds, kept so the list can show it without decoding the sound. */
+  audioSeconds?: number
   /** 'review': a weekly look back written by Gemini. */
   kind?: 'review'
   createdAt: string

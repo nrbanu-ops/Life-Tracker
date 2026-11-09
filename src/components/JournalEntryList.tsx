@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
 import type { Habit, JournalEntry } from '../db/types'
 import { entryPhotos } from '../lib/journal'
+import { AudioNote } from './AudioNote'
 import { BlobImage } from './BlobImage'
 
 type Props = {
@@ -52,6 +53,12 @@ export function JournalEntryList({ entries, habitsById, onEdit }: Props) {
               )}
               {entry.text && <span className="block text-sm whitespace-pre-wrap">{entry.text}</span>}
             </button>
+            {/* Outside the button: tapping play must not open the editor. */}
+            {entry.audio && (
+              <div className="px-4 pb-3">
+                <AudioNote audio={entry.audio} seconds={entry.audioSeconds} />
+              </div>
+            )}
           </li>
         )
       })}

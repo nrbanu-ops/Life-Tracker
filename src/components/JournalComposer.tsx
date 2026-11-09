@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { addEntry } from '../db/journal'
 import { clearDraft, loadDraft, saveDraft } from '../lib/draft'
+import { supportsRecording } from '../lib/audio'
 import { JOURNAL_PHOTO_MAX, JOURNAL_PHOTO_SIZE } from '../lib/journal'
+import { AudioNote } from './AudioNote'
+import { AudioRecorder } from './AudioRecorder'
 import { PhotoPicker } from './PhotoPicker'
 import { PhotoStrip } from './PhotoStrip'
 
@@ -17,6 +20,8 @@ const textareaClass =
 export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Props) {
   const [text, setText] = useState(() => loadDraft(date))
   const [photos, setPhotos] = useState<Blob[]>([])
+  // One voice note per entry; recording another replaces it.
+  const [audio, setAudio] = useState<{ blob: Blob; seconds: number }>()
   const [saving, setSaving] = useState(false)
   // The day can change under us: at midnight on the Günlük page, where there's no remount.
   const [shownDate, setShownDate] = useState(date)
@@ -24,8 +29,9 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
     setShownDate(date)
     setText(loadDraft(date))
     setPhotos([])
+    setAudio(undefined)
   }
-  const canSave = text.trim() !== '' || photos.length > 0
+  const canSave = text.trim() !== '' || photos.length > 0 || audio !== undefined
   const full = photos.length >= JOURNAL_PHOTO_MAX
 
   // Written on every keystroke, not in an effect, so the draft under `date` is never
@@ -38,10 +44,11 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
   const save = async () => {
     if (!canSave || saving) return
     setSaving(true)
-    await addEntry(date, text, photos)
+    await addEntry(date, text, { photos, audio: audio?.blob, audioSeconds: audio?.seconds })
     clearDraft(date)
     setText('')
     setPhotos([])
+    setAudio(undefined)
     setSaving(false)
   }
 
@@ -64,11 +71,11 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
         className={textareaClass}
       />
       <PhotoStrip photos={photos} onRemove={(i) => setPhotos((all) => all.filter((_, n) => n !== i))} />
+      {audio && <AudioNote audio={audio.blob} seconds={audio.seconds} onRemove={() => setAudio(undefined)} />}
       {full && <p className="text-xs text-muted">En fazla {JOURNAL_PHOTO_MAX} fotoğraf.</p>}
-      <div className="flex items-center justify-between gap-2">
-        {full ? (
-          <span />
-        ) : (
+      {/* Wrapping, because the recorder takes a whole line once it is running. */}
+      <div className="flex flex-wrap items-center gap-2">
+        {!full && (
           <PhotoPicker
             label={photos.length > 0 ? '📷 Fotoğraf ekle' : '📷 Fotoğraf'}
             maxSize={JOURNAL_PHOTO_SIZE}
@@ -77,12 +84,15 @@ export function JournalComposer({ date, placeholder = 'Bugün nasıldı?' }: Pro
             onPick={(photo) => setPhotos((all) => (all.length >= JOURNAL_PHOTO_MAX ? all : [...all, photo]))}
           />
         )}
+        {supportsRecording && !audio && (
+          <AudioRecorder onRecord={(blob, seconds) => setAudio({ blob, seconds })} />
+        )}
         {canSave && (
           <button
             type="button"
             onClick={save}
             disabled={saving}
-            className="rounded-full bg-accent px-5 py-2 text-sm font-medium text-surface disabled:opacity-40"
+            className="ml-auto rounded-full bg-accent px-5 py-2 text-sm font-medium text-surface disabled:opacity-40"
           >
             Kaydet
           </button>

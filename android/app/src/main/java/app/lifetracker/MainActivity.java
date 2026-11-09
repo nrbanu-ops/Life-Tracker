@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.GeolocationPermissions;
+import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -34,12 +35,15 @@ import java.util.regex.Pattern;
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER = 1;
     private static final int LOCATION_PERMISSION = 2;
+    private static final int MICROPHONE_PERMISSION = 3;
 
     private WebView web;
     private ValueCallback<Uri[]> pendingChooser;
     // The page asked where it is and is waiting for Android's own permission dialog.
     private String pendingGeoOrigin;
     private GeolocationPermissions.Callback pendingGeoCallback;
+    // The page wants the microphone (a journal voice note) and is waiting for the same dialog.
+    private PermissionRequest pendingMedia;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -180,6 +184,32 @@ public class MainActivity extends Activity {
                     LOCATION_PERMISSION);
         }
 
+        /** The page asked for the microphone; only the app can agree, and only once Android has. */
+        @Override
+        public void onPermissionRequest(PermissionRequest request) {
+            boolean wantsMicrophone = false;
+            for (String resource : request.getResources()) {
+                wantsMicrophone |= PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource);
+            }
+            // The app has no use for the camera through the WebView: photos go through the file chooser.
+            if (!wantsMicrophone) {
+                request.deny();
+                return;
+            }
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                request.grant(new String[] { PermissionRequest.RESOURCE_AUDIO_CAPTURE });
+                return;
+            }
+            if (pendingMedia != null) pendingMedia.deny();
+            pendingMedia = request;
+            requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO }, MICROPHONE_PERMISSION);
+        }
+
+        @Override
+        public void onPermissionRequestCanceled(PermissionRequest request) {
+            if (pendingMedia == request) pendingMedia = null;
+        }
+
         @Override
         public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
             if (pendingChooser != null) pendingChooser.onReceiveValue(null);
@@ -207,6 +237,13 @@ public class MainActivity extends Activity {
             pendingGeoCallback.invoke(pendingGeoOrigin, granted, false);
             pendingGeoCallback = null;
             pendingGeoOrigin = null;
+            return;
+        }
+        if (requestCode == MICROPHONE_PERMISSION && pendingMedia != null) {
+            boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED;
+            if (granted) pendingMedia.grant(new String[] { PermissionRequest.RESOURCE_AUDIO_CAPTURE });
+            else pendingMedia.deny();
+            pendingMedia = null;
             return;
         }
         super.onRequestPermissionsResult(requestCode, permissions, results);
