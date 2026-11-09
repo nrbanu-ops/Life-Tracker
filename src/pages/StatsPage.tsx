@@ -83,6 +83,17 @@ export function StatsPage() {
     <>
       <PageHeader title="İstatistik" />
 
+      <Link
+        to="/ozet"
+        className="mb-6 flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3 text-sm"
+      >
+        <span aria-hidden>✨</span>
+        <span className="flex-1 font-medium">{today.slice(0, 4)} özeti</span>
+        <span className="text-muted" aria-hidden>
+          ›
+        </span>
+      </Link>
+
       {tracked.length > 0 && (
         <section className="mb-6 grid grid-cols-2 gap-3">
           <div className="col-span-2 rounded-2xl border border-border bg-surface p-4">

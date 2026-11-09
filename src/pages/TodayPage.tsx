@@ -17,6 +17,7 @@ import { QuitSheet } from '../components/QuitSheet'
 import { TodayMilestones } from '../components/TodayMilestones'
 import { TodayTasks } from '../components/TodayTasks'
 import { SundayReviewNudge } from '../components/WeeklyReview'
+import { YearReviewCard } from '../components/YearReviewCard'
 import { db } from '../db/db'
 import { markMilestoneCelebrated } from '../db/habits'
 import { setLog } from '../db/logs'
@@ -158,6 +159,8 @@ export function TodayPage() {
       <TodayMilestones />
 
       <SundayReviewNudge today={today} />
+
+      <YearReviewCard today={today} />
 
       <MemoryCard today={today} />
 

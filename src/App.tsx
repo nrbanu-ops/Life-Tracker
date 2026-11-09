@@ -22,6 +22,7 @@ const SettingsPage = page(() => import('./pages/SettingsPage'), 'SettingsPage')
 const StatsPage = page(() => import('./pages/StatsPage'), 'StatsPage')
 const TasksPage = page(() => import('./pages/TasksPage'), 'TasksPage')
 const TimerPage = page(() => import('./pages/TimerPage'), 'TimerPage')
+const YearReviewPage = page(() => import('./pages/YearReviewPage'), 'YearReviewPage')
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="asistan" element={<AssistantPage />} />
             <Route path="basarimlar" element={<AchievementsPage />} />
             <Route path="profil" element={<ProfilePage />} />
+            <Route path="ozet" element={<YearReviewPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

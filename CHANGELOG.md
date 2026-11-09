@@ -5,6 +5,15 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Yıl özeti
+- **Bir yılın tamamı tek sayfada** (İstatistik → "2026 özeti"): kaç gün bir şeyler yaptığın,
+  habit işaretlerin, kusursuz günlerin, biten görevlerin, günlük yazıların, XP'n, başarımların.
+- Altında ayrıntı: en çok yaptığın habit, yılın en uzun serisi, en çok yazdığın ay, kaç kelime
+  yazdığın, ruh hali ortalaman ve en iyi ayın, bitirdiğin kitap/film/dizi/yerler ve beş yıldız
+  verdiklerin, biten projeler ve adımlar.
+- **Aralık'tan 15 Ocak'a kadar Bugün ekranında bir kart** çıkıyor; sonrasında İstatistik'ten
+  ulaşılıyor. Önceki yıllar da üstteki yıl seçicisinden açılıyor.
+
 ### Günlüğe ses notu
 - **Yazacak hâlin yoksa konuş:** günlük kutusunda "🎤 Ses notu" ile kaydediyorsun, akışta
   doğrudan dinleniyor. Girdi başına bir ses notu, en fazla 5 dakika.
