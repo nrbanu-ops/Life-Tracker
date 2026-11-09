@@ -6,9 +6,11 @@ import { useSearchParams } from 'react-router'
 import { DayDetail } from '../components/DayDetail'
 import { PageHeader } from '../components/PageHeader'
 import { db } from '../db/db'
+import type { Level } from '../db/types'
 import { dayStatus, monthGrid, monthOf, shiftMonth } from '../lib/calendar'
 import { fromDateKey, isDateKey } from '../lib/date'
 import { WEEKDAY_SHORT } from '../lib/frequency'
+import { MOOD_EMOJI, MOOD_LABEL } from '../lib/mood'
 import { useTodayKey } from '../lib/useTodayKey'
 
 export function CalendarPage() {
@@ -48,6 +50,13 @@ export function CalendarPage() {
     [first, last],
     new Set(),
   )
+  // Mood records are a date and two numbers, so the whole month is cheap to read.
+  const moods = useLiveQuery(
+    () => db.moods.where('date').between(first, last, true, true).toArray(),
+    [first, last],
+    [],
+  )
+  const moodByDate = new Map(moods.flatMap((m) => (m.mood ? [[m.date, m.mood] as const] : [])))
   const projects = useLiveQuery(() => db.projects.toArray(), [], [])
 
   const goToMonth = (next: string) => {
@@ -112,6 +121,7 @@ export function CalendarPage() {
               status={habits && logs && day <= today ? dayStatus(habits, logs, day) : undefined}
               openTasks={tasks?.filter((t) => !t.done && t.date === day).length ?? 0}
               hasJournal={journalDays.has(day)}
+              mood={moodByDate.get(day)}
               onSelect={() => setSelected(day)}
             />
           ))}
@@ -145,10 +155,12 @@ type CellProps = {
   openTasks: number
   /** Something was written in the journal that day. */
   hasJournal: boolean
+  /** The day's mood, if one was picked; energy is left to the day detail. */
+  mood?: Level
   onSelect: () => void
 }
 
-function DayCell({ day, inMonth, isToday, isSelected, status, openTasks, hasJournal, onSelect }: CellProps) {
+function DayCell({ day, inMonth, isToday, isSelected, status, openTasks, hasJournal, mood, onSelect }: CellProps) {
   const complete = status !== undefined && status.total > 0 && status.done === status.total
   const partial = status !== undefined && status.done > 0 && !complete
   const number = Number(day.slice(8))
@@ -165,7 +177,7 @@ function DayCell({ day, inMonth, isToday, isSelected, status, openTasks, hasJour
     <button
       type="button"
       onClick={onSelect}
-      aria-label={`${day}${status && status.total > 0 ? `, ${status.total} habit'ten ${status.done}` : ''}${openTasks ? `, ${openTasks} açık görev` : ''}${hasJournal ? ', günlük yazısı var' : ''}`}
+      aria-label={`${day}${status && status.total > 0 ? `, ${status.total} habit'ten ${status.done}` : ''}${openTasks ? `, ${openTasks} açık görev` : ''}${hasJournal ? ', günlük yazısı var' : ''}${mood ? `, ruh hali ${MOOD_LABEL[mood].toLocaleLowerCase('tr')}` : ''}`}
       aria-pressed={isSelected}
       className={`flex flex-col items-center gap-0.5 rounded-xl py-1 ${inMonth ? '' : 'opacity-35'} ${
         isSelected ? 'bg-bg' : ''
@@ -179,9 +191,14 @@ function DayCell({ day, inMonth, isToday, isSelected, status, openTasks, hasJour
         {number}
       </span>
       {/* Fixed height so a day with marks doesn't make its week taller than the others. */}
-      <span className="flex h-1.5 items-center gap-0.5" aria-hidden>
-        {openTasks > 0 && <span className="h-1.5 w-1.5 rounded-full bg-p3" />}
-        {hasJournal && <span className="h-1.5 w-1.5 rounded-full bg-p2" />}
+      <span className="flex h-3.5 items-center gap-1" aria-hidden>
+        {mood && <span className="text-[11px] leading-none">{MOOD_EMOJI[mood]}</span>}
+        {(openTasks > 0 || hasJournal) && (
+          <span className="flex items-center gap-0.5">
+            {openTasks > 0 && <span className="h-1.5 w-1.5 rounded-full bg-p3" />}
+            {hasJournal && <span className="h-1.5 w-1.5 rounded-full bg-p2" />}
+          </span>
+        )}
       </span>
     </button>
   )
@@ -201,6 +218,9 @@ function Legend() {
       </span>
       <span className="flex items-center gap-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-p2" /> Günlük
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="text-[11px] leading-none">{MOOD_EMOJI[4]}</span> Ruh hali
       </span>
     </div>
   )

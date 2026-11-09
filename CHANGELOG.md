@@ -3,6 +3,12 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-09
+
+### Takvimde ruh hali
+- **Ruh halini işaretlediğin günler takvimde yüzüyle görünüyor.** Bir ayın nasıl geçtiği tek
+  bakışta belli oluyor; enerji yine gün detayında. Açıklama satırına "Ruh hali" eklendi.
+
 ## 2026-11-08
 
 ### Takvimde günlük işareti
