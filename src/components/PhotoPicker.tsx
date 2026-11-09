@@ -13,7 +13,8 @@ type Props = {
 /** Button that picks a photo from the device (or camera) and shrinks it. */
 export function PhotoPicker({ label, onPick, maxSize, multiple = false }: Props) {
   const input = useRef<HTMLInputElement>(null)
-  const [failed, setFailed] = useState(false)
+  // The reason, not just the fact: a phone can refuse a photo for several different reasons.
+  const [failed, setFailed] = useState<string>()
 
   return (
     <>
@@ -33,18 +34,18 @@ export function PhotoPicker({ label, onPick, maxSize, multiple = false }: Props)
         onChange={async (e) => {
           const files = [...(e.target.files ?? [])]
           e.target.value = ''
-          let broke = false
+          let problem: string | undefined
           for (const file of files) {
             try {
               onPick(await shrinkImage(file, maxSize))
-            } catch {
-              broke = true
+            } catch (error) {
+              problem = (error as Error).message || 'Fotoğraf açılamadı'
             }
           }
-          setFailed(broke)
+          setFailed(problem)
         }}
       />
-      {failed && <p className="text-sm text-p1">Bir fotoğraf açılamadı, başka birini dene.</p>}
+      {failed && <p className="text-sm text-p1">{failed}. Başka bir fotoğraf dene.</p>}
     </>
   )
 }

@@ -5,6 +5,19 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Günlük sayfası telefonda çökmesin (düzeltme)
+- **Fotoğraflı günlük artık sayfa sayfa yükleniyor** (son 10 gün, altta "Daha eskisini göster").
+  Bir güne 10 fotoğraf girilebildiğinden beri sayfa hepsini birden açmaya çalışıyordu; 200
+  fotoğraflı bir günlükte telefonun tarayıcısı buna yetişemeyip boş ekran bırakabiliyordu.
+- Fotoğraflar artık sadece ekrana geldiklerinde çözülüyor (`loading="lazy"`): aynı günlükte
+  aynı anda 200 yerine ~30 fotoğraf işleniyor.
+- **Bir ekran açılamazsa artık boş kalmıyor:** sebebi yazan bir kutu, "Yenile" ve "Hatayı
+  kopyala" butonları çıkıyor.
+- Yeni sürüm yayınlandıktan hemen sonra eski sayfanın takılması durumu kendiliğinden
+  çözülüyor (bir kez yenileniyor).
+- **Fotoğraf eklenemezse sebebi yazıyor** ("Bu fotoğraf açılamadı (image/heic)" gibi).
+  Çevirilemeyen biçimler için ikinci bir yöntem deneniyor, yan yatmış fotoğraflar da düzeliyor.
+
 ### Her yerde arama
 - **Üstteki büyüteç** tek kutuda her şeyi arıyor: habit'ler, projeler, proje adımları, görevler,
   günlük yazıları ve kütüphane (adı, yazarı ve senin yorumun).

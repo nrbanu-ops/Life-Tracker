@@ -26,6 +26,9 @@ import { hasRecentReview } from '../lib/review'
 import { WeeklyReview } from '../components/WeeklyReview'
 import { useTodayKey } from '../lib/useTodayKey'
 
+/** Days added each time, both in the feed and in the gallery. */
+const PAGE = 10
+
 export function JournalPage() {
   const navigate = useNavigate()
   const today = useTodayKey()
@@ -33,6 +36,9 @@ export function JournalPage() {
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray(), [], [])
   const moods = useLiveQuery(() => db.moods.toArray(), [], [])
   const ai = useAiSettings()
+  // Only this many days are built at a time: a long journal with photos must not be put on
+  // screen all at once.
+  const [days, setDays] = useState(PAGE)
   const [filter, setFilter] = useState<JournalFilter>('all')
   const [view, setView] = useState<'text' | 'photos'>('text')
   const [query, setQuery] = useState('')
@@ -47,7 +53,8 @@ export function JournalPage() {
     { value: 'free', label: 'Serbest' },
     ...habits.filter((h) => notedHabitIds.has(h.id)).map((h) => ({ value: h.id, label: h.title })),
   ]
-  const days = entries ? groupByDay(searchEntries(filterEntries(entries, filter), query, habitsById)) : []
+  const allDays = entries ? groupByDay(searchEntries(filterEntries(entries, filter), query, habitsById)) : []
+  const shown = allDays.slice(0, days)
   const editing = entries?.find((e) => e.id === editingId)
   // The switch only appears once there is something to look at.
   const hasPhotos = (entries ?? []).some((e) => entryPhotos(e).length > 0)
@@ -78,7 +85,10 @@ export function JournalPage() {
         <input
           type="search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setDays(PAGE)
+          }}
           placeholder="🔍 Günlükte ara"
           aria-label="Günlükte ara"
           className="mt-5 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-accent"
@@ -104,7 +114,10 @@ export function JournalPage() {
             <button
               key={chip.value}
               type="button"
-              onClick={() => setFilter(chip.value)}
+              onClick={() => {
+                setFilter(chip.value)
+                setDays(PAGE)
+              }}
               aria-pressed={filter === chip.value}
               className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm ${
                 filter === chip.value ? 'bg-accent font-medium text-surface' : 'bg-surface text-muted'
@@ -118,8 +131,8 @@ export function JournalPage() {
 
       <div className="mt-5 flex flex-col gap-6">
         {entries === undefined ? null : view === 'photos' && hasPhotos ? (
-          <JournalGallery days={days} onOpen={setEditingId} />
-        ) : days.length === 0 ? (
+          <JournalGallery days={shown} onOpen={setEditingId} />
+        ) : allDays.length === 0 ? (
           <EmptyState
             title={query.trim() ? 'Bulunamadı' : filter === 'all' ? 'Günlüğün boş' : 'Bu filtrede not yok'}
             text={
@@ -129,7 +142,7 @@ export function JournalPage() {
             }
           />
         ) : (
-          days.map((day) => {
+          shown.map((day) => {
             const mood = moodByDate.get(day.date)
             return (
             <section key={day.date}>
@@ -154,6 +167,16 @@ export function JournalPage() {
           })
         )}
       </div>
+
+      {allDays.length > shown.length && (
+        <button
+          type="button"
+          onClick={() => setDays((n) => n + PAGE)}
+          className="mt-5 w-full rounded-xl border border-border bg-surface py-3 text-sm font-medium"
+        >
+          Daha eskisini göster ({allDays.length - shown.length} gün)
+        </button>
+      )}
 
       <EntrySheet
         entry={editing}

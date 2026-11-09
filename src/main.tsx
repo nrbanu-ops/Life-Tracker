@@ -27,6 +27,23 @@ registerSW({
   },
 })
 
+/**
+ * A screen is fetched when first opened. Right after a new version is published the old page can
+ * still be asking for files that are no longer on the server; that used to leave a blank screen.
+ * Reloading picks up the new version. Once per session, so a real failure can't become a loop.
+ */
+const RELOADED = 'life-tracker:chunk-reload'
+window.addEventListener('vite:preloadError', (event) => {
+  try {
+    if (sessionStorage.getItem(RELOADED)) return
+    sessionStorage.setItem(RELOADED, '1')
+  } catch {
+    return
+  }
+  event.preventDefault()
+  window.location.reload()
+})
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
