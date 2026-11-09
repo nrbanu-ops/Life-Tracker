@@ -5,6 +5,16 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Depolama kartı (Ayarlar)
+- **Uygulamanın ne kadar yer kapladığı artık görünüyor:** kullanılan alan, cihazın ayırdığı
+  alanın yüzdesi ve dolmaya yaklaşınca kırmızı uyarı. Dolunca yeni fotoğraflar sessizce
+  kaydedilemez olurdu; artık önceden belli.
+- **"Kalıcı depolama" durumu** görünüyor; kapalıysa tek dokunuşla açılıyor (kapalıyken tarayıcı
+  yer açmak için verini silebilir).
+- **"Fotoğrafları say"** butonu günlükteki fotoğrafların sayısını ve boyutunu, kütüphane
+  afişlerini ve **en ağır günleri** listeliyor; bir güne dokununca takvimde o gün açılıyor,
+  oradan fazla fotoğrafları silebilirsin.
+
 ### Günlükte fotoğraf galerisi
 - **Günlük sayfasında "Yazılar / Fotoğraflar" geçişi var.** Fotoğraflar aya göre gruplanmış bir
   ızgarada; birine dokununca ait olduğu yazı açılıyor. Arama ve habit filtresi galeride de geçerli,

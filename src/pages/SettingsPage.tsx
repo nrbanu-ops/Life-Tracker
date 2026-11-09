@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
+import { StorageSection } from '../components/StorageSection'
 import { ThemeSection } from '../components/ThemeSection'
 import { resetAllData } from '../db/backup'
 import { setPenaltyOn, usePenaltyOn } from '../db/leveling'
@@ -41,6 +42,8 @@ export function SettingsPage() {
 
       <div className="flex flex-col gap-4">
         <BackupSection />
+
+        <StorageSection />
 
         <ThemeSection />
 
