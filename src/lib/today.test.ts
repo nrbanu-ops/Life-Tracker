@@ -8,6 +8,7 @@ import {
   isWeeklyGoal,
   nextStatus,
   splitDone,
+  splitFocus,
   tapResult,
   weekProgress,
   withAmount,
@@ -186,5 +187,24 @@ describe('splitDone', () => {
   it('keeps the order of the list', () => {
     const { open } = splitDone([item('a'), item('b', 'done'), item('c')])
     expect(open.map((i) => i.habit.id)).toEqual(['a', 'c'])
+  })
+})
+
+describe('splitFocus', () => {
+  const item = (id: string, focus?: boolean) => ({
+    habit: habit(id, { type: 'daily' }, { focus }),
+    countsToday: true,
+  })
+
+  it('pulls the keystone habits out, keeping both sides in order', () => {
+    const { focus, rest } = splitFocus([item('a'), item('b', true), item('c'), item('d', true)])
+    expect(focus.map((i) => i.habit.id)).toEqual(['b', 'd'])
+    expect(rest.map((i) => i.habit.id)).toEqual(['a', 'c'])
+  })
+
+  it('leaves everything in rest when nothing is marked', () => {
+    const { focus, rest } = splitFocus([item('a'), item('b')])
+    expect(focus).toEqual([])
+    expect(rest).toHaveLength(2)
   })
 })

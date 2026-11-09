@@ -36,7 +36,7 @@ Tipler `src/db/types.ts`, Dexie şeması `src/db/db.ts` içinde. Tarihleri her z
 
 Altta sabit sekme çubuğu (Bugün, Takvim, Projeler, Habit'ler, İstatistik). Günlük, Kütüphane, Zamanlayıcı ve Ayarlar köşede küçük ikonlar.
 
-Ayarlar → **Bugün ekranı** (`TodaySection`, `src/lib/todaySetting.ts`): cihaza özel, yedeğe girmeyen görünüm anahtarları. "Tamamlananları gizle" açıkken Bugün'de işaretlenmiş habit'ler listeden çıkar ve her grubun altında `✓ n tamamlandı · göster` satırı kalır (`splitDone`, grup grup açılır); halka ve yüzde değişmez, çünkü gizleme sadece görünümü değiştirir.
+Ayarlar → **Bugün ekranı** (`TodaySection`, `src/lib/todaySetting.ts`): cihaza özel, yedeğe girmeyen görünüm anahtarları. "Tamamlananları gizle" açıkken Bugün'de işaretlenmiş habit'ler listeden çıkar ve her grubun altında `✓ n tamamlandı · göster` satırı kalır (`splitDone`, grup grup açılır); halka ve yüzde değişmez, çünkü gizleme sadece görünümü değiştirir. "Odak modu" açıkken `Habit.focus` ile işaretlenmiş en fazla `FOCUS_MAX` (3) habit üstte **Omurga** başlığı altında durur, gerisi tek bir `Diğerleri (n)` düğmesinin arkasına katlanır (`splitFocus`); halka ve haftalık sayaç yine bütün habit'leri sayar. Omurga kutusu habit formunda, 3 dolunca kapanır.
 
 ## Hesaplama kuralları
 - Proje ilerlemesi: tamamlanan milestone / toplam milestone

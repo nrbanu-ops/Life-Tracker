@@ -110,3 +110,14 @@ export function splitDone(items: TodayItem[]): { open: TodayItem[]; done: TodayI
     done: items.filter((item) => isCompleted(item.status)),
   }
 }
+
+/** At most this many habits can be keystones; more than a handful is not a focus. */
+export const FOCUS_MAX = 3
+
+/** Today's list split for focus mode: the keystone habits, and everything else. */
+export function splitFocus(items: TodayItem[]): { focus: TodayItem[]; rest: TodayItem[] } {
+  return {
+    focus: items.filter((item) => item.habit.focus),
+    rest: items.filter((item) => !item.habit.focus),
+  }
+}

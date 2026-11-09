@@ -42,3 +42,15 @@ export const useHideDone = (): boolean =>
     () => read(HIDE_DONE, false),
     () => false,
   )
+
+const FOCUS = 'life-tracker:focus'
+
+export const setFocusMode = (on: boolean): void => write(FOCUS, on)
+
+/** Whether Bugün leads with the keystone habits and folds the rest away. */
+export const useFocusMode = (): boolean =>
+  useSyncExternalStore(
+    subscribe,
+    () => read(FOCUS, false),
+    () => false,
+  )

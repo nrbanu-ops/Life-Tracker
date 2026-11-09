@@ -5,6 +5,13 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Odak modu
+- Bir habit'i **omurga** olarak işaretleyebilirsin (habit formunda kutu, en fazla 3). Ayarlar →
+  Bugün ekranı → "Odak modu" açıkken Bugün'de önce omurga habit'lerin gelir, geri kalanlar
+  `Diğerleri (n)` altında katlı durur; dokununca açılır.
+- Halka ve yüzde yine bütün günlük habit'leri sayar: odak modu neyin öne çıktığını değiştirir,
+  neyin sayıldığını değil.
+
 ### Tamamlananları gizle
 - Ayarlar'a **Bugün ekranı** bölümü geldi; ilk anahtarı "Tamamlananları gizle". Açıkken
   işaretlediğin habit'ler listeden çıkar, yerine `✓ n tamamlandı · göster` satırı gelir —

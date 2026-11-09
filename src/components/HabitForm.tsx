@@ -1,5 +1,7 @@
 import { format } from 'date-fns'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState, type FormEvent } from 'react'
+import { db } from '../db/db'
 import { createHabit, deleteHabit, setHabitArchived, updateHabit, type HabitInput } from '../db/habits'
 import type { Habit, HabitFrequency, HabitKind, Project } from '../db/types'
 import { DEFAULT_INCREMENT } from '../lib/amount'
@@ -16,6 +18,7 @@ import {
   type StatKey,
 } from '../lib/leveling'
 import { useLevelingOn } from '../lib/levelingSetting'
+import { FOCUS_MAX } from '../lib/today'
 import { Segmented } from './Segmented'
 
 type FrequencyType = HabitFrequency['type']
@@ -67,10 +70,17 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   )
   const [count, setCount] = useState(initial?.type === 'timesPerWeek' ? initial.count : 3)
   const [minimumVersion, setMinimumVersion] = useState(habit?.minimumVersion ?? '')
+  const [focus, setFocus] = useState(habit?.focus ?? false)
   const [projectId, setProjectId] = useState(habit ? (habit.projectId ?? '') : (defaultProjectId ?? ''))
   const [effort, setEffort] = useState<EffortTier | ''>(habit?.effort ?? '')
   const [stat, setStat] = useState<StatKey | ''>(habit?.stat ?? '')
   const levelingOn = useLevelingOn()
+  // How many keystone slots the other habits already take, so the cap can be shown here.
+  const focusTaken = useLiveQuery(
+    async () => (await db.habits.toArray()).filter((h) => h.focus && !h.archived && h.id !== habit?.id).length,
+    [habit?.id],
+    0,
+  )
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -113,6 +123,8 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
       // Quit habits have no schedule or minimum; they are tracked as time since quitting.
       frequency: isQuit ? { type: 'daily' } : buildFrequency(),
       minimumVersion: isQuit ? undefined : minimumVersion.trim() || undefined,
+      // A quit habit has no row on Bugün, so it can never be a keystone.
+      focus: !isQuit && focus ? true : undefined,
       projectId: projectId || undefined,
       effort: isQuit ? undefined : effort || undefined,
       stat: isQuit ? undefined : stat || undefined,
@@ -297,6 +309,25 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
               maxLength={80}
             />
             <span className="text-xs text-muted">Zor günlerde bunu yapman seriyi korur.</span>
+          </label>
+
+          <label className="flex items-start gap-3">
+            <input
+              id="habit-focus"
+              type="checkbox"
+              checked={focus}
+              disabled={!focus && focusTaken >= FOCUS_MAX}
+              onChange={(e) => setFocus(e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-accent disabled:opacity-40"
+            />
+            <span>
+              <span className="font-medium">Omurga habit</span>
+              <span className="block text-xs text-muted">
+                {!focus && focusTaken >= FOCUS_MAX
+                  ? `Zaten ${FOCUS_MAX} omurga habit var; birini çıkarmadan yenisini ekleyemezsin.`
+                  : `Odak modu açıkken Bugün ekranının en üstünde durur, gerisi katlanır. En fazla ${FOCUS_MAX} tane.`}
+              </span>
+            </span>
           </label>
 
           {levelingOn && (
