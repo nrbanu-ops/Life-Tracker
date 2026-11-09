@@ -6,6 +6,10 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 ## 2026-11-09
 
 ### Ses notu: neden başlamadığını söylüyor (düzeltme)
+- **İzin verildikten hemen sonraki ilk deneme artık kendiliğinden tekrarlanıyor.** Android'de
+  izni yeni verdiğinde ses sistemi bir süre daha "meşgul" diyebiliyor; bu bir saniye sonra
+  geçiyor. Uygulama artık bu durumda bir kez daha deniyor, geçmezse de uygulamayı kapatıp
+  açmanı söylüyor.
 - Tanılama artık mikrofonu üç ayrı adımda sınıyor: telefonun mikrofon aygıtını görüp görmediği,
   iznin durumu, ve kaydın gerçekten başlayıp başlamadığı. "Mikrofon meşgul" ile "izin yok" ile
   "kayıt biçimi tutmuyor" birbirinden böyle ayrılıyor.

@@ -50,9 +50,32 @@ export function micMessage(error: { name?: string; message?: string } | undefine
   }
   if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'Telefonda mikrofon bulunamadı.'
   if (name === 'NotReadableError' || name === 'AbortError') {
-    return 'Mikrofona ulaşılamadı. Başka bir uygulama (arama, kayıt, asistan) kullanıyor olabilir.'
+    return (
+      'Mikrofona ulaşılamadı. İzni az önce verdiysen uygulamayı tamamen kapatıp yeniden aç — izin ' +
+      'verildikten sonra ilk deneme bazen başarısız oluyor. Sürerse mikrofonu başka bir uygulama ' +
+      '(arama, kayıt, asistan) tutuyor olabilir.'
+    )
   }
   const detail = [name, error?.message].filter(Boolean).join(': ')
   const where = shell === undefined ? '' : ` (uygulama v${shell})`
   return `Kayıt başlatılamadı${where}${detail ? ` — ${detail}` : ''}`
+}
+
+/**
+ * Opens the microphone, with one retry.
+ *
+ * Right after Android grants the permission, the audio stack can still refuse the first open
+ * (NotReadableError) even though the page is now allowed: the refusal is a leftover, not a real
+ * one, and a moment later the same call works. Only these two errors are retried — a refused
+ * permission or a missing microphone would just fail twice and make the user wait for nothing.
+ */
+export async function openMicrophone(wait = 600): Promise<MediaStream> {
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio: true })
+  } catch (error) {
+    const name = (error as Error).name
+    if (name !== 'NotReadableError' && name !== 'AbortError') throw error
+    await new Promise((resolve) => setTimeout(resolve, wait))
+    return navigator.mediaDevices.getUserMedia({ audio: true })
+  }
 }

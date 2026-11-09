@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { androidBridge } from '../lib/android'
-import { AUDIO_MAX_SECONDS, formatDuration, micMessage, pickAudioType } from '../lib/audio'
+import { AUDIO_MAX_SECONDS, formatDuration, micMessage, openMicrophone, pickAudioType } from '../lib/audio'
 
 type Props = {
   onRecord: (audio: Blob, seconds: number) => void
@@ -50,7 +50,7 @@ export function AudioRecorder({ onRecord }: Props) {
     setProblem(undefined)
     let stream: MediaStream
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream = await openMicrophone()
     } catch (e) {
       return fail(e)
     }
