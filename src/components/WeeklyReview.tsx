@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { db } from '../db/db'
 import { addEntry } from '../db/journal'
 import { geminiReady, useAiSettings } from '../lib/assistant'
@@ -66,6 +67,15 @@ export function WeeklyReview({ today, variant, hasRecent }: Props) {
         {state === 'working' ? 'Gemini yazıyor…' : hasRecent || state === 'done' ? 'Yeniden oluştur' : 'Oluştur'}
       </button>
       {state === 'done' && <p className="mt-2 text-sm text-accent">Günlüğüne eklendi ✓</p>}
+      {variant === 'journal' && (
+        <p className="mt-3 text-sm text-muted">
+          Geriye bakmanın diğer yarısı ileriye bakmak:{' '}
+          <Link to="/" className="text-accent underline">
+            Bugün ekranından haftanı planla
+          </Link>
+          .
+        </p>
+      )}
       {typeof state === 'object' && <p className="mt-2 text-sm text-p1">{state.error}</p>}
     </section>
   )

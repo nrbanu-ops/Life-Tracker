@@ -5,6 +5,15 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Haftalık planlama
+- Bugün ekranına **🎯 Bu hafta** kartı: haftanın en fazla 3 önceliği, tek dokunuşla
+  işaretlenir. Pazar ve pazartesi plan yoksa kart "Bu haftayı planla" diye sorar; diğer
+  günlerde tek satırlık sessiz bir hatırlatma kalır, oradan da açılır.
+- Önceliğin yazısını değiştirmezsen işareti kaybolmaz; boş bıraktığın kutular kaydedilmez.
+  İsteğe bağlı bir not da yazılabilir. Plan yedeğe girer.
+- Günlük sayfasındaki haftalık bakış kartından Bugün'e bağlantı var: geriye bakmanın diğer
+  yarısı ileriye bakmak.
+
 ### Odak modu
 - Bir habit'i **omurga** olarak işaretleyebilirsin (habit formunda kutu, en fazla 3). Ayarlar →
   Bugün ekranı → "Odak modu" açıkken Bugün'de önce omurga habit'lerin gelir, geri kalanlar

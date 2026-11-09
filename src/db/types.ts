@@ -201,6 +201,23 @@ export type UnlockedAchievement = {
   unlockedAt: string
 }
 
+/** One of the (at most WEEK_PLAN_MAX) things the week is for. */
+export type WeekPriority = {
+  text: string
+  done: boolean
+}
+
+/** What a week is meant to be about, written on Sunday or Monday and ticked off as it goes. */
+export type WeekPlan = {
+  /** Monday's day key: one plan per week. */
+  week: string
+  priorities: WeekPriority[]
+  /** Anything else worth remembering about the week. */
+  note?: string
+  createdAt: string
+  updatedAt?: string
+}
+
 /** Key–value bookkeeping, e.g. 'backupHandle' (a FileSystemFileHandle) or 'lastBackupAt'. */
 export type MetaEntry = {
   key: string

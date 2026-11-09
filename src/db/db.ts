@@ -12,6 +12,7 @@ import type {
   ProjectAchievement,
   Task,
   UnlockedAchievement,
+  WeekPlan,
   XpWeek,
 } from './types'
 
@@ -29,6 +30,7 @@ export const db = new Dexie('life-tracker') as Dexie & {
   achievements: EntityTable<UnlockedAchievement, 'id'>
   projectAchievements: EntityTable<ProjectAchievement, 'id'>
   xpWeeks: EntityTable<XpWeek, 'week'>
+  weekPlans: EntityTable<WeekPlan, 'week'>
 }
 
 // Booleans can't be indexed in IndexedDB, so `archived` and `done` are filtered in memory.
@@ -105,6 +107,11 @@ db.version(11)
         delete entry.photo
       }),
   )
+
+// v12: what each week is meant to be about, written ahead of it.
+db.version(12).stores({
+  weekPlans: 'week',
+})
 
 export const META_TABLE = 'meta'
 

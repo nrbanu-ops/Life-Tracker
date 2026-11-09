@@ -16,6 +16,7 @@ import { QuitCard } from '../components/QuitCard'
 import { QuitSheet } from '../components/QuitSheet'
 import { TodayMilestones } from '../components/TodayMilestones'
 import { TodayTasks } from '../components/TodayTasks'
+import { WeekPlanCard } from '../components/WeekPlanCard'
 import { SundayReviewNudge } from '../components/WeeklyReview'
 import { YearReviewCard } from '../components/YearReviewCard'
 import { db } from '../db/db'
@@ -77,6 +78,8 @@ export function TodayPage() {
       <LevelCard />
 
       <BackupReminder />
+
+      <WeekPlanCard today={today} />
 
       <TodayTasks today={today} projectColor={projectColor} />
 
