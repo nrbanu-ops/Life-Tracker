@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { BackupSection } from '../components/BackupSection'
-import { DiagnosticsSection } from '../components/DiagnosticsSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
 import { ReminderSection } from '../components/ReminderSection'
@@ -55,8 +54,6 @@ export function SettingsPage() {
         <ThemeSection />
 
         <TodaySection />
-
-        <DiagnosticsSection />
 
         <GeminiSection />
 

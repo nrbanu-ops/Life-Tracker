@@ -5,6 +5,12 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Tanılama kaldırıldı
+- Ayarlar'daki **Tanılama** bölümü kalktı: fotoğraf sorununu bulmak için eklenmişti, sorun
+  çözüldü. Gerekirse git geçmişinde duruyor.
+- Yarıda kalmış bir testin geride bırakmış olabileceği 2 MB'lık deneme verisi güncellemeyle
+  birlikte siliniyor.
+
 ### Seri koruması ❄️
 - Ayda **2 hak**: kaçırdığın bir günü "korursan" seri kırılmaz. Hastalık ya da yolculuk
   yüzünden 60 günlük bir seriyi kaybetmek, insanı tamamen bıraktıran şey.

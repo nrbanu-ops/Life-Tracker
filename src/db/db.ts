@@ -113,6 +113,11 @@ db.version(12).stores({
   weekPlans: 'week',
 })
 
+// v13: the Tanılama self-test is gone; drop the 2 MB blob a half-finished run could leave.
+db.version(13)
+  .stores({})
+  .upgrade((tx) => tx.table('meta').delete('diagnose-test'))
+
 export const META_TABLE = 'meta'
 
 export const newId = () => crypto.randomUUID()
