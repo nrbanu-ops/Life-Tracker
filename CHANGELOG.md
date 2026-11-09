@@ -6,6 +6,10 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 ## 2026-11-09
 
 ### Ses notu: neden başlamadığını söylüyor (düzeltme)
+- **Mikrofon açılmazsa yankı engelleme kapalı olarak bir kez daha deneniyor.** Android'de bu
+  ayar açıkken telefon kaydı farklı bir kaynaktan (telefon görüşmelerinin kullandığı kaynak)
+  almaya çalışıyor; o kaynak yoksa ya da meşgulse kayıt hiç başlamıyor. İşlemesiz deneme bu
+  durumda çalışıyor.
 - **İzin verildikten hemen sonraki ilk deneme artık kendiliğinden tekrarlanıyor.** Android'de
   izni yeni verdiğinde ses sistemi bir süre daha "meşgul" diyebiliyor; bu bir saniye sonra
   geçiyor. Uygulama artık bu durumda bir kez daha deniyor, geçmezse de uygulamayı kapatıp

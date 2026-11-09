@@ -51,9 +51,9 @@ export function micMessage(error: { name?: string; message?: string } | undefine
   if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'Telefonda mikrofon bulunamadı.'
   if (name === 'NotReadableError' || name === 'AbortError') {
     return (
-      'Mikrofona ulaşılamadı. İzni az önce verdiysen uygulamayı tamamen kapatıp yeniden aç — izin ' +
-      'verildikten sonra ilk deneme bazen başarısız oluyor. Sürerse mikrofonu başka bir uygulama ' +
-      '(arama, kayıt, asistan) tutuyor olabilir.'
+      'Telefon mikrofonu açmadı (izin var ama cihaz vermiyor). Sırayla dene: uygulamayı tamamen ' +
+      'kapatıp aç · mikrofon kullanan uygulamaları kapat (arama, ses kaydı, asistan) · telefonu ' +
+      'yeniden başlat.'
     )
   }
   const detail = [name, error?.message].filter(Boolean).join(': ')
@@ -61,21 +61,40 @@ export function micMessage(error: { name?: string; message?: string } | undefine
   return `Kayıt başlatılamadı${where}${detail ? ` — ${detail}` : ''}`
 }
 
+/** A refusal worth trying again; a denied permission or a missing microphone is not. */
+const worthRetrying = (error: unknown) => {
+  const name = (error as Error | undefined)?.name
+  return name === 'NotReadableError' || name === 'AbortError'
+}
+
 /**
- * Opens the microphone, with one retry.
+ * Opens the microphone, trying three ways before giving up.
  *
- * Right after Android grants the permission, the audio stack can still refuse the first open
- * (NotReadableError) even though the page is now allowed: the refusal is a leftover, not a real
- * one, and a moment later the same call works. Only these two errors are retried — a refused
- * permission or a missing microphone would just fail twice and make the user wait for nothing.
+ * Two different things go wrong on Android, and both look like "the device is busy":
+ *  - right after the permission is granted the audio stack can still be refusing, which passes
+ *    in a moment — hence the same request again after a wait;
+ *  - the default request asks for echo cancellation, and on Android that makes the WebView open
+ *    a different recording source (the one phone calls use). Where that source is missing or
+ *    taken, plain recording still works — hence the last attempt without it.
+ *
+ * A refused permission or a missing microphone is not retried: it would fail every time and
+ * only keep the user waiting.
  */
 export async function openMicrophone(wait = 600): Promise<MediaStream> {
-  try {
-    return await navigator.mediaDevices.getUserMedia({ audio: true })
-  } catch (error) {
-    const name = (error as Error).name
-    if (name !== 'NotReadableError' && name !== 'AbortError') throw error
-    await new Promise((resolve) => setTimeout(resolve, wait))
-    return navigator.mediaDevices.getUserMedia({ audio: true })
+  const plain: MediaStreamConstraints = { audio: true }
+  const noProcessing: MediaStreamConstraints = {
+    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
   }
+  let last: unknown
+  const attempts = [plain, plain, noProcessing]
+  for (let i = 0; i < attempts.length; i++) {
+    if (i === 1) await new Promise((resolve) => setTimeout(resolve, wait))
+    try {
+      return await navigator.mediaDevices.getUserMedia(attempts[i])
+    } catch (error) {
+      if (!worthRetrying(error)) throw error
+      last = error
+    }
+  }
+  throw last
 }

@@ -170,6 +170,16 @@ export async function runChecks(options: { microphone: boolean }): Promise<Check
       stream.getTracks().forEach((track) => track.stop())
     } catch (error) {
       checks.push({ label: 'Mikrofon izni', state: 'fail', detail: reason(error) })
+      // The fallback the recorder itself uses: on Android this opens a different source.
+      try {
+        const simple = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        })
+        simple.getTracks().forEach((track) => track.stop())
+        checks.push({ label: 'Mikrofon (işlemesiz)', state: 'ok', detail: 'bu yoldan açıldı' })
+      } catch (second) {
+        checks.push({ label: 'Mikrofon (işlemesiz)', state: 'fail', detail: reason(second) })
+      }
       checks.push({ label: 'Kayıt başlatma', state: 'skip', detail: 'mikrofon açılamadı' })
     }
   }

@@ -45,7 +45,7 @@ describe('micMessage', () => {
 
   it('tells a missing microphone from a busy one', () => {
     expect(micMessage({ name: 'NotFoundError' }, 7)).toContain('bulunamadı')
-    expect(micMessage({ name: 'NotReadableError' }, 7)).toContain('başka bir uygulama')
+    expect(micMessage({ name: 'NotReadableError' }, 7)).toContain('cihaz vermiyor')
   })
 
   it('anything else carries the error’s own name, which is the point', () => {
@@ -94,11 +94,26 @@ describe('openMicrophone', () => {
     expect(tries).toHaveBeenCalledTimes(1)
   })
 
-  it('gives up after the second refusal', async () => {
+  it('falls back to recording without echo cancellation, which uses another source on Android', async () => {
+    const tries = vi
+      .fn<(c: MediaStreamConstraints) => Promise<MediaStream>>()
+      .mockRejectedValueOnce(Object.assign(new Error('busy'), { name: 'NotReadableError' }))
+      .mockRejectedValueOnce(Object.assign(new Error('busy'), { name: 'NotReadableError' }))
+      .mockResolvedValueOnce(stream)
+    withGetUserMedia(tries as unknown as () => Promise<MediaStream>)
+    await expect(openMicrophone(0)).resolves.toBe(stream)
+    expect(tries).toHaveBeenCalledTimes(3)
+    expect(tries.mock.calls[0][0]).toEqual({ audio: true })
+    expect(tries.mock.calls[2][0]).toEqual({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    })
+  })
+
+  it('gives up once all three ways have been refused', async () => {
     const busy = Object.assign(new Error('busy'), { name: 'NotReadableError' })
     const tries = vi.fn(() => Promise.reject(busy))
     withGetUserMedia(tries)
     await expect(openMicrophone(0)).rejects.toBe(busy)
-    expect(tries).toHaveBeenCalledTimes(2)
+    expect(tries).toHaveBeenCalledTimes(3)
   })
 })
