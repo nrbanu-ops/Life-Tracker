@@ -3,9 +3,16 @@ import type { Habit, HabitLog, HabitLogStatus } from '../db/types'
 import { incrementOf } from './amount'
 import { toDateKey, weekRange, weekdayOf } from './date'
 
-/** done and minimum both count as completed; partial and skipped do not. */
+/** done and minimum both count as completed; partial, skipped and frozen do not. */
 export const isCompleted = (status: HabitLogStatus | undefined): boolean =>
   status === 'done' || status === 'minimum'
+
+/**
+ * Days the habit is not asked to deliver on: skipped on purpose, or held by a streak freeze.
+ * Neither breaks a streak. They part ways in the success rate, where only a skip is left out.
+ */
+export const isExcused = (status: HabitLogStatus | undefined): boolean =>
+  status === 'skipped' || status === 'frozen'
 
 /** Whether the habit appears on the given day's list. */
 export function isShownOn(habit: Habit, key: string): boolean {
@@ -43,8 +50,8 @@ export function withAmount(
 
 /** What one tap on today's row does. */
 export function tapResult(habit: Habit, log: Partial<LogEntry> | undefined): LogEntry | undefined {
-  // A skipped day goes back to empty on tap, whatever the kind.
-  if (log?.status === 'skipped') return undefined
+  // A skipped or frozen day goes back to empty on tap, whatever the kind.
+  if (isExcused(log?.status)) return undefined
   if (habit.kind === 'check') {
     const status = nextStatus(log?.status, !!habit.minimumVersion)
     return status && { status }
@@ -77,7 +84,7 @@ export function buildToday(habits: Habit[], weekLogs: HabitLog[], today: string)
       )
       const todayLog = logs.find((log) => log.date === today)
       const base = { habit, status: todayLog?.status, value: todayLog?.value }
-      if (base.status === 'skipped') return { ...base, countsToday: false }
+      if (isExcused(base.status)) return { ...base, countsToday: false }
       if (habit.frequency.type !== 'timesPerWeek') return { ...base, countsToday: true }
       const weekCount = logs.filter((log) => isCompleted(log.status)).length
       const targetMet = weekCount >= habit.frequency.count

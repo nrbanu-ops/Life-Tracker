@@ -5,6 +5,17 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Seri koruması ❄️
+- Ayda **2 hak**: kaçırdığın bir günü "korursan" seri kırılmaz. Hastalık ya da yolculuk
+  yüzünden 60 günlük bir seriyi kaybetmek, insanı tamamen bıraktıran şey.
+- **Atlamaktan farkı:** korunan gün başarı oranında *yapılmadı* sayılır, atlanan gün hiç
+  sayılmaz. Yani seri korunur ama rakamlar dürüst kalır. XP de ceza da yok.
+- Bugün ekranı kendiliğinden teklif eder: dün (ya da son bir hafta içinde) kaçan, öncesinde
+  en az 3 günlük serisi olan habit için kart çıkar. "Şimdi değil" yarına kadar susturur.
+  Geçmiş bir günde elle de yapılır: habit satırındaki ⋯ → "Seriyi koru".
+- Isı haritasında korunan günün kendi hücresi var. İki kez kaçırdıysan teklif gelmez: o seri
+  zaten gitmiştir.
+
 ### Haftalık planlama
 - Bugün ekranına **🎯 Bu hafta** kartı: haftanın en fazla 3 önceliği, tek dokunuşla
   işaretlenir. Pazar ve pazartesi plan yoksa kart "Bu haftayı planla" diye sorar; diğer

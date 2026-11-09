@@ -190,3 +190,51 @@ describe('lastDays', () => {
     expect(lastDays(TODAY, 30)).toEqual(['2026-09-29', TODAY])
   })
 })
+
+describe('a frozen day', () => {
+  it('keeps the streak running, exactly like a skip', () => {
+    const logs = [
+      log('2026-10-24'),
+      log('2026-10-25'),
+      log('2026-10-26', 'frozen'),
+      log('2026-10-27'),
+    ]
+    expect(streaks(habit({ type: 'daily' }), logs, TODAY).current).toBe(3)
+  })
+
+  it('still counts as a miss in the success rate, unlike a skip', () => {
+    const frozen = [log('2026-10-26'), log('2026-10-27', 'frozen')]
+    expect(successRate(habit({ type: 'daily' }), frozen, '2026-10-26', TODAY, TODAY)).toEqual({
+      done: 1,
+      planned: 2,
+      rate: 0.5,
+    })
+    const skipped = [log('2026-10-26'), log('2026-10-27', 'skipped')]
+    expect(successRate(habit({ type: 'daily' }), skipped, '2026-10-26', TODAY, TODAY)).toEqual({
+      done: 1,
+      planned: 1,
+      rate: 1,
+    })
+  })
+
+  it('lowers what a weekly goal is asked for only once few days are left', () => {
+    const weekly = habit({ type: 'timesPerWeek', count: 3 })
+    // One held day out of seven changes nothing: three goes are still perfectly possible.
+    const one = [log('2026-10-26'), log('2026-10-27'), log('2026-10-28', 'frozen')]
+    expect(streaks(weekly, one, '2026-11-02').current).toBe(0)
+    // Held from Wednesday on, there are only two days to ask for, and both were kept.
+    const most = [
+      log('2026-10-26'),
+      log('2026-10-27'),
+      ...['2026-10-28', '2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01'].map((d) =>
+        log(d, 'frozen'),
+      ),
+    ]
+    expect(streaks(weekly, most, '2026-11-02').current).toBe(1)
+  })
+
+  it('gets its own cell in the heatmap', () => {
+    const states = dayStates(habit({ type: 'daily' }), [log('2026-10-27', 'frozen')], '2026-10-27', '2026-10-27', TODAY)
+    expect(states.get('2026-10-27')).toBe('frozen')
+  })
+})

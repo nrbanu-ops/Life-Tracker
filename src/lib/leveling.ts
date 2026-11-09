@@ -13,7 +13,7 @@ import type {
 import { fromDateKey, toDateKey, weekRange } from './date'
 import { entryPhotos } from './journal'
 import { streaks, successRate } from './stats'
-import { isCompleted, isShownOn } from './today'
+import { isCompleted, isExcused, isShownOn } from './today'
 
 // The leveling system (CLAUDE.md, step 12). Everything here is pure: XP is worked out from the
 // user's data, closed weeks are then frozen in the `xpWeeks` table (src/db/leveling.ts).
@@ -308,9 +308,10 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
         const day = shift(week, i)
         if (day < created || day > last) continue
         const log = byDate.get(day)
-        if (log?.status === 'skipped') skipped++
-        if (log?.status !== 'skipped') anyPlanned = true
-        if (!log || log.status === 'skipped') continue
+        // A frozen day earns nothing and is fined nothing, exactly like a skipped one.
+        if (isExcused(log?.status)) skipped++
+        if (!isExcused(log?.status)) anyPlanned = true
+        if (!log || isExcused(log.status)) continue
         const factor = statusFactor(habit, log)
         if (factor === 0) continue
         if (isCompleted(log.status)) completed++
@@ -344,7 +345,8 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
   for (let day = created; day <= last; day = shift(day, 1)) {
     if (!isShownOn(habit, day)) continue
     const log = byDate.get(day)
-    if (log?.status === 'skipped') continue
+    // Frozen like skipped: no XP, no fine, and the run carries on.
+    if (isExcused(log?.status)) continue
     if (log && isCompleted(log.status)) {
       run++
       const week = weekRange(day).start
@@ -406,11 +408,11 @@ export function questHabits(habits: Habit[], day: string): Habit[] {
 
 export type QuestState = { habits: Habit[]; done: number; total: number; complete: boolean }
 
-/** Skipped quest habits are left out; the quest needs at least one done. */
+/** Skipped and frozen quest habits are left out; the quest needs at least one done. */
 export function questState(habits: Habit[], logs: HabitLog[], day: string): QuestState {
   const quest = questHabits(habits, day)
   const status = new Map(logs.filter((l) => l.date === day).map((l) => [l.habitId, l.status]))
-  const counted = quest.filter((h) => status.get(h.id) !== 'skipped')
+  const counted = quest.filter((h) => !isExcused(status.get(h.id)))
   const done = counted.filter((h) => isCompleted(status.get(h.id))).length
   return { habits: quest, done, total: counted.length, complete: counted.length > 0 && done === counted.length }
 }

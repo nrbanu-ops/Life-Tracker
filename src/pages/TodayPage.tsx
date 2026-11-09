@@ -8,6 +8,7 @@ import { DayJournal } from '../components/DayJournal'
 import { LevelCard } from '../components/LevelCard'
 import { MemoryCard } from '../components/MemoryCard'
 import { EmptyState } from '../components/EmptyState'
+import { FreezeCard } from '../components/FreezeCard'
 import { HabitActionSheet } from '../components/HabitActionSheet'
 import { HabitCheckRow } from '../components/HabitCheckRow'
 import { PageHeader } from '../components/PageHeader'
@@ -78,6 +79,8 @@ export function TodayPage() {
       <LevelCard />
 
       <BackupReminder />
+
+      <FreezeCard today={today} />
 
       <WeekPlanCard today={today} />
 

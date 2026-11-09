@@ -224,8 +224,12 @@ export type MetaEntry = {
   value: unknown
 }
 
-/** partial: some amount logged, target not reached. skipped: keeps the streak, not counted. */
-export type HabitLogStatus = 'done' | 'minimum' | 'partial' | 'skipped'
+/**
+ * partial: some amount logged, target not reached. skipped: keeps the streak, not counted.
+ * frozen: a used streak freeze — the day was missed, the streak survives, but unlike a skip
+ * it still counts as a miss in the success rate, so the numbers stay honest.
+ */
+export type HabitLogStatus = 'done' | 'minimum' | 'partial' | 'skipped' | 'frozen'
 
 export type HabitLog = {
   id: string

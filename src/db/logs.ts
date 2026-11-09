@@ -1,5 +1,5 @@
 import { todayKey, weekRange } from '../lib/date'
-import { withAmount } from '../lib/today'
+import { isExcused, withAmount } from '../lib/today'
 import { markXpWeekDirty } from './leveling'
 import { db, newId } from './db'
 import type { Habit, HabitLog } from './types'
@@ -46,8 +46,8 @@ export async function addAmount(
     const habit = await db.habits.get(habitId)
     if (!habit) return undefined
     const existing = await db.habitLogs.where({ habitId, date }).first()
-    // Logging time un-skips the day.
-    const status = existing?.status === 'skipped' ? undefined : existing?.status
+    // Logging time un-skips the day, and gives back a freeze that is no longer needed.
+    const status = isExcused(existing?.status) ? undefined : existing?.status
     await setLog(habitId, date, withAmount(habit, (existing?.value ?? 0) + amount, status))
     return habit
   })

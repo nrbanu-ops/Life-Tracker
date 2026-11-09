@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type { HabitLogStatus } from '../db/types'
 import { formatAmount } from '../lib/amount'
-import type { TodayItem } from '../lib/today'
+import { isExcused, type TodayItem } from '../lib/today'
 
 type Props = {
   item: TodayItem
@@ -31,8 +31,9 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
 
   const details: string[] = []
   if (status === 'skipped') details.push('Bugün atlandı')
+  if (status === 'frozen') details.push('Seri koruması ❄️')
   if (status === 'minimum') details.push(`Minimum: ${habit.minimumVersion ?? 'yapıldı'}`)
-  if (habit.kind !== 'check' && habit.target && status !== 'skipped') {
+  if (habit.kind !== 'check' && habit.target && !isExcused(status)) {
     details.push(`${formatAmount(habit, value ?? 0)} / ${formatAmount(habit, habit.target)}`)
   }
   if (habit.frequency.type === 'timesPerWeek') {
@@ -94,6 +95,8 @@ function statusLabel(status: HabitLogStatus | undefined) {
       return 'kısmen yapıldı'
     case 'skipped':
       return 'atlandı'
+    case 'frozen':
+      return 'seri koruması kullanıldı'
     default:
       return 'yapılmadı'
   }
@@ -143,6 +146,13 @@ function CheckMark({ status, progress, countable, color }: CheckMarkProps) {
     return (
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border text-sm text-muted">
         »
+      </span>
+    )
+  }
+  if (status === 'frozen') {
+    return (
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-border bg-accent-soft text-sm">
+        ❄️
       </span>
     )
   }

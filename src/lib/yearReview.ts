@@ -12,7 +12,7 @@ import type {
   XpWeek,
 } from '../db/types'
 import { dayStatus } from './calendar'
-import { isCompleted, isShownOn } from './today'
+import { isCompleted, isExcused, isShownOn } from './today'
 
 /**
  * A year in one page. Everything here is a plain function over plain data so it can be tested;
@@ -106,7 +106,7 @@ function longestStreak(habit: Habit, logs: HabitLog[], days: string[]): number {
   for (const day of days) {
     if (!isShownOn(habit, day)) continue
     const status = byDate.get(day)
-    if (status === 'skipped') continue
+    if (isExcused(status)) continue
     if (isCompleted(status)) {
       run++
       best = Math.max(best, run)

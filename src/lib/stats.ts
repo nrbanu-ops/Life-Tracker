@@ -1,7 +1,7 @@
 import { addDays, addMonths, endOfMonth, startOfMonth } from 'date-fns'
 import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey, weekdayOf, weekRange } from './date'
-import { isCompleted, isShownOn } from './today'
+import { isCompleted, isExcused, isShownOn } from './today'
 
 export type SuccessRate = {
   done: number
@@ -102,9 +102,9 @@ export function streaks(habit: Habit, logs: HabitLog[], today: string): Streaks 
       const { end } = weekRange(week)
       const days = daysBetween(week < start ? start : week, end < today ? end : today)
       const completed = days.filter((d) => isCompleted(byDate.get(d))).length
-      // Skipped days lower what the week can be asked for; a week with nothing left is neutral.
+      // Skipped and frozen days lower what the week can be asked for; a week with nothing left is neutral.
       const available = (week < start ? daysBetween(start, end) : daysBetween(week, end)).filter(
-        (d) => byDate.get(d) !== 'skipped',
+        (d) => !isExcused(byDate.get(d)),
       ).length
       const target = Math.min(count, available)
       const running = end >= today
@@ -120,7 +120,8 @@ export function streaks(habit: Habit, logs: HabitLog[], today: string): Streaks 
     for (const day of daysBetween(start, today)) {
       if (!isShownOn(habit, day)) continue
       const status = byDate.get(day)
-      if (status === 'skipped') continue
+      // A freeze protects the streak exactly as a skip does; that is the whole point of it.
+      if (isExcused(status)) continue
       if (isCompleted(status)) {
         run++
         longest = Math.max(longest, run)
@@ -133,7 +134,7 @@ export function streaks(habit: Habit, logs: HabitLog[], today: string): Streaks 
 }
 
 /** One heatmap cell: how the day went for the habit. */
-export type DayState = 'done' | 'minimum' | 'partial' | 'skipped' | 'missed' | 'open' | 'none'
+export type DayState = 'done' | 'minimum' | 'partial' | 'skipped' | 'frozen' | 'missed' | 'open' | 'none'
 
 /**
  * done/minimum/partial/skipped come from the log. missed: planned and past, nothing done.

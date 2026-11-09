@@ -18,6 +18,8 @@ const FILL: Record<DayState, string> = {
   minimum: 'var(--color-heat-2)',
   partial: 'var(--color-heat-1)',
   skipped: 'transparent',
+  // A held day: filled, so it reads as handled rather than missed.
+  frozen: 'var(--color-accent-soft)',
   missed: 'var(--color-bg)',
   open: 'var(--color-bg)',
   none: 'transparent',
@@ -28,6 +30,7 @@ const LABEL: Record<DayState, string> = {
   minimum: 'Minimum yapıldı',
   partial: 'Kısmen',
   skipped: 'Atlandı',
+  frozen: 'Seri koruması ❄️',
   missed: 'Yapılmadı',
   open: 'Henüz işaretlenmedi',
   none: 'Planlı değil',
@@ -75,7 +78,7 @@ export function Heatmap({ days, states }: Props) {
                   )}
                   {week.map((day, d) => {
                     const state = states.get(day) ?? 'none'
-                    const outlined = state === 'skipped' || state === 'missed' || state === 'open'
+                    const outlined = state === 'skipped' || state === 'frozen' || state === 'missed' || state === 'open'
                     const isActive = active === day
                     return (
                       <rect

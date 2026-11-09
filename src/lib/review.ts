@@ -47,11 +47,15 @@ export function buildReviewRequest(data: ReviewData, today: string): string {
     const daily = habits.filter((h) => h.frequency.type !== 'timesPerWeek' && isShownOn(h, day))
     const done = daily.filter((h) => isCompleted(status.get(`${h.id}|${day}`)))
     const skipped = daily.filter((h) => status.get(`${h.id}|${day}`) === 'skipped')
-    const missed = daily.filter((h) => !done.includes(h) && !skipped.includes(h) && day < today)
+    const held = daily.filter((h) => status.get(`${h.id}|${day}`) === 'frozen')
+    const missed = daily.filter(
+      (h) => !done.includes(h) && !skipped.includes(h) && !held.includes(h) && day < today,
+    )
     const weeklyDone = habits.filter((h) => h.frequency.type === 'timesPerWeek' && isCompleted(status.get(`${h.id}|${day}`)))
     if (done.length + weeklyDone.length) parts.push(`yaptıkları: ${[...done, ...weeklyDone].map((h) => h.title).join(', ')}`)
     if (missed.length) parts.push(`yapmadıkları: ${missed.map((h) => h.title).join(', ')}`)
     if (skipped.length) parts.push(`atladıkları: ${skipped.map((h) => h.title).join(', ')}`)
+    if (held.length) parts.push(`seri koruması kullandıkları: ${held.map((h) => h.title).join(', ')}`)
     const tasksDone = data.tasks.filter((t) => t.done && t.completedAt && toDateKey(new Date(t.completedAt)) === day)
     if (tasksDone.length) parts.push(`tamamlanan görevler: ${tasksDone.map((t) => t.title).join(', ')}`)
     lines.push(`\n- ${parts.join(' · ')}`)

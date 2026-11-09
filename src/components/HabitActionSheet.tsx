@@ -3,10 +3,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router'
 import { db } from '../db/db'
 import { setHabitNote } from '../db/journal'
+import { freezeDay, monthLogs } from '../db/freeze'
 import { setLog, type LogEntry } from '../db/logs'
 import { formatAmount, incrementOf } from '../lib/amount'
 import { todayKey } from '../lib/date'
-import { withAmount, type TodayItem } from '../lib/today'
+import { freezesLeft } from '../lib/freeze'
+import { isCompleted, withAmount, type TodayItem } from '../lib/today'
 import { BottomSheet } from './BottomSheet'
 
 type Props = {
@@ -31,6 +33,8 @@ function Actions({ item, date, onClose }: Required<Props>) {
   const [text, setText] = useState(String(value ?? 0))
   const navigate = useNavigate()
   const isToday = date === todayKey()
+  // A freeze is for a day already missed, so today never offers one.
+  const freezesThisMonth = useLiveQuery(async () => freezesLeft(await monthLogs(date), date), [date])
 
   const save = (entry: LogEntry | undefined) => setLog(habit.id, date, entry)
   const saveAndClose = async (entry: LogEntry | undefined) => {
@@ -126,6 +130,25 @@ function Actions({ item, date, onClose }: Required<Props>) {
           )}
         </SheetButton>
       )}
+      {!isToday && status === 'frozen' && (
+        <SheetButton onClick={() => saveAndClose(undefined)}>Seri korumasını geri al</SheetButton>
+      )}
+      {!isToday && status !== 'frozen' && !isCompleted(status) && freezesThisMonth !== undefined && (
+        <SheetButton
+          disabled={freezesThisMonth <= 0}
+          onClick={async () => {
+            await freezeDay(habit.id, date)
+            onClose()
+          }}
+        >
+          ❄️ Seriyi koru
+          <span className="block text-sm font-normal text-muted">
+            {freezesThisMonth > 0
+              ? `Seri bozulmaz ama başarı oranında yapılmadı sayılır. Bu ay ${freezesThisMonth} hakkın kaldı.`
+              : 'Bu ayki haklarını kullandın.'}
+          </span>
+        </SheetButton>
+      )}
       {status === 'skipped' ? (
         <SheetButton onClick={() => saveAndClose(undefined)}>Atlamayı geri al</SheetButton>
       ) : (
@@ -134,7 +157,7 @@ function Actions({ item, date, onClose }: Required<Props>) {
           <span className="block text-sm font-normal text-muted">Seri bozulmaz, oranı etkilemez</span>
         </SheetButton>
       )}
-      {status !== undefined && status !== 'skipped' && (
+      {status !== undefined && status !== 'skipped' && status !== 'frozen' && (
         <SheetButton muted onClick={() => saveAndClose(undefined)}>
           {isToday ? 'Bugünü temizle' : 'Bu günü temizle'}
         </SheetButton>
@@ -197,15 +220,17 @@ function NoteEditor({ initial, habitId, date }: { initial: string; habitId: stri
 type SheetButtonProps = {
   onClick: () => void
   muted?: boolean
+  disabled?: boolean
   children: ReactNode
 }
 
-function SheetButton({ onClick, muted, children }: SheetButtonProps) {
+function SheetButton({ onClick, muted, disabled, children }: SheetButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl px-4 py-3 text-left font-medium ${muted ? 'text-muted' : 'bg-bg'}`}
+      disabled={disabled}
+      className={`rounded-xl px-4 py-3 text-left font-medium disabled:opacity-50 ${muted ? 'text-muted' : 'bg-bg'}`}
     >
       {children}
     </button>
