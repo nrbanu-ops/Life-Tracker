@@ -1,20 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
-import { AUDIO_MAX_SECONDS, formatDuration, pickAudioType } from '../lib/audio'
+import { androidBridge } from '../lib/android'
+import { AUDIO_MAX_SECONDS, formatDuration, micMessage, pickAudioType } from '../lib/audio'
 
 type Props = {
   onRecord: (audio: Blob, seconds: number) => void
 }
 
-type State = 'idle' | 'starting' | 'recording' | 'denied' | 'failed'
+type State = 'idle' | 'starting' | 'recording' | 'failed'
 
-const MESSAGE: Partial<Record<State, string>> = {
-  denied: 'Mikrofon izni verilmedi. Tarayıcının site ayarlarından izin verip tekrar dene.',
-  failed: 'Kayıt başlatılamadı. Mikrofonu başka bir uygulama kullanıyor olabilir.',
+/** The shell's version, so a shell too old to grant the microphone can say so itself. */
+const shellVersion = () => {
+  try {
+    return androidBridge?.version?.()
+  } catch {
+    return undefined
+  }
 }
 
 /** Records one voice note. Stops itself at AUDIO_MAX_SECONDS so nothing runs away. */
 export function AudioRecorder({ onRecord }: Props) {
   const [state, setState] = useState<State>('idle')
+  // The reason, kept whole: its name is the one thing worth knowing.
+  const [problem, setProblem] = useState<string>()
   const [seconds, setSeconds] = useState(0)
   const recorder = useRef<MediaRecorder>(null)
   const timer = useRef<number>(null)
@@ -33,21 +40,32 @@ export function AudioRecorder({ onRecord }: Props) {
     [],
   )
 
+  const fail = (error: unknown) => {
+    setProblem(micMessage(error as Error | undefined, shellVersion()))
+    setState('failed')
+  }
+
   const start = async () => {
     setState('starting')
+    setProblem(undefined)
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     } catch (e) {
-      return setState((e as Error).name === 'NotAllowedError' ? 'denied' : 'failed')
+      return fail(e)
     }
     const type = pickAudioType((t) => MediaRecorder.isTypeSupported(t))
     let media: MediaRecorder
     try {
       media = new MediaRecorder(stream, type ? { mimeType: type } : undefined)
-    } catch {
-      stream.getTracks().forEach((track) => track.stop())
-      return setState('failed')
+    } catch (first) {
+      // isTypeSupported can say yes to a format the recorder then refuses; let it choose its own.
+      try {
+        media = new MediaRecorder(stream)
+      } catch {
+        stream.getTracks().forEach((track) => track.stop())
+        return fail(first)
+      }
     }
     const chunks: Blob[] = []
     const startedAt = Date.now()
@@ -123,7 +141,7 @@ export function AudioRecorder({ onRecord }: Props) {
       >
         🎤 Ses notu
       </button>
-      {MESSAGE[state] && <p className="text-xs text-p1">{MESSAGE[state]}</p>}
+      {state === 'failed' && problem && <p className="text-xs text-p1">{problem}</p>}
     </div>
   )
 }

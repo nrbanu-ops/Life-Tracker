@@ -5,6 +5,16 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Ses notu: neden başlamadığını söylüyor (düzeltme)
+- "Kayıt başlatılamadı. Mikrofonu başka bir uygulama kullanıyor olabilir." mesajı her türlü
+  hatada çıkıyordu ve asıl sebebi gizliyordu. Artık ayrım yapıyor: **izin verilmedi** (Android
+  ayarlarında nereye bakılacağını yazıyor), **mikrofon bulunamadı**, **mikrofon meşgul**, ve
+  bunların hiçbiri değilse hatanın kendi adı.
+- **Uygulama sürümü çok eskiyse bunu söylüyor:** ses notu için kabuğun mikrofon iznini
+  verebilmesi gerekiyor (v6 ve üstü). Eski kabukta artık "yeni APK'yı kur" yazıyor.
+- Kayıt biçimini reddeden telefonlarda kayıt seçeneksiz bir kez daha deneniyor; bu durumda
+  ses notu hiç hata vermeden çalışıyor.
+
 ### Fotoğraf eklenmemesi düzeltildi (düzeltme)
 - **Telefonda galeriden fotoğraf seçip "bitti" demek hiçbir şey eklemiyordu.** Sebebi çoklu
   fotoğraf özelliğiydi: Android'de galeri, birden fazla seçime izin verildiğinde seçimi

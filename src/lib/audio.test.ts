@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AUDIO_TYPES, formatDuration, pickAudioType } from './audio'
+import { AUDIO_TYPES, formatDuration, pickAudioType, micMessage } from './audio'
 
 describe('formatDuration', () => {
   it('reads like a player: minutes and two-digit seconds', () => {
@@ -30,5 +30,32 @@ describe('pickAudioType', () => {
 
   it('offers only types a browser would know', () => {
     for (const type of AUDIO_TYPES) expect(type).toMatch(/^audio\//)
+  })
+})
+
+describe('micMessage', () => {
+  it('a shell too old to grant the microphone says so, whatever the error', () => {
+    expect(micMessage({ name: 'NotAllowedError' }, 5)).toContain('yeni sürümü gerekiyor')
+    expect(micMessage({ name: 'NotAllowedError' }, 5)).toContain('v5')
+  })
+
+  it('a refused permission points at Android’s own settings', () => {
+    expect(micMessage({ name: 'NotAllowedError' }, 7)).toContain('İzinler')
+  })
+
+  it('tells a missing microphone from a busy one', () => {
+    expect(micMessage({ name: 'NotFoundError' }, 7)).toContain('bulunamadı')
+    expect(micMessage({ name: 'NotReadableError' }, 7)).toContain('Başka bir uygulama')
+  })
+
+  it('anything else carries the error’s own name, which is the point', () => {
+    expect(micMessage({ name: 'NotSupportedError', message: 'mimeType' }, 7)).toBe(
+      'Kayıt başlatılamadı (uygulama v7) — NotSupportedError: mimeType',
+    )
+  })
+
+  it('in a browser there is no shell version to name', () => {
+    expect(micMessage({ name: 'WeirdError' })).toBe('Kayıt başlatılamadı — WeirdError')
+    expect(micMessage(undefined)).toBe('Kayıt başlatılamadı')
   })
 })
