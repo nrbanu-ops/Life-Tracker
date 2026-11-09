@@ -4,11 +4,9 @@ import { useState } from 'react'
 import { deleteEntry, updateEntry } from '../db/journal'
 import type { JournalEntry } from '../db/types'
 import { fromDateKey } from '../lib/date'
-import { supportsRecording } from '../lib/audio'
 import { entryPhotos, JOURNAL_PHOTO_MAX, JOURNAL_PHOTO_SIZE } from '../lib/journal'
 import { saveErrorMessage } from '../lib/saveError'
 import { AudioNote } from './AudioNote'
-import { AudioRecorder } from './AudioRecorder'
 import { BottomSheet } from './BottomSheet'
 import { PhotoPicker } from './PhotoPicker'
 import { PhotoStrip } from './PhotoStrip'
@@ -35,6 +33,7 @@ export function EntrySheet({ entry, habitTitle, onClose }: Props) {
 function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => void }) {
   const [text, setText] = useState(entry.text)
   const [photos, setPhotos] = useState(() => entryPhotos(entry))
+  // Recording is gone; a note saved earlier can still be played here, or thrown away.
   const [audio, setAudio] = useState<{ blob: Blob; seconds?: number } | undefined>(() =>
     entry.audio ? { blob: entry.audio, seconds: entry.audioSeconds } : undefined,
   )
@@ -61,9 +60,6 @@ function EntryEditor({ entry, onClose }: { entry: JournalEntry; onClose: () => v
           </div>
         ))}
       {audio && <AudioNote audio={audio.blob} seconds={audio.seconds} onRemove={() => setAudio(undefined)} />}
-      {canHavePhoto && supportsRecording && !audio && (
-        <AudioRecorder onRecord={(blob, seconds) => setAudio({ blob, seconds })} />
-      )}
       <textarea
         id="entry-text"
         value={text}

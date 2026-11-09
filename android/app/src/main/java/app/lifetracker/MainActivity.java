@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER = 1;
     private static final int LOCATION_PERMISSION = 2;
-    private static final int MICROPHONE_PERMISSION = 3;
     private static final int NOTIFICATION_PERMISSION = 4;
 
     private WebView web;
@@ -44,8 +43,6 @@ public class MainActivity extends Activity {
     // The page asked where it is and is waiting for Android's own permission dialog.
     private String pendingGeoOrigin;
     private GeolocationPermissions.Callback pendingGeoCallback;
-    // The page wants the microphone (a journal voice note) and is waiting for the same dialog.
-    private PermissionRequest pendingMedia;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -188,30 +185,14 @@ public class MainActivity extends Activity {
                     LOCATION_PERMISSION);
         }
 
-        /** The page asked for the microphone; only the app can agree, and only once Android has. */
+        /**
+         * The page is asking for a camera or a microphone. It never does: voice notes were
+         * removed, and photos come through the file chooser. Answering keeps the WebView from
+         * waiting, and the app asks Android for no such permission at all.
+         */
         @Override
         public void onPermissionRequest(PermissionRequest request) {
-            boolean wantsMicrophone = false;
-            for (String resource : request.getResources()) {
-                wantsMicrophone |= PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource);
-            }
-            // The app has no use for the camera through the WebView: photos go through the file chooser.
-            if (!wantsMicrophone) {
-                request.deny();
-                return;
-            }
-            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                request.grant(new String[] { PermissionRequest.RESOURCE_AUDIO_CAPTURE });
-                return;
-            }
-            if (pendingMedia != null) pendingMedia.deny();
-            pendingMedia = request;
-            requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO }, MICROPHONE_PERMISSION);
-        }
-
-        @Override
-        public void onPermissionRequestCanceled(PermissionRequest request) {
-            if (pendingMedia == request) pendingMedia = null;
+            request.deny();
         }
 
         @Override
@@ -251,13 +232,6 @@ public class MainActivity extends Activity {
         }
         if (requestCode == NOTIFICATION_PERMISSION) {
             // Nothing to undo either way: a refused permission just means no reminder shows up.
-            return;
-        }
-        if (requestCode == MICROPHONE_PERMISSION && pendingMedia != null) {
-            boolean granted = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED;
-            if (granted) pendingMedia.grant(new String[] { PermissionRequest.RESOURCE_AUDIO_CAPTURE });
-            else pendingMedia.deny();
-            pendingMedia = null;
             return;
         }
         super.onRequestPermissionsResult(requestCode, permissions, results);

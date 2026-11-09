@@ -4,7 +4,7 @@ import { reportText, verdict, type Check } from './diagnose'
 const checks: Check[] = [
   { label: 'Depolama alanı', state: 'ok', detail: '12 MB / 2 GB' },
   { label: 'Fotoğraf boyutunda yazma', state: 'fail', detail: 'QuotaExceededError' },
-  { label: 'Mikrofon izni', state: 'skip', detail: 'denenmedi' },
+  { label: 'Kalıcı depolama', state: 'skip', detail: 'denenmedi' },
 ]
 
 describe('reportText', () => {
@@ -14,7 +14,7 @@ describe('reportText', () => {
         'Life Tracker tanılama · 9.11.2026 18:00',
         '✓ Depolama alanı: 12 MB / 2 GB',
         '✗ Fotoğraf boyutunda yazma: QuotaExceededError',
-        '— Mikrofon izni: denenmedi',
+        '— Kalıcı depolama: denenmedi',
       ].join('\n'),
     )
   })
@@ -30,6 +30,6 @@ describe('verdict', () => {
   })
 
   it('skipped steps are not failures', () => {
-    expect(verdict([{ label: 'Mikrofon izni', state: 'skip' }])).toContain('Her şey çalışıyor')
+    expect(verdict([{ label: 'Kalıcı depolama', state: 'skip' }])).toContain('Her şey çalışıyor')
   })
 })

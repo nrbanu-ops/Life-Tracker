@@ -5,6 +5,14 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Ses notu kaldırıldı
+- Telefonda mikrofon hiçbir yolla açılmadı: izin verilmiş olmasına rağmen Android kaydı
+  reddetti (beklemeli tekrar ve yankı engellemesiz deneme dahil). Hiç çalışmayan bir buton
+  yokundan kötü olduğu için ses notu tamamen kaldırıldı — uygulama artık mikrofon izni de
+  istemiyor.
+- **Daha önce kaydedilmiş ses notları duruyor:** günlükte çalınabiliyor, not düzenlemeden
+  silinebiliyor, yedeğe ve yıl özetine giriyor. Hiçbir kayıt silinmedi.
+
 ### Ses notu: neden başlamadığını söylüyor (düzeltme)
 - **Mikrofon açılmazsa yankı engelleme kapalı olarak bir kez daha deneniyor.** Android'de bu
   ayar açıkken telefon kaydı farklı bir kaynaktan (telefon görüşmelerinin kullandığı kaynak)

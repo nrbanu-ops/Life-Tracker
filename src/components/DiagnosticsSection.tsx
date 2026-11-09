@@ -20,11 +20,11 @@ export function DiagnosticsSection() {
   const [copied, setCopied] = useState(false)
   const [when, setWhen] = useState('')
 
-  const run = async (microphone: boolean) => {
+  const run = async () => {
     setRunning(true)
     setCopied(false)
     try {
-      setChecks(await runChecks({ microphone }))
+      setChecks(await runChecks())
       setWhen(new Date().toLocaleString('tr-TR'))
     } finally {
       setRunning(false)
@@ -35,24 +35,16 @@ export function DiagnosticsSection() {
     <section id="tanilama" className="rounded-2xl border border-border bg-surface p-4">
       <h2 className="font-medium">Tanılama</h2>
       <p className="mt-1 text-sm text-muted">
-        Fotoğraf ya da ses notu eklenmiyorsa bu test hangi adımda takıldığını söyler.
+        Fotoğraf eklenmiyorsa ya da bir şey kaydedilmiyorsa bu test hangi adımda takıldığını söyler.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => run(false)}
+          onClick={run}
           disabled={running}
           className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-surface disabled:opacity-40"
         >
           {running ? 'Çalışıyor…' : 'Testi çalıştır'}
-        </button>
-        <button
-          type="button"
-          onClick={() => run(true)}
-          disabled={running}
-          className="rounded-xl border border-border bg-bg px-4 py-2.5 text-sm disabled:opacity-40"
-        >
-          Mikrofonla birlikte
         </button>
       </div>
       {checks && (

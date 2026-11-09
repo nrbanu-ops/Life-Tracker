@@ -1,5 +1,4 @@
 import { androidBridge } from '../lib/android'
-import { pickAudioType } from '../lib/audio'
 import type { Check } from '../lib/diagnose'
 import { shrinkImage } from '../lib/image'
 import { formatBytes } from '../lib/storage'
@@ -38,11 +37,11 @@ async function sampleJpeg(): Promise<Blob> {
 }
 
 /**
- * Walks the steps a photo or a voice note goes through, in order, and reports each one.
+ * Walks the steps a photo goes through, in order, and reports each one.
  * Writes are real writes (and are cleaned up): a quota that only bites on big records is
  * exactly the kind of failure this is here to catch.
  */
-export async function runChecks(options: { microphone: boolean }): Promise<Check[]> {
+export async function runChecks(): Promise<Check[]> {
   const checks: Check[] = []
 
   checks.push({
@@ -112,75 +111,6 @@ export async function runChecks(options: { microphone: boolean }): Promise<Check
       checks.push({ label: 'Fotoğraf küçültme', state: 'ok', detail: `${formatBytes(small.size)}'a indi` })
     } catch (error) {
       checks.push({ label: 'Fotoğraf küçültme', state: 'fail', detail: reason(error) })
-    }
-  }
-
-  const hasRecorder = typeof window !== 'undefined' && 'MediaRecorder' in window
-  const type = hasRecorder ? pickAudioType((t) => MediaRecorder.isTypeSupported(t)) : undefined
-  checks.push({
-    label: 'Ses kaydı desteği',
-    state: hasRecorder ? 'ok' : 'fail',
-    detail: hasRecorder ? (type ?? 'biçim seçimi tarayıcıya bırakıldı') : 'MediaRecorder yok',
-  })
-
-  // What the system thinks before anything is asked: these two separate "no microphone" from
-  // "not allowed" from "allowed but unavailable", which all look the same once getUserMedia fails.
-  try {
-    const devices = await navigator.mediaDevices?.enumerateDevices?.()
-    const inputs = devices?.filter((device) => device.kind === 'audioinput') ?? []
-    checks.push({
-      label: 'Mikrofon aygıtı',
-      state: inputs.length > 0 ? 'ok' : 'fail',
-      detail: inputs.length > 0 ? `${inputs.length} tane` : 'görünmüyor',
-    })
-  } catch (error) {
-    checks.push({ label: 'Mikrofon aygıtı', state: 'skip', detail: reason(error) })
-  }
-
-  try {
-    const permission = await navigator.permissions?.query?.({ name: 'microphone' as PermissionName })
-    checks.push({
-      label: 'Mikrofon izin durumu',
-      state: permission?.state === 'denied' ? 'fail' : 'ok',
-      detail: permission?.state ?? 'bilinmiyor',
-    })
-  } catch (error) {
-    checks.push({ label: 'Mikrofon izin durumu', state: 'skip', detail: reason(error) })
-  }
-
-  const canAsk = typeof navigator !== 'undefined' && typeof navigator.mediaDevices?.getUserMedia === 'function'
-  if (!canAsk) {
-    checks.push({ label: 'Mikrofon izni', state: 'fail', detail: 'bu cihazda mikrofon erişimi yok' })
-  } else if (!options.microphone) {
-    checks.push({ label: 'Mikrofon izni', state: 'skip', detail: 'denenmedi' })
-  } else {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      checks.push({ label: 'Mikrofon izni', state: 'ok', detail: 'verildi' })
-      // Starting the recorder is a separate step that can fail on its own; this is where it shows.
-      try {
-        const type = pickAudioType((t) => MediaRecorder.isTypeSupported(t))
-        const recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined)
-        recorder.start()
-        recorder.stop()
-        checks.push({ label: 'Kayıt başlatma', state: 'ok', detail: recorder.mimeType || 'başladı' })
-      } catch (error) {
-        checks.push({ label: 'Kayıt başlatma', state: 'fail', detail: reason(error) })
-      }
-      stream.getTracks().forEach((track) => track.stop())
-    } catch (error) {
-      checks.push({ label: 'Mikrofon izni', state: 'fail', detail: reason(error) })
-      // The fallback the recorder itself uses: on Android this opens a different source.
-      try {
-        const simple = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-        })
-        simple.getTracks().forEach((track) => track.stop())
-        checks.push({ label: 'Mikrofon (işlemesiz)', state: 'ok', detail: 'bu yoldan açıldı' })
-      } catch (second) {
-        checks.push({ label: 'Mikrofon (işlemesiz)', state: 'fail', detail: reason(second) })
-      }
-      checks.push({ label: 'Kayıt başlatma', state: 'skip', detail: 'mikrofon açılamadı' })
     }
   }
 
