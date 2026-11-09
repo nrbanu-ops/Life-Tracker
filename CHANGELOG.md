@@ -6,6 +6,9 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 ## 2026-11-09
 
 ### Ses notu: neden başlamadığını söylüyor (düzeltme)
+- Tanılama artık mikrofonu üç ayrı adımda sınıyor: telefonun mikrofon aygıtını görüp görmediği,
+  iznin durumu, ve kaydın gerçekten başlayıp başlamadığı. "Mikrofon meşgul" ile "izin yok" ile
+  "kayıt biçimi tutmuyor" birbirinden böyle ayrılıyor.
 - "Kayıt başlatılamadı. Mikrofonu başka bir uygulama kullanıyor olabilir." mesajı her türlü
   hatada çıkıyordu ve asıl sebebi gizliyordu. Artık ayrım yapıyor: **izin verilmedi** (Android
   ayarlarında nereye bakılacağını yazıyor), **mikrofon bulunamadı**, **mikrofon meşgul**, ve

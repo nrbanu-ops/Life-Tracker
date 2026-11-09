@@ -123,6 +123,31 @@ export async function runChecks(options: { microphone: boolean }): Promise<Check
     detail: hasRecorder ? (type ?? 'biçim seçimi tarayıcıya bırakıldı') : 'MediaRecorder yok',
   })
 
+  // What the system thinks before anything is asked: these two separate "no microphone" from
+  // "not allowed" from "allowed but unavailable", which all look the same once getUserMedia fails.
+  try {
+    const devices = await navigator.mediaDevices?.enumerateDevices?.()
+    const inputs = devices?.filter((device) => device.kind === 'audioinput') ?? []
+    checks.push({
+      label: 'Mikrofon aygıtı',
+      state: inputs.length > 0 ? 'ok' : 'fail',
+      detail: inputs.length > 0 ? `${inputs.length} tane` : 'görünmüyor',
+    })
+  } catch (error) {
+    checks.push({ label: 'Mikrofon aygıtı', state: 'skip', detail: reason(error) })
+  }
+
+  try {
+    const permission = await navigator.permissions?.query?.({ name: 'microphone' as PermissionName })
+    checks.push({
+      label: 'Mikrofon izin durumu',
+      state: permission?.state === 'denied' ? 'fail' : 'ok',
+      detail: permission?.state ?? 'bilinmiyor',
+    })
+  } catch (error) {
+    checks.push({ label: 'Mikrofon izin durumu', state: 'skip', detail: reason(error) })
+  }
+
   const canAsk = typeof navigator !== 'undefined' && typeof navigator.mediaDevices?.getUserMedia === 'function'
   if (!canAsk) {
     checks.push({ label: 'Mikrofon izni', state: 'fail', detail: 'bu cihazda mikrofon erişimi yok' })
@@ -131,10 +156,21 @@ export async function runChecks(options: { microphone: boolean }): Promise<Check
   } else {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach((track) => track.stop())
       checks.push({ label: 'Mikrofon izni', state: 'ok', detail: 'verildi' })
+      // Starting the recorder is a separate step that can fail on its own; this is where it shows.
+      try {
+        const type = pickAudioType((t) => MediaRecorder.isTypeSupported(t))
+        const recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined)
+        recorder.start()
+        recorder.stop()
+        checks.push({ label: 'Kayıt başlatma', state: 'ok', detail: recorder.mimeType || 'başladı' })
+      } catch (error) {
+        checks.push({ label: 'Kayıt başlatma', state: 'fail', detail: reason(error) })
+      }
+      stream.getTracks().forEach((track) => track.stop())
     } catch (error) {
       checks.push({ label: 'Mikrofon izni', state: 'fail', detail: reason(error) })
+      checks.push({ label: 'Kayıt başlatma', state: 'skip', detail: 'mikrofon açılamadı' })
     }
   }
 
