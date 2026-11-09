@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { Habit, JournalEntry } from '../db/types'
-import { entryPhotos, filterEntries, groupByDay, memoryFor, searchEntries } from './journal'
+import {
+  entryPhotos,
+  filterEntries,
+  groupByDay,
+  memoryFor,
+  photosByMonth,
+  searchEntries,
+} from './journal'
 
 describe('memoryFor', () => {
   const at = (id: string, date: string): JournalEntry => ({ id, date, text: id, createdAt: `${date}T09:00:00` })
@@ -83,5 +90,42 @@ describe('entryPhotos', () => {
   it('is empty for an entry with no photo', () => {
     expect(entryPhotos({})).toEqual([])
     expect(entryPhotos({ ...base, photos: [] })).toEqual([])
+  })
+})
+
+describe('photosByMonth', () => {
+  const photo = (n: number) => new Blob([new Uint8Array([n])], { type: 'image/jpeg' })
+  const entry = (id: string, date: string, photos: Blob[]): JournalEntry => ({
+    id,
+    date,
+    text: '',
+    createdAt: `${date}T09:00:00`,
+    photos,
+  })
+  const day = (date: string, entries: JournalEntry[]) => ({ date, entries })
+
+  it('groups the photos of consecutive days under one month, keeping their order', () => {
+    const months = photosByMonth([
+      day('2026-11-08', [entry('a', '2026-11-08', [photo(1), photo(2)])]),
+      day('2026-11-02', [entry('b', '2026-11-02', [photo(3)])]),
+      day('2026-10-30', [entry('c', '2026-10-30', [photo(4)])]),
+    ])
+    expect(months.map((m) => m.month)).toEqual(['2026-11', '2026-10'])
+    expect(months[0].photos.map((p) => p.id)).toEqual(['a:0', 'a:1', 'b:0'])
+    expect(months[0].photos[2]).toMatchObject({ date: '2026-11-02', entryId: 'b' })
+  })
+
+  it('leaves out days without photos, and says nothing when there are none at all', () => {
+    const empty = day('2026-11-07', [entry('x', '2026-11-07', [])])
+    expect(photosByMonth([empty])).toEqual([])
+    const months = photosByMonth([day('2026-11-08', [entry('a', '2026-11-08', [photo(1)])]), empty])
+    expect(months).toHaveLength(1)
+    expect(months[0].photos).toHaveLength(1)
+  })
+
+  it('still finds the photo of an entry written before several were allowed', () => {
+    const old = photo(9)
+    const entries = [{ id: 'o', date: '2026-01-05', text: '', createdAt: '2026-01-05T09:00:00', photo: old }]
+    expect(photosByMonth([day('2026-01-05', entries)])[0].photos[0].photo).toBe(old)
   })
 })

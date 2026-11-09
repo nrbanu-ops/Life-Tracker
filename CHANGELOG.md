@@ -5,6 +5,11 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Günlükte fotoğraf galerisi
+- **Günlük sayfasında "Yazılar / Fotoğraflar" geçişi var.** Fotoğraflar aya göre gruplanmış bir
+  ızgarada; birine dokununca ait olduğu yazı açılıyor. Arama ve habit filtresi galeride de geçerli,
+  yani "konser" yazınca o günlerin fotoğrafları kalıyor.
+
 ### Takvimde ruh hali
 - **Ruh halini işaretlediğin günler takvimde yüzüyle görünüyor.** Bir ayın nasıl geçtiği tek
   bakışta belli oluyor; enerji yine gün detayında. Açıklama satırına "Ruh hali" eklendi.

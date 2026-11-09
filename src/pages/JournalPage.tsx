@@ -8,10 +8,18 @@ import { EntrySheet } from '../components/EntrySheet'
 import { BackIcon } from '../components/icons'
 import { JournalComposer } from '../components/JournalComposer'
 import { JournalEntryList } from '../components/JournalEntryList'
+import { JournalGallery } from '../components/JournalGallery'
 import { PageHeader } from '../components/PageHeader'
+import { Segmented } from '../components/Segmented'
 import { db } from '../db/db'
 import { fromDateKey } from '../lib/date'
-import { filterEntries, groupByDay, searchEntries, type JournalFilter } from '../lib/journal'
+import {
+  entryPhotos,
+  filterEntries,
+  groupByDay,
+  searchEntries,
+  type JournalFilter,
+} from '../lib/journal'
 import { ENERGY_EMOJI, MOOD_EMOJI } from '../lib/mood'
 import { geminiReady, useAiSettings } from '../lib/assistant'
 import { hasRecentReview } from '../lib/review'
@@ -26,6 +34,7 @@ export function JournalPage() {
   const moods = useLiveQuery(() => db.moods.toArray(), [], [])
   const ai = useAiSettings()
   const [filter, setFilter] = useState<JournalFilter>('all')
+  const [view, setView] = useState<'text' | 'photos'>('text')
   const [query, setQuery] = useState('')
   const [editingId, setEditingId] = useState<string>()
   const moodByDate = new Map(moods.map((m) => [m.date, m]))
@@ -40,6 +49,8 @@ export function JournalPage() {
   ]
   const days = entries ? groupByDay(searchEntries(filterEntries(entries, filter), query, habitsById)) : []
   const editing = entries?.find((e) => e.id === editingId)
+  // The switch only appears once there is something to look at.
+  const hasPhotos = (entries ?? []).some((e) => entryPhotos(e).length > 0)
 
   return (
     <>
@@ -74,6 +85,19 @@ export function JournalPage() {
         />
       )}
 
+      {hasPhotos && (
+        <div className="mt-4">
+          <Segmented
+            options={[
+              { value: 'text', label: 'Yazılar' },
+              { value: 'photos', label: 'Fotoğraflar' },
+            ]}
+            value={view}
+            onChange={setView}
+          />
+        </div>
+      )}
+
       {chips.length > 2 && (
         <div className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1">
           {chips.map((chip) => (
@@ -93,7 +117,9 @@ export function JournalPage() {
       )}
 
       <div className="mt-5 flex flex-col gap-6">
-        {entries === undefined ? null : days.length === 0 ? (
+        {entries === undefined ? null : view === 'photos' && hasPhotos ? (
+          <JournalGallery days={days} onOpen={setEditingId} />
+        ) : days.length === 0 ? (
           <EmptyState
             title={query.trim() ? 'Bulunamadı' : filter === 'all' ? 'Günlüğün boş' : 'Bu filtrede not yok'}
             text={

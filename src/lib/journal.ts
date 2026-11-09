@@ -34,6 +34,35 @@ export function entryPhotos(entry: Pick<JournalEntry, 'photo' | 'photos'>): Blob
   return entry.photo ? [entry.photo] : []
 }
 
+export type JournalPhoto = {
+  /** Unique across the gallery: an entry can hold the same picture twice. */
+  id: string
+  date: string
+  entryId: string
+  photo: Blob
+}
+
+export type PhotoMonth = { month: string; photos: JournalPhoto[] }
+
+/**
+ * Every photo in the given days, newest first, grouped by month ('YYYY-MM') for the gallery.
+ * The days come in already sorted and filtered, so the gallery follows the search and the chips.
+ */
+export function photosByMonth(days: JournalDay[]): PhotoMonth[] {
+  const months: PhotoMonth[] = []
+  for (const day of days) {
+    const month = day.date.slice(0, 7)
+    const photos = day.entries.flatMap((entry) =>
+      entryPhotos(entry).map((photo, i) => ({ id: `${entry.id}:${i}`, date: day.date, entryId: entry.id, photo })),
+    )
+    if (photos.length === 0) continue
+    const last = months[months.length - 1]
+    if (last?.month === month) last.photos.push(...photos)
+    else months.push({ month, photos })
+  }
+  return months
+}
+
 /** Entries whose text (or habit name) contains every word of the query, ignoring case. */
 export function searchEntries(entries: JournalEntry[], query: string, habitsById: Map<string, Habit>): JournalEntry[] {
   const words = query.toLocaleLowerCase('tr').split(/\s+/).filter(Boolean)
