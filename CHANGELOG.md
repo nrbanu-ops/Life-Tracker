@@ -5,6 +5,17 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-09
 
+### Geri yüklemeden önce otomatik güvenlik kopyası
+- **Yedekten geri yüklerken, şu anki verin önce ayrı bir dosyaya kaydediliyor**
+  (`life-tracker-geri-yuklemeden-once-<tarih>.json`). Yanlış dosyayı seçersen eskisi duruyor:
+  o dosyayı geri yükleyip eski haline dönebilirsin.
+- **"Tüm verileri sıfırla" da aynı şekilde** önce bir kopya yazıyor
+  (`life-tracker-sifirlamadan-once-<tarih>.json`).
+- Kopya yazılamazsa **hiçbir şey silinmiyor**; uyarı çıkıyor ve istersen "Kopyasız geri yükle"
+  ile yine de devam edebiliyorsun.
+- Bu kopya "son yedek" sayılmıyor: bir saniye sonra o veri gidiyor, "az önce yedeklendi" demek
+  yanlış olurdu.
+
 ### Depolama kartı (Ayarlar)
 - **Uygulamanın ne kadar yer kapladığı artık görünüyor:** kullanılan alan, cihazın ayırdığı
   alanın yüzdesi ve dolmaya yaklaşınca kırmızı uyarı. Dolunca yeni fotoğraflar sessizce

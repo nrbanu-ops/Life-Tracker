@@ -8,6 +8,7 @@ import {
   backupReminder,
   decodeRecord,
   encodeRecord,
+  safetyFileName,
   SNOOZE_DAYS,
   type Backup,
 } from '../lib/backup'
@@ -25,6 +26,32 @@ export async function exportBackup(): Promise<string> {
   }
   const backup: Backup = { app: BACKUP_APP, format: BACKUP_FORMAT, exportedAt: new Date().toISOString(), tables }
   return JSON.stringify(backup)
+}
+
+export type SafetyResult = SaveResult | 'empty'
+
+/**
+ * Writes what is in the app right now to a file of its own, before a restore or a reset throws
+ * it away. Picking the wrong file used to be final: the confirmation said so, but saying so
+ * doesn't give anything back. 'empty' means there was nothing to lose.
+ *
+ * It deliberately does not count as a backup: a moment later this data is gone, and "last
+ * backup: just now" would then be a lie about the data that replaced it.
+ */
+export async function saveSafetyCopy(today: string, kind: 'restore' | 'reset' = 'restore'): Promise<SafetyResult> {
+  if (!(await hasAnyData())) return 'empty'
+  const blob = new Blob([await exportBackup()], { type: 'application/json' })
+  try {
+    return await saveFile(safetyFileName(today, kind), blob)
+  } catch {
+    return 'failed'
+  }
+}
+
+/** Counts only, so an app full of photos doesn't have to be read to answer. */
+async function hasAnyData(): Promise<boolean> {
+  for (const table of dataTables()) if ((await table.count()) > 0) return true
+  return false
 }
 
 /** Replaces all data with the backup's; tables the backup doesn't know about are left empty. */

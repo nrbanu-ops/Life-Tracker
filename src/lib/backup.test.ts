@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { backupReminder, decodeRecord, encodeRecord, parseBackup } from './backup'
+import {
+  backupFileName,
+  backupReminder,
+  decodeRecord,
+  encodeRecord,
+  parseBackup,
+  safetyFileName,
+} from './backup'
 
 describe('backup records', () => {
   it('round-trips a list of photos, as a journal entry holds them', async () => {
@@ -72,5 +79,13 @@ describe('backupReminder', () => {
   it('stays hidden while snoozed', () => {
     expect(backupReminder({ ...base, snoozedUntil: '2026-11-21' })).toBeUndefined()
     expect(backupReminder({ ...base, snoozedUntil: '2026-11-20' })).toBeNull()
+  })
+})
+
+describe('safetyFileName', () => {
+  it('is nothing like the ordinary backup name, so neither overwrites the other', () => {
+    expect(safetyFileName('2026-11-09')).toBe('life-tracker-geri-yuklemeden-once-2026-11-09.json')
+    expect(safetyFileName('2026-11-09', 'reset')).toBe('life-tracker-sifirlamadan-once-2026-11-09.json')
+    expect(safetyFileName('2026-11-09')).not.toBe(backupFileName('2026-11-09'))
   })
 })

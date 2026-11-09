@@ -92,6 +92,13 @@ export function parseBackup(text: string): ParsedBackup {
 /** "life-tracker-yedek-2026-10-31.json" */
 export const backupFileName = (today: string) => `life-tracker-yedek-${today}.json`
 
+/**
+ * The copy of the current data taken just before it is thrown away. A name of its own, so it
+ * can't be mistaken for the ordinary backup and overwritten by the next one.
+ */
+export const safetyFileName = (today: string, kind: 'restore' | 'reset' = 'restore') =>
+  `life-tracker-${kind === 'reset' ? 'sifirlamadan' : 'geri-yuklemeden'}-once-${today}.json`
+
 export type ReminderInput = {
   today: string
   /** Day key of the first thing entered; undefined while the app is empty. */

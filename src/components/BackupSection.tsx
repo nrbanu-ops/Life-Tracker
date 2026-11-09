@@ -9,6 +9,7 @@ import {
   chooseBackupFile,
   downloadBackup,
   restoreBackup,
+  saveSafetyCopy,
   setAndroidBackup,
   stopAutoBackup,
   supportsAndroidBackup,
@@ -16,7 +17,7 @@ import {
 } from '../db/backup'
 import { db } from '../db/db'
 import { savesWithShareSheet } from '../lib/android'
-import { parseBackup, type Backup } from '../lib/backup'
+import { parseBackup, safetyFileName, type Backup } from '../lib/backup'
 import { useTodayKey } from '../lib/useTodayKey'
 
 type Message = { kind: 'ok' | 'error'; text: string }
@@ -29,6 +30,9 @@ export function BackupSection() {
   const androidOn = useLiveQuery(androidBackupOn)
   const [message, setMessage] = useState<Message>()
   const [pending, setPending] = useState<Backup>()
+  // Set when the copy of the current data could not be written: the restore waits for the user
+  // to say whether to go ahead without it.
+  const [noCopy, setNoCopy] = useState(false)
   // A backup with photos takes a while to write and longer to restore; without this the screen
   // looks dead and a second tap would start the whole thing again.
   const [busy, setBusy] = useState(false)
@@ -213,6 +217,7 @@ export function BackupSection() {
             const parsed = parseBackup(await file.text())
             if (!parsed.ok) return setMessage({ kind: 'error', text: parsed.error })
             setMessage(undefined)
+            setNoCopy(false)
             setPending(parsed.backup)
           }}
         />
@@ -226,24 +231,53 @@ export function BackupSection() {
               `(${formatDistanceToNow(new Date(pending.exportedAt), { locale: tr, addSuffix: true })} alınmış) `}
             şu anki <b>bütün verilerinin yerine</b> geçecek. Emin misin?
           </p>
+          <p className="text-xs text-muted">
+            {noCopy
+              ? 'Şu anki verinin kopyası kaydedilemedi. İstersen kopyasız devam edebilirsin, ama yanlış dosyayı seçtiysen geri dönüşü olmaz.'
+              : savesWithShareSheet
+                ? 'Önce şu anki verin ayrı bir dosyaya kaydedilecek; paylaşım sayfası açılınca "Dosyalara Kaydet" de.'
+                : 'Önce şu anki verin ayrı bir dosyaya kaydedilecek, yanlış yedek olursa diye.'}
+          </p>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() =>
                 run(async () => {
+                  // The copy comes first: once the tables are cleared there is nothing left to copy.
+                  const copy = noCopy ? 'empty' : await saveSafetyCopy(today)
+                  if (copy === 'failed' || copy === 'cancelled') {
+                    setNoCopy(true)
+                    return {
+                      kind: 'error',
+                      text:
+                        copy === 'cancelled'
+                          ? 'Kopya kaydedilmedi, geri yükleme yapılmadı.'
+                          : 'Şu anki verinin kopyası yazılamadı, geri yükleme yapılmadı.',
+                    }
+                  }
                   const count = await restoreBackup(pending)
                   setPending(undefined)
-                  return { kind: 'ok', text: `Geri yüklendi ✓ (${count} kayıt)` }
+                  setNoCopy(false)
+                  return {
+                    kind: 'ok',
+                    text:
+                      copy === 'saved'
+                        ? `Geri yüklendi ✓ (${count} kayıt). Önceki verin ${safetyFileName(today)} olarak kaydedildi.`
+                        : `Geri yüklendi ✓ (${count} kayıt)`,
+                  }
                 })
               }
               disabled={busy}
               className="flex-1 rounded-xl bg-surface py-2.5 text-sm font-medium text-p1 disabled:opacity-50"
             >
-              {busy ? 'Geri yükleniyor…' : 'Evet, geri yükle'}
+              {busy ? 'Geri yükleniyor…' : noCopy ? 'Kopyasız geri yükle' : 'Evet, geri yükle'}
             </button>
             <button
               type="button"
-              onClick={() => setPending(undefined)}
+              onClick={() => {
+                setPending(undefined)
+                setNoCopy(false)
+              }}
               disabled={busy}
               className="flex-1 py-2.5 text-sm text-muted disabled:opacity-50"
             >

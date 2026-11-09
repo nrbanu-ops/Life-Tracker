@@ -5,7 +5,7 @@ import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
 import { StorageSection } from '../components/StorageSection'
 import { ThemeSection } from '../components/ThemeSection'
-import { resetAllData } from '../db/backup'
+import { resetAllData, saveSafetyCopy } from '../db/backup'
 import { setPenaltyOn, usePenaltyOn } from '../db/leveling'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
 import { androidBridge } from '../lib/android'
@@ -134,9 +134,12 @@ export function SettingsPage() {
 
 /** Deletes all entered data, behind a typed confirmation. */
 function ResetSection() {
+  const today = useTodayKey()
   const [open, setOpen] = useState(false)
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
+  // The copy of the current data could not be written; deleting waits for a second answer.
+  const [noCopy, setNoCopy] = useState(false)
   const ready = typed.trim().toLocaleUpperCase('tr') === 'SİL'
 
   return (
@@ -152,9 +155,15 @@ function ResetSection() {
       ) : (
         <div className="mt-3 flex flex-col gap-2">
           <p className="rounded-xl bg-bg p-3 text-sm">
-            Bu geri alınamaz. Önce yukarıdan <b>Yedeği indir</b>'e bas. Otomatik yedek de kapanır, böylece son yedek
+            Silmeden önce şu anki verin ayrı bir dosyaya kaydedilecek. Otomatik yedek de kapanır, böylece son yedek
             dosyan boş verilerle ezilmez. API anahtarların ve ayarların kalır.
           </p>
+          {noCopy && (
+            <p className="rounded-xl bg-p1/15 p-3 text-sm text-p1">
+              Şu anki verinin kopyası kaydedilemedi, hiçbir şey silinmedi. Yukarıdan <b>Yedeği indir</b>'i
+              deneyebilir ya da kopyasız silebilirsin.
+            </p>
+          )}
           <input
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
@@ -168,19 +177,26 @@ function ResetSection() {
               disabled={!ready || busy}
               onClick={async () => {
                 setBusy(true)
+                // The copy first: after the tables are cleared there is nothing left to copy.
+                const copy = noCopy ? 'empty' : await saveSafetyCopy(today, 'reset')
+                if (copy === 'failed' || copy === 'cancelled') {
+                  setNoCopy(true)
+                  return setBusy(false)
+                }
                 await resetAllData()
                 // A fresh start: every screen and watcher reads the empty database.
                 window.location.assign(import.meta.env.BASE_URL)
               }}
               className="flex-1 rounded-xl bg-p1 py-2.5 text-sm font-medium text-surface disabled:opacity-40"
             >
-              {busy ? 'Siliniyor…' : 'Hepsini sil'}
+              {busy ? 'Siliniyor…' : noCopy ? 'Kopyasız sil' : 'Hepsini sil'}
             </button>
             <button
               type="button"
               onClick={() => {
                 setOpen(false)
                 setTyped('')
+                setNoCopy(false)
               }}
               className="rounded-xl px-4 py-2.5 text-sm text-muted"
             >
