@@ -73,6 +73,7 @@ export function FreezeCard({ today }: { today: string }) {
             <p className="text-sm">
               <b>{offer.habit.title}</b> {when(offer.date)} kaçtı; {offer.streak} günlük serin
               kırılacak.
+              {offer.habit.why && <span className="block text-muted">Neden: {offer.habit.why}</span>}
             </p>
             <button
               type="button"

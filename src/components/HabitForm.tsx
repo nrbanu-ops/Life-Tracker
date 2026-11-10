@@ -71,6 +71,7 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   const [count, setCount] = useState(initial?.type === 'timesPerWeek' ? initial.count : 3)
   const [minimumVersion, setMinimumVersion] = useState(habit?.minimumVersion ?? '')
   const [focus, setFocus] = useState(habit?.focus ?? false)
+  const [why, setWhy] = useState(habit?.why ?? '')
   const [projectId, setProjectId] = useState(habit ? (habit.projectId ?? '') : (defaultProjectId ?? ''))
   const [effort, setEffort] = useState<EffortTier | ''>(habit?.effort ?? '')
   const [stat, setStat] = useState<StatKey | ''>(habit?.stat ?? '')
@@ -123,6 +124,7 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
       // Quit habits have no schedule or minimum; they are tracked as time since quitting.
       frequency: isQuit ? { type: 'daily' } : buildFrequency(),
       minimumVersion: isQuit ? undefined : minimumVersion.trim() || undefined,
+      why: why.trim() || undefined,
       // A quit habit has no row on Bugün, so it can never be a keystone.
       focus: !isQuit && focus ? true : undefined,
       projectId: projectId || undefined,
@@ -155,6 +157,23 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
           autoFocus={!habit}
           maxLength={80}
         />
+      </label>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm text-muted">Neden? (isteğe bağlı)</span>
+        <input
+          id="habit-why"
+          value={why}
+          onChange={(e) => setWhy(e.target.value)}
+          placeholder={isQuit ? 'ör. Sabahları nefes nefese kalmamak için' : 'ör. Sabahları daha enerjik olmak için'}
+          className={inputClass}
+          maxLength={140}
+        />
+        <span className="text-xs text-muted">
+          {isQuit
+            ? 'Tekrar başlamak üzereyken sana hatırlatılır.'
+            : 'Günü atlamak üzereyken ve seri koruması kartında sana hatırlatılır.'}
+        </span>
       </label>
 
       <fieldset className="flex flex-col gap-2">

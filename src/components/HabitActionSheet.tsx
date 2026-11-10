@@ -53,6 +53,8 @@ function Actions({ item, date, onClose }: Required<Props>) {
 
   return (
     <div className="flex flex-col gap-2">
+      {/* This sheet is where a day gets skipped, so it is where the reason belongs. */}
+      {habit.why && <p className="-mt-2 mb-2 text-sm text-muted">Neden: {habit.why}</p>}
       {countable && (
         <div className="mb-3 flex flex-col items-center gap-2 rounded-2xl bg-bg p-4">
           <div className="flex items-center gap-4">

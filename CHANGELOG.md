@@ -3,6 +3,14 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-10
+
+### Habit'e "Neden?" notu
+- Habit formunda yeni alan: bu habit'in senin için neden önemli olduğunu tek cümleyle yaz.
+- Tam bırakmak üzere olduğun anlarda geri gösterilir: habit'in ⋯ panelinde (günü atladığın
+  yer), seri koruması kartında ve bırakma habit'inde "tekrar başladım" demeden hemen önce.
+- Projelerde ayrı alan yok: projenin "Açıklama"sı zaten bunu soruyor ve proje sayfasında görünüyor.
+
 ## 2026-11-09
 
 ### Sıfırlama artık sadece habit ve projeleri siliyor

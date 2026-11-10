@@ -45,6 +45,8 @@ function Details({ habit, now, onClose }: Required<Props>) {
 
       {confirming ? (
         <div className="flex flex-col gap-2 rounded-2xl border border-border p-4">
+          {/* The last moment the reason can still change the answer. */}
+          {habit.why && <p className="text-sm font-medium">Bırakma sebebin: {habit.why}</p>}
           <p className="text-sm">
             Sayaç sıfırlanacak. En uzun süren kayıtlı kalır. Olur böyle şeyler, yeniden
             başlamak da bir adım.

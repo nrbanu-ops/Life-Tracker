@@ -56,6 +56,8 @@ export type Habit = {
   celebratedMilestone?: number
   frequency: HabitFrequency
   minimumVersion?: string
+  /** One sentence on why this habit matters; shown back at the moments it is about to be dropped. */
+  why?: string
   /** A keystone habit: with focus mode on it sits at the top of Bugün. At most FOCUS_MAX. */
   focus?: boolean
   /** Leveling: effort tier and stat chosen by the user; the app guesses them otherwise. */
