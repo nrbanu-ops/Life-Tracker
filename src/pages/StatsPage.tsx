@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { EmptyState } from '../components/EmptyState'
 import { Heatmap } from '../components/Heatmap'
+import { MonthReviewCard } from '../components/MonthReviewCard'
 import { PageHeader } from '../components/PageHeader'
 import { ProgressBar } from '../components/ProgressBar'
 import { RateChart, type RatePoint } from '../components/RateChart'
@@ -93,6 +94,8 @@ export function StatsPage() {
           ›
         </span>
       </Link>
+
+      <MonthReviewCard today={today} variant="stats" />
 
       {tracked.length > 0 && (
         <section className="mb-6 grid grid-cols-2 gap-3">

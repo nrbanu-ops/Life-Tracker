@@ -5,6 +5,14 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-10
 
+### Aylık bakış 📅
+- Geçen ayın bir önceki ayla karşılaştırması tek kartta: genel oran ve kaç puan değiştiği, en
+  iyi giden habit, en çok artan, en çok düşen ve **küçültmen ya da arşivlemen gerekenler**
+  (ayın %30'undan azında yapılanlar).
+- İstatistik sayfasının en üstünde her zaman durur; her ayın ilk 7 günü Bugün ekranında da
+  kendiliğinden çıkar, "Kapat" dersen o ay bir daha gelmez.
+- Bir önceki ay henüz olmayan ya da çok az planlanan habit'ler karşılaştırmaya girmez.
+
 ### Zor gün modu 🌧️
 - Bugün'de halkanın altında tek satır: **"Zor bir gün mü? Bugün minimum yetsin"**. Açınca o gün
   bir dokunuş minimumu işaretler (minimum versiyonu yazılmamış habit'lerde de), tekrar dokunuş

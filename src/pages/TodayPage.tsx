@@ -7,6 +7,7 @@ import { BackupReminder } from '../components/BackupReminder'
 import { DayJournal } from '../components/DayJournal'
 import { LevelCard } from '../components/LevelCard'
 import { MemoryCard } from '../components/MemoryCard'
+import { MonthReviewCard } from '../components/MonthReviewCard'
 import { EmptyState } from '../components/EmptyState'
 import { FreezeCard } from '../components/FreezeCard'
 import { HabitActionSheet } from '../components/HabitActionSheet'
@@ -89,6 +90,8 @@ export function TodayPage() {
       <BackupReminder />
 
       <FreezeCard today={today} />
+
+      <MonthReviewCard today={today} variant="today" />
 
       <WeekPlanCard today={today} />
 
