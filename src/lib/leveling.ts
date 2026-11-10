@@ -207,6 +207,8 @@ export type XpData = {
   achievements: UnlockedAchievement[]
   /** Missed habits cost XP from this day on; undefined while penalties are off. */
   penaltyFrom?: string
+  /** Days declared hard: a daily habit missed on one is not fined. */
+  hardDays?: string[]
 }
 
 export const XP = {
@@ -267,7 +269,15 @@ const COMEBACK = 0.5
 /** Planned days missed in a row before doing it again counts as a comeback. */
 const COMEBACK_AFTER = 3
 
-function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, today: string, penaltyFrom?: string): XpEvent[] {
+function habitEvents(
+  habit: Habit,
+  logs: HabitLog[],
+  from: string,
+  to: string,
+  today: string,
+  penaltyFrom?: string,
+  hardDays: ReadonlySet<string> = new Set(),
+): XpEvent[] {
   if (habit.kind === 'quit') return []
   const own = logs.filter((l) => l.habitId === habit.id)
   const byDate = new Map(own.map((l) => [l.date, l]))
@@ -365,8 +375,9 @@ function habitEvents(habit: Habit, logs: HabitLog[], from: string, to: string, t
       )
     } else {
       if (log?.status === 'partial') emit(day, base(day) * statusFactor(habit, log) * lateFactor(day, log.loggedAt))
-      // Partly done costs half.
-      fine(day, base(day) * (log?.status === 'partial' ? 0.5 : 1))
+      // Partly done costs half. A hard day costs nothing: that is what declaring one is for.
+      // (The streak still needs the minimum; weekly goals are judged over the week, not the day.)
+      if (!hardDays.has(day)) fine(day, base(day) * (log?.status === 'partial' ? 0.5 : 1))
       if (day < today) {
         run = 0
         missed++
@@ -519,10 +530,11 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
   const last = to < today ? to : today
   const inRange = (date: string | undefined): date is string => !!date && date >= from && date <= last
   const events: XpEvent[] = []
+  const hard = new Set(data.hardDays ?? [])
 
   for (const habit of data.habits) {
     events.push(
-      ...habitEvents(habit, data.logs, from, last, today, data.penaltyFrom),
+      ...habitEvents(habit, data.logs, from, last, today, data.penaltyFrom, hard),
       ...quitEvents(habit, from, last, today),
     )
   }

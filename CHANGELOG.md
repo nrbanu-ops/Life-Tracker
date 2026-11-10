@@ -5,6 +5,18 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-10
 
+### Zor gün modu 🌧️
+- Bugün'de halkanın altında tek satır: **"Zor bir gün mü? Bugün minimum yetsin"**. Açınca o gün
+  bir dokunuş minimumu işaretler (minimum versiyonu yazılmamış habit'lerde de), tekrar dokunuş
+  tam yapıldı yapar. Sayılı ve süreli habit'lerde hedefin altındaki her miktar minimum sayılır;
+  açmadan önce yarım bıraktıkların da.
+- O gün yapamadığın günlük habit'ler için **ceza yazılmaz**. Seri ise kendiliğinden korunmaz:
+  en küçük adımı yine de atman gerekir — modun amacı "hiçbirini yapamam" yerine "en azından
+  küçüğünü yaparım" dedirtmek.
+- Ayda 3 hak. "Kapat" dersen o günün hakkı geri gelir; işaretlediklerin durur.
+- Düzeltme: odak modunda bütün günlük habit'lerin omurga ise üstteki ilerleme halkası
+  kayboluyordu.
+
 ### Tetikleyici ve günün bölümü
 - Habit formunda **"Günün hangi bölümünde?"** (Fark etmez / Sabah / Gün içi / Akşam) ve bir
   **tetikleyici** alanı ("çaydan sonra", "işten gelince"). Saat yerine zaten yaptığın bir şeye

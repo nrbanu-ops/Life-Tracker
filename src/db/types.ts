@@ -227,6 +227,12 @@ export type WeekPlan = {
   updatedAt?: string
 }
 
+/** A day declared hard: the minimum is enough and nothing missed is fined. One row per day. */
+export type HardDay = {
+  /** Day key. */
+  date: string
+}
+
 /** Key–value bookkeeping, e.g. 'backupHandle' (a FileSystemFileHandle) or 'lastBackupAt'. */
 export type MetaEntry = {
   key: string

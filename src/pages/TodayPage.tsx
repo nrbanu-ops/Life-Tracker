@@ -10,6 +10,7 @@ import { MemoryCard } from '../components/MemoryCard'
 import { EmptyState } from '../components/EmptyState'
 import { FreezeCard } from '../components/FreezeCard'
 import { HabitActionSheet } from '../components/HabitActionSheet'
+import { HardDayToggle } from '../components/HardDayToggle'
 import { HabitCheckRow } from '../components/HabitCheckRow'
 import { PageHeader } from '../components/PageHeader'
 import { ProgressRing } from '../components/ProgressRing'
@@ -22,8 +23,10 @@ import { SundayReviewNudge } from '../components/WeeklyReview'
 import { YearReviewCard } from '../components/YearReviewCard'
 import { db } from '../db/db'
 import { markMilestoneCelebrated } from '../db/habits'
+import { useHardDay } from '../db/hardDay'
 import { setLog } from '../db/logs'
 import { fromDateKey, weekRange } from '../lib/date'
+import { hardTap } from '../lib/hardDay'
 import {
   buildToday,
   dayProgress,
@@ -48,6 +51,8 @@ export function TodayPage() {
   // Focus mode folds the non-keystone habits away until they are asked for.
   const [showRest, setShowRest] = useState(false)
   const hideDone = useHideDone()
+  const hardDay = useHardDay(today)
+  const hard = hardDay?.on ?? false
   const focusMode = useFocusMode()
   const now = useNow()
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray())
@@ -111,15 +116,19 @@ export function TodayPage() {
         />
       ) : (
         <>
-          {daily.length > 0 && (
+          {items.some((item) => !isWeeklyGoal(item.habit)) && (
             <section className="mb-5 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
               <ProgressRing done={done} total={total} />
               <div>
                 <p className="font-medium">{progressTitle(done, total)}</p>
-                <p className="text-sm text-muted">Dokun: işaretle · Uzun bas: minimum, atla</p>
+                <p className="text-sm text-muted">
+                  {hard ? 'Dokun: minimum · Tekrar dokun: tam' : 'Dokun: işaretle · Uzun bas: minimum, atla'}
+                </p>
               </div>
             </section>
           )}
+
+          {hardDay && <HardDayToggle today={today} state={hardDay} />}
 
           {keystones.length > 0 && (
             <HabitGroup
@@ -127,6 +136,7 @@ export function TodayPage() {
               items={keystones}
               today={today}
               hideDone={hideDone}
+              hard={hard}
               projectColor={projectColor}
               onMore={setActionHabitId}
             />
@@ -163,6 +173,7 @@ export function TodayPage() {
                     items={group.list}
                     today={today}
                     hideDone={hideDone}
+                    hard={hard}
                     projectColor={projectColor}
                     onMore={setActionHabitId}
                   />
@@ -231,12 +242,14 @@ type GroupProps = {
   items: TodayItem[]
   today: string
   hideDone: boolean
+  /** A hard day: a tap marks the minimum. */
+  hard: boolean
   projectColor: Map<string, string>
   onMore: (habitId: string) => void
 }
 
 /** One titled block of today's habits, with the "hide completed" fold underneath it. */
-function HabitGroup({ title, detail, items, today, hideDone, projectColor, onMore }: GroupProps) {
+function HabitGroup({ title, detail, items, today, hideDone, hard, projectColor, onMore }: GroupProps) {
   const [revealed, setRevealed] = useState(false)
   const { open, done: finished } = splitDone(items)
   // Hiding only changes this list; the ring above still counts what was finished.
@@ -255,7 +268,7 @@ function HabitGroup({ title, detail, items, today, hideDone, projectColor, onMor
               key={item.habit.id}
               item={item}
               projectColor={item.habit.projectId ? projectColor.get(item.habit.projectId) : undefined}
-              onTap={() => setLog(item.habit.id, today, tapResult(item.habit, item))}
+              onTap={() => setLog(item.habit.id, today, (hard ? hardTap : tapResult)(item.habit, item))}
               onMore={() => onMore(item.habit.id)}
             />
           ))}

@@ -361,3 +361,27 @@ describe('firstDay', () => {
     expect(firstDay(data([], []), day(5))).toBe(day(5))
   })
 })
+
+describe('hard days', () => {
+  const run = habit('Koşu')
+  const fines = (d: XpData) => xpEvents(d, START, day(2), day(3)).filter((e) => e.source === 'penalty')
+
+  it('are not fined for a daily habit that was missed', () => {
+    // Three finished days, nothing done on any of them; the middle one was declared hard.
+    expect(fines(data([run], [], { penaltyFrom: START }))).toHaveLength(3)
+    const withHard = fines(data([run], [], { penaltyFrom: START, hardDays: [day(1)] }))
+    expect(withHard.map((e) => e.date)).toEqual([day(0), day(2)])
+  })
+
+  it('still break the streak bonus: the minimum is what keeps a streak, not the mode', () => {
+    const kept = Array.from({ length: 10 }, (_, i) => done(run, day(i)))
+    const broken = kept.filter((l) => l.date !== day(8))
+    const xpOn = (logs: HabitLog[], hardDays?: string[]) =>
+      xpEvents(data([run], logs, { hardDays }), day(9), day(9), day(10))
+        .filter((e) => e.source === 'habit')
+        .reduce((sum, e) => sum + e.xp, 0)
+    // Day 9 earns the 7-day streak bonus only when day 8 was actually done.
+    expect(xpOn(broken, [day(8)])).toBeLessThan(xpOn(kept))
+    expect(xpOn(broken, [day(8)])).toBe(xpOn(broken))
+  })
+})

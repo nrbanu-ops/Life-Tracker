@@ -93,6 +93,7 @@ export async function resetHabitsAndProjects(today: string): Promise<void> {
     db.projectAchievements,
     db.achievements,
     db.xpWeeks,
+    db.hardDays,
   ]
   await db.transaction('rw', [...cleared, db.meta], async () => {
     for (const table of cleared) await table.clear()

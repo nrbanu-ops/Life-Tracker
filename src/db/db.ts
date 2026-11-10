@@ -3,6 +3,7 @@ import type {
   DayMood,
   Habit,
   HabitLog,
+  HardDay,
   JournalEntry,
   LibraryGoal,
   LibraryItem,
@@ -31,6 +32,7 @@ export const db = new Dexie('life-tracker') as Dexie & {
   projectAchievements: EntityTable<ProjectAchievement, 'id'>
   xpWeeks: EntityTable<XpWeek, 'week'>
   weekPlans: EntityTable<WeekPlan, 'week'>
+  hardDays: EntityTable<HardDay, 'date'>
 }
 
 // Booleans can't be indexed in IndexedDB, so `archived` and `done` are filtered in memory.
@@ -117,6 +119,11 @@ db.version(12).stores({
 db.version(13)
   .stores({})
   .upgrade((tx) => tx.table('meta').delete('diagnose-test'))
+
+// v14: days declared hard, when the minimum is enough.
+db.version(14).stores({
+  hardDays: 'date',
+})
 
 export const META_TABLE = 'meta'
 

@@ -38,7 +38,7 @@ export async function startXpFrom(day: string): Promise<void> {
 const PENALTY = 'penaltyFrom'
 
 export async function loadXpData(): Promise<XpData> {
-  const [habits, logs, tasks, milestones, projects, journal, moods, library, achievements, penalty] = await Promise.all([
+  const [habits, logs, tasks, milestones, projects, journal, moods, library, achievements, penalty, hard] = await Promise.all([
     db.habits.toArray(),
     db.habitLogs.toArray(),
     db.tasks.toArray(),
@@ -49,9 +49,11 @@ export async function loadXpData(): Promise<XpData> {
     db.library.toArray(),
     db.achievements.toArray(),
     db.meta.get(PENALTY),
+    db.hardDays.toArray(),
   ])
   const penaltyFrom = typeof penalty?.value === 'string' && penalty.value !== 'off' ? penalty.value : undefined
-  return { habits, logs, tasks, milestones, projects, journal, moods, library, achievements, penaltyFrom }
+  const hardDays = hard.map((d) => d.date)
+  return { habits, logs, tasks, milestones, projects, journal, moods, library, achievements, penaltyFrom, hardDays }
 }
 
 /** Penalties for missed habits start today (switching them on again never fines the past). */
