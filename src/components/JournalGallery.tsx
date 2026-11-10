@@ -1,9 +1,11 @@
 import { format } from 'date-fns'
+import { useState } from 'react'
 import { tr } from 'date-fns/locale'
 import { fromDateKey } from '../lib/date'
 import { photosByMonth, type JournalDay } from '../lib/journal'
 import { BlobImage } from './BlobImage'
 import { EmptyState } from './EmptyState'
+import { PhotoViewer } from './PhotoViewer'
 
 type Props = {
   /** Already filtered and sorted, so the gallery follows the search and the chips. */
@@ -11,9 +13,16 @@ type Props = {
   onOpen: (entryId: string) => void
 }
 
-/** Every journal photo as a grid, by month; tapping one opens the writing it belongs to. */
+/**
+ * Every journal photo as a grid, by month. Tapping one shows it on the whole screen, where
+ * swiping goes on through the rest and "Yazıyı aç" opens the writing it belongs to.
+ */
 export function JournalGallery({ days, onOpen }: Props) {
   const months = photosByMonth(days)
+  const all = months.flatMap((m) => m.photos)
+  // By id rather than position: the list underneath changes as the search is typed.
+  const [viewingId, setViewingId] = useState<string>()
+  const viewing = viewingId === undefined ? -1 : all.findIndex((p) => p.id === viewingId)
 
   if (months.length === 0) {
     return (
@@ -36,7 +45,7 @@ export function JournalGallery({ days, onOpen }: Props) {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => onOpen(item.entryId)}
+                onClick={() => setViewingId(item.id)}
                 // The date is in the label, not on the picture: a grid of badges is noise.
                 aria-label={`${format(fromDateKey(item.date), 'd MMMM', { locale: tr })} fotoğrafı`}
                 className="aspect-square overflow-hidden rounded-lg bg-surface"
@@ -47,6 +56,19 @@ export function JournalGallery({ days, onOpen }: Props) {
           </div>
         </section>
       ))}
+      <PhotoViewer
+        photos={all.map((p) => ({ blob: p.photo, caption: format(fromDateKey(p.date), 'd MMMM yyyy', { locale: tr }) }))}
+        index={viewing < 0 ? null : viewing}
+        onIndex={(i) => setViewingId(all[i]?.id)}
+        onClose={() => setViewingId(undefined)}
+        action={{
+          label: 'Yazıyı aç',
+          onClick: (i) => {
+            setViewingId(undefined)
+            onOpen(all[i].entryId)
+          },
+        }}
+      />
     </div>
   )
 }

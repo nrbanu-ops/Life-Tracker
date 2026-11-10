@@ -5,6 +5,27 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-10
 
+### Fotoğrafa dokununca büyür 🔍
+- **Günlükteki fotoğraflar tam ekran açılır.** Fotoğrafa dokun: siyah zeminde, ekranın tamamında
+  görünür. Birden fazlaysa sağa-sola kaydırarak geçersin; üstte "2 / 5" sayacı var.
+- **Dokunarak yakınlaştır.** Açık fotoğrafa dokununca o noktaya yaklaşır, parmağınla
+  gezdirirsin; bir daha dokununca eski hâline döner. Kapatmak için ✕ ya da fotoğrafın dışındaki
+  siyah alana dokun.
+- **Yazıyı düzenlemek** için fotoğrafın değil, yazının (ya da saatin) üstüne dokun; eskisi gibi açılır.
+- **Fotoğraflar görünümünde** dokunmak artık fotoğrafı büyütür ve bütün fotoğraflar arasında
+  kaydırılır; altta tarihi ve **"Yazıyı aç"** düğmesi durur.
+- Yazı yazarken eklediğin küçük resimler ve kütüphanedeki afiş/fotoğraf da dokununca büyür.
+
+### Yeni temalar ve hareketli arka plan 🎨
+- **İki yeni tema:** **Mantar Krallığı** (hep aydınlık; gökyüzü, tepeler, bloklar, altınlar ve
+  yavaşça geçen bulutlar) ve **Phantom** (hep karanlık; siyah, kırmızı, beyaz, köşeli kartlar,
+  yırtık kırmızı şeritler ve yıldızlar).
+- **Arka plan yeniden çizildi.** Çiçek dalı fotoğrafı yerine her temanın kendi renklerinden
+  akan dalgalar var; açık ve koyu modda ayrı ayrı, bazı temalarda aynalı.
+- **Arka plan çok yavaş kayar** (birkaç piksel, fark edilmeyecek kadar ağır). İstemezsen Ayarlar →
+  Renk teması → **Arka plan hareketi**'ni kapat; telefonunda "hareketi azalt" açıksa zaten durur.
+- **Tema seçici** düzeldi: renk noktaları adın üstünde, uzun adlar artık kesilmiyor.
+
 ### Arayüz toparlandı
 - **Bugün'de habit'ler en üstte.** Halka ve habit listesi başlığın hemen altına geldi; işaretlemek
   için artık kaydırmak gerekmiyor. Görevler, seviye kartı ve günlük altta.

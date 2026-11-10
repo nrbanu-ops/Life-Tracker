@@ -11,6 +11,7 @@ import { LanguageSelect } from './LanguageSelect'
 import { PlacePicker } from './PlacePicker'
 import { LibraryEntryFields } from './LibraryEntryFields'
 import { PhotoPicker } from './PhotoPicker'
+import { PhotoViewer } from './PhotoViewer'
 import { Poster } from './Poster'
 
 type Props = {
@@ -55,6 +56,7 @@ function ItemDetail({ item, today, onClose }: { item: LibraryItem; today: string
   const [pickingPlace, setPickingPlace] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [viewing, setViewing] = useState(false)
 
   const trimmedTitle = title.trim()
   const yearValue = Number(year)
@@ -67,7 +69,19 @@ function ItemDetail({ item, today, onClose }: { item: LibraryItem; today: string
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4">
-        <Poster item={preview} className="w-28 shrink-0" />
+        {photo || item.posterUrl ? (
+          <button type="button" onClick={() => setViewing(true)} aria-label="Görseli büyüt" className="w-28 shrink-0 self-start">
+            <Poster item={preview} />
+          </button>
+        ) : (
+          <Poster item={preview} className="w-28 shrink-0" />
+        )}
+        <PhotoViewer
+          photos={[photo ? { blob: photo } : { url: item.posterUrl }]}
+          index={viewing ? 0 : null}
+          onIndex={() => {}}
+          onClose={() => setViewing(false)}
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <p className="text-sm text-muted">{facts}</p>
           {item.startedAt && (
