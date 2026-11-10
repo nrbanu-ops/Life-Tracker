@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState, type FormEvent } from 'react'
 import { db } from '../db/db'
 import { createHabit, deleteHabit, setHabitArchived, updateHabit, type HabitInput } from '../db/habits'
-import type { Habit, HabitFrequency, HabitKind, Project } from '../db/types'
+import type { DayPart, Habit, HabitFrequency, HabitKind, Project } from '../db/types'
 import { DEFAULT_INCREMENT } from '../lib/amount'
 import { WEEKDAY_SHORT } from '../lib/frequency'
 import {
@@ -18,7 +18,7 @@ import {
   type StatKey,
 } from '../lib/leveling'
 import { useLevelingOn } from '../lib/levelingSetting'
-import { FOCUS_MAX } from '../lib/today'
+import { DAY_PART_LABEL, DAY_PARTS, FOCUS_MAX } from '../lib/today'
 import { Segmented } from './Segmented'
 
 type FrequencyType = HabitFrequency['type']
@@ -72,6 +72,8 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   const [minimumVersion, setMinimumVersion] = useState(habit?.minimumVersion ?? '')
   const [focus, setFocus] = useState(habit?.focus ?? false)
   const [why, setWhy] = useState(habit?.why ?? '')
+  const [when, setWhen] = useState<DayPart | ''>(habit?.when ?? '')
+  const [cue, setCue] = useState(habit?.cue ?? '')
   const [projectId, setProjectId] = useState(habit ? (habit.projectId ?? '') : (defaultProjectId ?? ''))
   const [effort, setEffort] = useState<EffortTier | ''>(habit?.effort ?? '')
   const [stat, setStat] = useState<StatKey | ''>(habit?.stat ?? '')
@@ -125,6 +127,8 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
       frequency: isQuit ? { type: 'daily' } : buildFrequency(),
       minimumVersion: isQuit ? undefined : minimumVersion.trim() || undefined,
       why: why.trim() || undefined,
+      when: isQuit ? undefined : when || undefined,
+      cue: isQuit ? undefined : cue.trim() || undefined,
       // A quit habit has no row on Bugün, so it can never be a keystone.
       focus: !isQuit && focus ? true : undefined,
       projectId: projectId || undefined,
@@ -315,6 +319,30 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
                 </div>
               </div>
             )}
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1.5 text-sm text-muted">Günün hangi bölümünde?</legend>
+            <Segmented<DayPart | ''>
+              options={[
+                { value: '', label: 'Fark etmez' },
+                ...DAY_PARTS.map((part) => ({ value: part, label: DAY_PART_LABEL[part] })),
+              ]}
+              value={when}
+              onChange={setWhen}
+            />
+            <input
+              id="habit-cue"
+              value={cue}
+              onChange={(e) => setCue(e.target.value)}
+              placeholder="Tetikleyici: ör. çaydan sonra, işten gelince"
+              aria-label="Tetikleyici"
+              className={inputClass}
+              maxLength={60}
+            />
+            <span className="text-xs text-muted">
+              Saat yerine zaten her gün yaptığın bir şeye bağla; Bugün ekranı günün o bölümündekileri öne alır.
+            </span>
           </fieldset>
 
           <label className="flex flex-col gap-1.5">

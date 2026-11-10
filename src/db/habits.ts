@@ -14,6 +14,8 @@ export type HabitInput = Pick<
   | 'frequency'
   | 'minimumVersion'
   | 'why'
+  | 'when'
+  | 'cue'
   | 'focus'
   | 'projectId'
   | 'effort'
@@ -63,6 +65,8 @@ export async function updateHabit(id: string, input: HabitInput): Promise<void> 
     frequency: input.frequency,
     minimumVersion: input.minimumVersion,
     why: input.why,
+    when: input.when,
+    cue: input.cue,
     focus: input.focus,
     projectId: input.projectId,
   })

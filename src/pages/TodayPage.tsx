@@ -28,6 +28,8 @@ import {
   buildToday,
   dayProgress,
   isWeeklyGoal,
+  partOfDay,
+  sortByDayPart,
   splitDone,
   splitFocus,
   tapResult,
@@ -60,7 +62,8 @@ export function TodayPage() {
     return <PageHeader title="Bugün" subtitle={subtitle} />
   }
 
-  const items = buildToday(habits, weekLogs, today)
+  // What can be done at this hour comes first; the stored order decides the rest.
+  const items = sortByDayPart(buildToday(habits, weekLogs, today), partOfDay(now.getHours()))
   // The ring and the weekly count are about the whole day, keystones included.
   const { done, total } = dayProgress(items.filter((item) => !isWeeklyGoal(item.habit)))
   const week = weekProgress(items.filter((item) => isWeeklyGoal(item.habit)))

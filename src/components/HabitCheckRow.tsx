@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type { HabitLogStatus } from '../db/types'
 import { formatAmount } from '../lib/amount'
-import { isExcused, type TodayItem } from '../lib/today'
+import { DAY_PART_LABEL, isExcused, type TodayItem } from '../lib/today'
 
 type Props = {
   item: TodayItem
@@ -30,6 +30,9 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
   }
 
   const details: string[] = []
+  // When and after what: the two things that decide whether it actually gets done.
+  const timing = [habit.when && DAY_PART_LABEL[habit.when], habit.cue].filter(Boolean).join(', ')
+  if (timing && status === undefined) details.push(timing)
   if (status === 'skipped') details.push('Bugün atlandı')
   if (status === 'frozen') details.push('Seri koruması ❄️')
   if (status === 'minimum') details.push(`Minimum: ${habit.minimumVersion ?? 'yapıldı'}`)

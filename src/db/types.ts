@@ -36,6 +36,9 @@ export type HabitFrequency =
  */
 export type HabitKind = 'check' | 'count' | 'duration' | 'quit'
 
+/** The stretch of the day a habit belongs to; mornings end at noon, evenings start at six. */
+export type DayPart = 'morning' | 'day' | 'evening'
+
 export type Habit = {
   id: string
   title: string
@@ -56,6 +59,10 @@ export type Habit = {
   celebratedMilestone?: number
   frequency: HabitFrequency
   minimumVersion?: string
+  /** When in the day it is done. Bugün puts the current part of the day first. */
+  when?: DayPart
+  /** What sets it off, e.g. "çaydan sonra": something already done every day, not a clock time. */
+  cue?: string
   /** One sentence on why this habit matters; shown back at the moments it is about to be dropped. */
   why?: string
   /** A keystone habit: with focus mode on it sits at the top of Bugün. At most FOCUS_MAX. */

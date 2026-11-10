@@ -1,5 +1,5 @@
 import type { LogEntry } from '../db/logs'
-import type { Habit, HabitLog, HabitLogStatus } from '../db/types'
+import type { DayPart, Habit, HabitLog, HabitLogStatus } from '../db/types'
 import { incrementOf } from './amount'
 import { toDateKey, weekRange, weekdayOf } from './date'
 
@@ -127,4 +127,36 @@ export function splitFocus(items: TodayItem[]): { focus: TodayItem[]; rest: Toda
     focus: items.filter((item) => item.habit.focus),
     rest: items.filter((item) => !item.habit.focus),
   }
+}
+
+export const DAY_PARTS: DayPart[] = ['morning', 'day', 'evening']
+
+export const DAY_PART_LABEL: Record<DayPart, string> = {
+  morning: 'Sabah',
+  day: 'Gün içi',
+  evening: 'Akşam',
+}
+
+/** Which part of the day an hour (0–23) falls in. */
+export function partOfDay(hour: number): DayPart {
+  if (hour < 12) return 'morning'
+  return hour < 18 ? 'day' : 'evening'
+}
+
+/**
+ * Today's list in the order it can be acted on: what belongs to this part of the day first,
+ * then the habits with no set time (they can be done now too), then what comes later today,
+ * and last what already had its moment. Within each of those the list keeps its own order.
+ */
+export function sortByDayPart(items: TodayItem[], now: DayPart): TodayItem[] {
+  const current = DAY_PARTS.indexOf(now)
+  const rank = (item: TodayItem): number => {
+    const { when } = item.habit
+    if (!when) return 1
+    const at = DAY_PARTS.indexOf(when)
+    if (at === current) return 0
+    return at > current ? 2 + (at - current) : 10 + at
+  }
+  // Array.prototype.sort is stable, so equal ranks stay as they were.
+  return [...items].sort((a, b) => rank(a) - rank(b))
 }

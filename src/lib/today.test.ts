@@ -7,6 +7,8 @@ import {
   isShownOn,
   isWeeklyGoal,
   nextStatus,
+  partOfDay,
+  sortByDayPart,
   splitDone,
   splitFocus,
   tapResult,
@@ -206,5 +208,45 @@ describe('splitFocus', () => {
     const { focus, rest } = splitFocus([item('a'), item('b')])
     expect(focus).toEqual([])
     expect(rest).toHaveLength(2)
+  })
+})
+
+describe('partOfDay', () => {
+  it('ends the morning at noon and starts the evening at six', () => {
+    expect(partOfDay(0)).toBe('morning')
+    expect(partOfDay(11)).toBe('morning')
+    expect(partOfDay(12)).toBe('day')
+    expect(partOfDay(17)).toBe('day')
+    expect(partOfDay(18)).toBe('evening')
+    expect(partOfDay(23)).toBe('evening')
+  })
+})
+
+describe('sortByDayPart', () => {
+  const item = (id: string, when?: Habit['when']) => ({
+    habit: habit(id, { type: 'daily' }, { when }),
+    countsToday: true,
+  })
+  const list = [item('any1'), item('eve', 'evening'), item('morn', 'morning'), item('noon', 'day'), item('any2')]
+  const ids = (now: 'morning' | 'day' | 'evening') => sortByDayPart(list, now).map((i) => i.habit.id)
+
+  it('leads with this part of the day, then anything untimed, then what comes later', () => {
+    expect(ids('morning')).toEqual(['morn', 'any1', 'any2', 'noon', 'eve'])
+  })
+
+  it('moves what already had its moment to the end', () => {
+    expect(ids('day')).toEqual(['noon', 'any1', 'any2', 'eve', 'morn'])
+    expect(ids('evening')).toEqual(['eve', 'any1', 'any2', 'morn', 'noon'])
+  })
+
+  it('keeps the stored order inside a part and leaves the input alone', () => {
+    const two = [item('b', 'morning'), item('a', 'morning'), item('c')]
+    expect(sortByDayPart(two, 'morning').map((i) => i.habit.id)).toEqual(['b', 'a', 'c'])
+    expect(two.map((i) => i.habit.id)).toEqual(['b', 'a', 'c'])
+  })
+
+  it('changes nothing when no habit has a time', () => {
+    const plain = [item('x'), item('y'), item('z')]
+    expect(sortByDayPart(plain, 'evening').map((i) => i.habit.id)).toEqual(['x', 'y', 'z'])
   })
 })

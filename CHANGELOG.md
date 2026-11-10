@@ -5,6 +5,14 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-10
 
+### Tetikleyici ve günün bölümü
+- Habit formunda **"Günün hangi bölümünde?"** (Fark etmez / Sabah / Gün içi / Akşam) ve bir
+  **tetikleyici** alanı ("çaydan sonra", "işten gelince"). Saat yerine zaten yaptığın bir şeye
+  bağlamak, habit'in gerçekten yapılma ihtimalini en çok artıran şey.
+- Bugün listesi saate göre sıralanıyor: önce günün şu anki bölümündekiler, sonra saati olmayanlar,
+  sonra günün ilerisindekiler, en sonda vakti geçenler. Sabah öğlene kadar, akşam 18'den sonra.
+- Bölüm ve tetikleyici, işaretlenmemiş habit'in altında küçük yazıyla görünür.
+
 ### Habit'e "Neden?" notu
 - Habit formunda yeni alan: bu habit'in senin için neden önemli olduğunu tek cümleyle yaz.
 - Tam bırakmak üzere olduğun anlarda geri gösterilir: habit'in ⋯ panelinde (günü atladığın
