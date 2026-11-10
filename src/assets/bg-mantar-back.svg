@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdebff"/><stop offset="0.7" stop-color="#e6f6ff"/><stop offset="1" stop-color="#f2fbff"/>
+    </linearGradient>
+  </defs>
+  <rect x="-300" y="-300" width="1500" height="2500" fill="url(#sky)"/>
+  <!-- Far hills, almost mist. -->
+  <ellipse cx="640" cy="1560" rx="560" ry="230" fill="#dcf3e6"/>
+  <ellipse cx="60" cy="1640" rx="420" ry="250" fill="#d3efdd"/>
+  <!-- Blocks and coins keep to the right: headings that sit straight on the sky start at the left. -->
+  <rect x="596" y="660" width="64" height="64" rx="6" fill="#f9dfba" stroke="#e7bd86" stroke-width="4"/>
+  <path d="M 596 692 H 660 M 628 660 V 692 M 612 692 V 724 M 644 692 V 724" stroke="#e7bd86" stroke-width="3" fill="none"/>
+  <rect x="660" y="660" width="64" height="64" rx="6" fill="#f9dfba" stroke="#e7bd86" stroke-width="4"/>
+  <path d="M 660 692 H 724 M 692 660 V 692 M 676 692 V 724 M 708 692 V 724" stroke="#e7bd86" stroke-width="3" fill="none"/>
+  <rect x="724" y="660" width="64" height="64" rx="6" fill="#f9dfba" stroke="#e7bd86" stroke-width="4"/>
+  <path d="M 724 692 H 788 M 756 660 V 692 M 740 692 V 724 M 772 692 V 724" stroke="#e7bd86" stroke-width="3" fill="none"/>
+  <ellipse cx="628" cy="560" rx="17" ry="22" fill="#fff0b3" stroke="#f0cf66" stroke-width="4"/>
+  <path d="M 628 550 V 570" stroke="#f0cf66" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="692" cy="540" rx="17" ry="22" fill="#fff0b3" stroke="#f0cf66" stroke-width="4"/>
+  <path d="M 692 530 V 550" stroke="#f0cf66" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="756" cy="560" rx="17" ry="22" fill="#fff0b3" stroke="#f0cf66" stroke-width="4"/>
+  <path d="M 756 550 V 570" stroke="#f0cf66" stroke-width="4" stroke-linecap="round"/>
+  <rect x="700" y="1130" width="64" height="64" rx="6" fill="#f9dfba" stroke="#e7bd86" stroke-width="4"/>
+  <path d="M 700 1162 H 764 M 732 1130 V 1162 M 716 1162 V 1194 M 748 1162 V 1194" stroke="#e7bd86" stroke-width="3" fill="none"/>
+  <rect x="764" y="1130" width="64" height="64" rx="6" fill="#f9dfba" stroke="#e7bd86" stroke-width="4"/>
+  <path d="M 764 1162 H 828 M 796 1130 V 1162 M 780 1162 V 1194 M 812 1162 V 1194" stroke="#e7bd86" stroke-width="3" fill="none"/>
+  <ellipse cx="732" cy="1050" rx="17" ry="22" fill="#fff0b3" stroke="#f0cf66" stroke-width="4"/>
+  <path d="M 732 1040 V 1060" stroke="#f0cf66" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="796" cy="1050" rx="17" ry="22" fill="#fff0b3" stroke="#f0cf66" stroke-width="4"/>
+  <path d="M 796 1040 V 1060" stroke="#f0cf66" stroke-width="4" stroke-linecap="round"/>
+  <!-- Near hills, with the lighter spots that make them read as hills. -->
+  <ellipse cx="200" cy="1900" rx="470" ry="360" fill="#c2e8bd"/>
+  <ellipse cx="110" cy="1690" rx="26" ry="38" fill="#d6f1d2"/>
+  <ellipse cx="250" cy="1640" rx="20" ry="30" fill="#d6f1d2"/>
+  <ellipse cx="330" cy="1730" rx="22" ry="32" fill="#d6f1d2"/>
+  <ellipse cx="790" cy="1960" rx="430" ry="300" fill="#aedcaa"/>
+  <ellipse cx="720" cy="1760" rx="22" ry="32" fill="#c6eac2"/>
+  <ellipse cx="840" cy="1800" rx="18" ry="26" fill="#c6eac2"/>
+  <g fill="#b5e0b0"><ellipse cx="520" cy="1790" rx="63.0" ry="39.6"/><ellipse cx="464.2" cy="1802.6" rx="41.4" ry="27.0"/><ellipse cx="575.8" cy="1802.6" rx="41.4" ry="27.0"/></g>
+  <g fill="#b5e0b0"><ellipse cx="-20" cy="1800" rx="56.0" ry="35.2"/><ellipse cx="-69.6" cy="1811.2" rx="36.800000000000004" ry="24.0"/><ellipse cx="29.6" cy="1811.2" rx="36.800000000000004" ry="24.0"/></g>
+</svg>

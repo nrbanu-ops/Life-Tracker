@@ -3,10 +3,11 @@ import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import App from './App.tsx'
-import { applyPalette, getPalette } from './lib/theme.ts'
+import { applyBackdropMotion, applyPalette, getBackdropMotion, getPalette } from './lib/theme.ts'
 
 // index.html already set data-palette; this also points theme-color at the palette's colours.
 applyPalette(getPalette())
+applyBackdropMotion(getBackdropMotion())
 
 const UPDATE_CHECK_MS = 30 * 60_000
 

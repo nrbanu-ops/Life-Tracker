@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { AchievementWatcher } from './AchievementWatcher'
+import { Backdrop } from './Backdrop'
 import { BackupManager } from './BackupManager'
 import { ErrorBoundary } from './ErrorBoundary'
 import { LevelWatcher } from './LevelWatcher'
@@ -18,7 +19,7 @@ export function Layout() {
         paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))',
       }}
     >
-      <div className="app-backdrop" aria-hidden />
+      <Backdrop />
       <BackupManager />
       <TimerBanner />
       {/* Screens load on first visit; the tab bar stays put meanwhile. Keyed so each screen fades in. */}

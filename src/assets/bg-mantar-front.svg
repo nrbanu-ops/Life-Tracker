@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1800" preserveAspectRatio="xMidYMid slice">
+  <g fill="#ffffff" stroke="#c9e4f6" stroke-width="4.0" transform="translate(150 340) scale(1.25)">
+    <ellipse cx="0" cy="0" rx="58" ry="40"/>
+    <ellipse cx="-62" cy="14" rx="44" ry="30"/>
+    <ellipse cx="62" cy="14" rx="46" ry="32"/>
+    <ellipse cx="-18" cy="-26" rx="40" ry="30"/>
+    <ellipse cx="30" cy="-22" rx="36" ry="28"/>
+    <g stroke="none"><ellipse cx="0" cy="0" rx="56" ry="38"/><ellipse cx="-62" cy="14" rx="42" ry="28"/><ellipse cx="62" cy="14" rx="44" ry="30"/><ellipse cx="-18" cy="-26" rx="38" ry="28"/><ellipse cx="30" cy="-22" rx="34" ry="26"/></g>
+  </g>
+  <g fill="#ffffff" stroke="#c9e4f6" stroke-width="5.6" transform="translate(680 250) scale(0.9)">
+    <ellipse cx="0" cy="0" rx="58" ry="40"/>
+    <ellipse cx="-62" cy="14" rx="44" ry="30"/>
+    <ellipse cx="62" cy="14" rx="46" ry="32"/>
+    <ellipse cx="-18" cy="-26" rx="40" ry="30"/>
+    <ellipse cx="30" cy="-22" rx="36" ry="28"/>
+    <g stroke="none"><ellipse cx="0" cy="0" rx="56" ry="38"/><ellipse cx="-62" cy="14" rx="42" ry="28"/><ellipse cx="62" cy="14" rx="44" ry="30"/><ellipse cx="-18" cy="-26" rx="38" ry="28"/><ellipse cx="30" cy="-22" rx="34" ry="26"/></g>
+  </g>
+  <g fill="#ffffff" stroke="#c9e4f6" stroke-width="4.5" transform="translate(770 860) scale(1.1)">
+    <ellipse cx="0" cy="0" rx="58" ry="40"/>
+    <ellipse cx="-62" cy="14" rx="44" ry="30"/>
+    <ellipse cx="62" cy="14" rx="46" ry="32"/>
+    <ellipse cx="-18" cy="-26" rx="40" ry="30"/>
+    <ellipse cx="30" cy="-22" rx="36" ry="28"/>
+    <g stroke="none"><ellipse cx="0" cy="0" rx="56" ry="38"/><ellipse cx="-62" cy="14" rx="42" ry="28"/><ellipse cx="62" cy="14" rx="44" ry="30"/><ellipse cx="-18" cy="-26" rx="38" ry="28"/><ellipse cx="30" cy="-22" rx="34" ry="26"/></g>
+  </g>
+  <g fill="#ffffff" stroke="#c9e4f6" stroke-width="5.9" transform="translate(90 1250) scale(0.85)">
+    <ellipse cx="0" cy="0" rx="58" ry="40"/>
+    <ellipse cx="-62" cy="14" rx="44" ry="30"/>
+    <ellipse cx="62" cy="14" rx="46" ry="32"/>
+    <ellipse cx="-18" cy="-26" rx="40" ry="30"/>
+    <ellipse cx="30" cy="-22" rx="36" ry="28"/>
+    <g stroke="none"><ellipse cx="0" cy="0" rx="56" ry="38"/><ellipse cx="-62" cy="14" rx="42" ry="28"/><ellipse cx="62" cy="14" rx="44" ry="30"/><ellipse cx="-18" cy="-26" rx="38" ry="28"/><ellipse cx="30" cy="-22" rx="34" ry="26"/></g>
+  </g>
+  <g fill="#ffffff" stroke="#c9e4f6" stroke-width="5.0" transform="translate(540 1420) scale(1.0)">
+    <ellipse cx="0" cy="0" rx="58" ry="40"/>
+    <ellipse cx="-62" cy="14" rx="44" ry="30"/>
+    <ellipse cx="62" cy="14" rx="46" ry="32"/>
+    <ellipse cx="-18" cy="-26" rx="40" ry="30"/>
+    <ellipse cx="30" cy="-22" rx="36" ry="28"/>
+    <g stroke="none"><ellipse cx="0" cy="0" rx="56" ry="38"/><ellipse cx="-62" cy="14" rx="42" ry="28"/><ellipse cx="62" cy="14" rx="44" ry="30"/><ellipse cx="-18" cy="-26" rx="38" ry="28"/><ellipse cx="30" cy="-22" rx="34" ry="26"/></g>
+  </g>
+</svg>

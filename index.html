@@ -19,6 +19,7 @@
       try {
         var p = localStorage.getItem('life-tracker:palette')
         if (p) document.documentElement.dataset.palette = p
+        if (localStorage.getItem('life-tracker:backdrop-motion') === 'off') document.documentElement.dataset.motion = 'off'
       } catch (e) {}
     </script>
   </head>

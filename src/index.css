@@ -31,9 +31,9 @@
   --color-rank-b: #a78bfa;
   --color-rank-a: #f87171;
   --color-rank-s: #f5b941;
-  /* The solid colour blended over the background picture, and the veil that dims it in the dark. */
+  /* The hue of the bands behind every screen; --wave-end, where set, is the hue they flow into. */
   --color-backdrop-tint: #5b86bd;
-  --color-backdrop-veil: rgb(24 32 48 / 0.45);
+  --wave-end: #5fa58c;
   color-scheme: light;
 }
 
@@ -72,7 +72,6 @@
   --color-accent: #d2403c;
   --color-accent-soft: #ffe0da;
   --color-backdrop-tint: #f2745f;
-  --color-backdrop-veil: rgb(46 22 32 / 0.45);
   /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
   --color-sys-bg: #2b0f1a;
   --color-sys-panel: #40182a;
@@ -81,6 +80,9 @@
   --color-sys-glow: #ffb3c8;
   --color-sys-text: #ffe8ef;
   --color-sys-muted: #dba2b6;
+  /* The hue the bands turn toward on the way down; mirrored, for a shape of its own. */
+  --wave-end: #f5b95f;
+  --backdrop-flip-x: -1;
 }
 @media (prefers-color-scheme: dark) {
   :root[data-palette='seker'] {
@@ -104,7 +106,6 @@
   --color-accent: #0e7f99;
   --color-accent-soft: #d7eff5;
   --color-backdrop-tint: #3aa8c4;
-  --color-backdrop-veil: rgb(7 32 42 / 0.45);
   /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
   --color-sys-bg: #04212b;
   --color-sys-panel: #0a3140;
@@ -113,6 +114,9 @@
   --color-sys-glow: #7ff0ff;
   --color-sys-text: #dcfaff;
   --color-sys-muted: #89c6d6;
+  /* The hue the bands turn toward on the way down; mirrored, for a shape of its own. */
+  --wave-end: #4a6fd6;
+  --backdrop-flip-x: -1;
 }
 @media (prefers-color-scheme: dark) {
   :root[data-palette='okyanus'] {
@@ -136,7 +140,6 @@
   --color-accent: #6d3fd4;
   --color-accent-soft: #ebe2fc;
   --color-backdrop-tint: #9272e0;
-  --color-backdrop-veil: rgb(31 22 54 / 0.45);
   /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
   --color-sys-bg: #180b2e;
   --color-sys-panel: #261140;
@@ -145,6 +148,8 @@
   --color-sys-glow: #d6b4fe;
   --color-sys-text: #f0e6ff;
   --color-sys-muted: #b8a4da;
+  /* The hue the bands turn toward on the way down. */
+  --wave-end: #ea8cc4;
 }
 @media (prefers-color-scheme: dark) {
   :root[data-palette='lavanta'] {
@@ -168,7 +173,6 @@
   --color-accent: #bf5a10;
   --color-accent-soft: #ffe3cb;
   --color-backdrop-tint: #f58a3c;
-  --color-backdrop-veil: rgb(42 23 9 / 0.45);
   /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
   --color-sys-bg: #251104;
   --color-sys-panel: #3a1d09;
@@ -177,6 +181,9 @@
   --color-sys-glow: #ffd08a;
   --color-sys-text: #fff0dc;
   --color-sys-muted: #d8b088;
+  /* The hue the bands turn toward on the way down; mirrored, for a shape of its own. */
+  --wave-end: #c54f86;
+  --backdrop-flip-x: -1;
 }
 @media (prefers-color-scheme: dark) {
   :root[data-palette='gunbatimi'] {
@@ -200,7 +207,6 @@
   --color-accent: #cc1a71;
   --color-accent-soft: #ffdcec;
   --color-backdrop-tint: #f261a4;
-  --color-backdrop-veil: rgb(46 15 34 / 0.45);
   /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
   --color-sys-bg: #2b0820;
   --color-sys-panel: #420d31;
@@ -209,6 +215,8 @@
   --color-sys-glow: #ffa6ce;
   --color-sys-text: #ffe6f3;
   --color-sys-muted: #e0a0c4;
+  /* The hue the bands turn toward on the way down. */
+  --wave-end: #b18af0;
 }
 @media (prefers-color-scheme: dark) {
   :root[data-palette='pembe'] {
@@ -232,7 +240,6 @@
   --color-accent: #0b7d73;
   --color-accent-soft: #d2f2ec;
   --color-backdrop-tint: #2fc0ad;
-  --color-backdrop-veil: rgb(4 35 31 / 0.45);
   /* The leveling window takes the palette's hue in both themes, so dark mode isn't all one colour. */
   --color-sys-bg: #022423;
   --color-sys-panel: #073634;
@@ -241,6 +248,8 @@
   --color-sys-glow: #8af0e4;
   --color-sys-text: #dcfffb;
   --color-sys-muted: #88cec4;
+  /* The hue the bands turn toward on the way down. */
+  --wave-end: #4f9be6;
 }
 @media (prefers-color-scheme: dark) {
   :root[data-palette='turkuaz'] {
@@ -292,15 +301,105 @@
   --color-rank-b: #7c5cd6;
   --color-rank-a: #d6453f;
   --color-rank-s: #b07d08;
-}
-:root[data-palette='gokkusagi'] .app-backdrop {
-  /* Flowing bands, no colour blending: the artwork already is the palette. */
-  background: url("./assets/bg-wave.svg") center / cover no-repeat;
-  background-color: var(--color-bg);
-  background-blend-mode: normal;
+  /* The bands are not shades of one hue here: cream through peach and rose down to sky blue. */
+  --wave-1: #fde9d2;
+  --wave-2: #fbdcb9;
+  --wave-3: #fad7c4;
+  --wave-4: #fbcdc6;
+  --wave-5: #fac6cf;
+  --wave-6: #f6cfdd;
+  --wave-7: #ecd7e4;
+  --wave-8: #dde0ee;
+  --wave-9: #cfdcee;
+  --wave-10: #c2d5ea;
 }
 :root[data-palette='gokkusagi'] .map-tiles {
   /* The page stays light, so the map must not be inverted for the phone's dark mode. */
+  filter: none;
+}
+
+/*
+ * Phantom: the opposite exception — always dark, whatever the phone says. Black paper, one
+ * loud red, white ink, and corners cut nearly square. Like Gökkuşağı it carries every variable.
+ * Its backdrop is drawn artwork (torn crimson ribbons, halftone, stars) instead of the bands.
+ */
+:root[data-palette='phantom'] {
+  color-scheme: dark;
+  --color-bg: #0e0e10;
+  --color-surface: #1a1a1e;
+  --color-text: #f6f6f6;
+  --color-muted: #adadb3;
+  --color-border: #38383f;
+  /* Bright enough that the dark card colour reads on it as button text. */
+  --color-accent: #ff2d46;
+  --color-accent-soft: #3d1219;
+  --color-p1: #ff5466;
+  --color-p2: #ffc83d;
+  --color-p3: #5ab0ff;
+  --color-sys-bg: #09090a;
+  --color-sys-panel: #19191c;
+  --color-sys-line: #3a3a41;
+  --color-sys-edge: #ff2d46;
+  --color-sys-glow: #ffffff;
+  --color-sys-text: #f6f6f6;
+  --color-sys-muted: #adadb3;
+  --color-sys-warn: #ffc83d;
+  --color-sys-danger: #ff2d46;
+  --color-rank-e: #9aa6bd;
+  --color-rank-d: #4ade80;
+  --color-rank-c: #3aa6ff;
+  --color-rank-b: #a78bfa;
+  --color-rank-a: #f87171;
+  --color-rank-s: #f5b941;
+  --color-backdrop-tint: #6d0918;
+  /* Tailwind's rounded-* classes read these, so the whole app turns angular at once. */
+  --radius-lg: 2px;
+  --radius-xl: 3px;
+  --radius-2xl: 4px;
+  --radius-3xl: 6px;
+}
+:root[data-palette='phantom'] .map-tiles {
+  /* The page is dark even when the phone is not, so the map always needs its dark treatment. */
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9);
+}
+
+/*
+ * Mantar Krallığı: always bright. A pale sky with hills, blocks and coins, clouds drifting
+ * across on a layer of their own. Everything in the picture is kept pastel so that text
+ * which sits straight on it stays readable; the colour is in the buttons and marks instead.
+ */
+:root[data-palette='mantar'] {
+  color-scheme: light;
+  --color-bg: #e6f6ff;
+  --color-surface: #ffffff;
+  --color-text: #1d2742;
+  --color-muted: #55607a;
+  --color-border: #cfe2f0;
+  --color-accent: #e0281e;
+  --color-accent-soft: #ffe2de;
+  /* Red, coin gold and sky blue. */
+  --color-p1: #d81f1f;
+  --color-p2: #b97f00;
+  --color-p3: #1c74c4;
+  /* The leveling window as a cream sign with a pipe-green edge. */
+  --color-sys-bg: #fffbe8;
+  --color-sys-panel: #fff0b8;
+  --color-sys-line: #ecc96a;
+  --color-sys-edge: #2f8f3e;
+  --color-sys-glow: #b97f00;
+  --color-sys-text: #1d2742;
+  --color-sys-muted: #55607a;
+  --color-sys-warn: #cf4520;
+  --color-sys-danger: #c62828;
+  --color-rank-e: #6b7a94;
+  --color-rank-d: #1f9e52;
+  --color-rank-c: #1d7fd4;
+  --color-rank-b: #7c5cd6;
+  --color-rank-a: #d6453f;
+  --color-rank-s: #b07d08;
+  --color-backdrop-tint: #7cc6f5;
+}
+:root[data-palette='mantar'] .map-tiles {
   filter: none;
 }
 
@@ -407,6 +506,20 @@
   }
 }
 
+@keyframes viewer-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The photo viewer scrolls sideways between photos and around a zoomed one; no bars over the picture. */
+.photo-viewer * {
+  scrollbar-width: none;
+}
+.photo-viewer *::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes page-in {
   from {
     opacity: 0;
@@ -483,36 +596,105 @@ body,
 }
 
 /*
- * Blossom branches behind every screen, a light and a dark picture. A fixed layer rather
- * than background-attachment: fixed, which Android's WebView scrolls anyway.
+ * The backdrop (src/components/Backdrop.tsx): ten bands in two layers. A band's colour is the
+ * page colour with more and more of the palette's hue mixed in on the way down, turning toward
+ * --wave-end in the lower half, so every palette — and its dark version — gets its own picture
+ * from two variables. A palette can also name the ten colours outright (--wave-1 … --wave-10).
  */
 .app-backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
+  overflow: hidden;
   pointer-events: none;
-  /* The picture is cream; a blue "color" layer turns paper and branches blue, like ink, to go with the level card. */
-  background:
-    linear-gradient(var(--color-backdrop-tint), var(--color-backdrop-tint)),
-    url("./assets/bg-light.jpg") center / cover no-repeat;
-  background-color: var(--color-bg);
-  background-blend-mode: color, normal;
+  background: var(--color-bg);
+  /* Some palettes mirror the picture, so that they are not all the same shape in another colour. */
+  transform: scaleX(var(--backdrop-flip-x, 1));
+  --w: var(--color-backdrop-tint);
+  --w2: var(--wave-end, var(--color-backdrop-tint));
 }
-@media (min-aspect-ratio: 3/4) {
-  /* Wide screens: keep the branches at phone size in the corners instead of blowing them up. */
-  .app-backdrop {
-    background-size: auto 100%;
-  }
+.backdrop-waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* The curves run past the view box; they must keep painting there once the layer has moved. */
+  overflow: visible;
+  will-change: transform;
 }
-@media (prefers-color-scheme: dark) {
-  .app-backdrop {
-    /* A dark veil dims the bright blossoms so icons over them stay clear; the "color" layer turns the picture navy. */
-    background-image:
-      linear-gradient(var(--color-backdrop-veil), var(--color-backdrop-veil)),
-      linear-gradient(var(--color-backdrop-tint), var(--color-backdrop-tint)),
-      url("./assets/bg-dark.jpg");
-    background-blend-mode: normal, color, normal;
-  }
+.wave-1 { fill: var(--wave-1, color-mix(in oklab, var(--w) 6%, var(--color-bg))); }
+.wave-2 { fill: var(--wave-2, color-mix(in oklab, var(--w) 11%, var(--color-bg))); }
+.wave-3 { fill: var(--wave-3, color-mix(in oklab, var(--w) 16%, var(--color-bg))); }
+.wave-4 { fill: var(--wave-4, color-mix(in oklab, var(--w) 21%, var(--color-bg))); }
+.wave-5 { fill: var(--wave-5, color-mix(in oklab, var(--w) 25%, var(--color-bg))); }
+.wave-6 { fill: var(--wave-6, color-mix(in oklab, color-mix(in oklab, var(--w2) 20%, var(--w)) 28%, var(--color-bg))); }
+.wave-7 { fill: var(--wave-7, color-mix(in oklab, color-mix(in oklab, var(--w2) 40%, var(--w)) 31%, var(--color-bg))); }
+.wave-8 { fill: var(--wave-8, color-mix(in oklab, color-mix(in oklab, var(--w2) 60%, var(--w)) 34%, var(--color-bg))); }
+.wave-9 { fill: var(--wave-9, color-mix(in oklab, color-mix(in oklab, var(--w2) 80%, var(--w)) 37%, var(--color-bg))); }
+.wave-10 { fill: var(--wave-10, color-mix(in oklab, var(--w2) 40%, var(--color-bg))); }
+
+/*
+ * The only motion: the two layers slide a few pixels against each other, slowly enough to be
+ * felt rather than watched. Transforms only, so it stays on the compositor. Settings can turn
+ * it off (data-motion), and "reduce motion" on the phone already does, above.
+ */
+.backdrop-back {
+  animation: backdrop-drift-a 47s ease-in-out infinite alternate;
+}
+.backdrop-front {
+  animation: backdrop-drift-b 61s ease-in-out infinite alternate;
+}
+@keyframes backdrop-drift-a {
+  from { transform: translate3d(-2.2%, 0, 0); }
+  to { transform: translate3d(2.2%, -0.8%, 0); }
+}
+@keyframes backdrop-drift-b {
+  from { transform: translate3d(2.6%, 0.6%, 0); }
+  to { transform: translate3d(-2.6%, -0.6%, 0); }
+}
+/*
+ * Palettes with artwork of their own: the bands are put away and two pictures take their
+ * place — one that barely moves, and one in front of it that drifts.
+ */
+:root[data-palette='phantom'] .backdrop-waves,
+:root[data-palette='mantar'] .backdrop-waves {
+  display: none;
+}
+:root[data-palette='phantom'] .app-backdrop::before,
+:root[data-palette='phantom'] .app-backdrop::after,
+:root[data-palette='mantar'] .app-backdrop::before,
+:root[data-palette='mantar'] .app-backdrop::after {
+  content: '';
+  position: absolute;
+  /* Larger than the screen, so the drift never shows an edge. */
+  inset: -6%;
+  background: center / cover no-repeat;
+  will-change: transform;
+}
+:root[data-palette='phantom'] .app-backdrop::before {
+  background-image: url("./assets/bg-phantom-back.svg");
+  animation: backdrop-drift-a 53s ease-in-out infinite alternate;
+}
+:root[data-palette='phantom'] .app-backdrop::after {
+  background-image: url("./assets/bg-phantom-front.svg");
+  animation: backdrop-drift-b 37s ease-in-out infinite alternate;
+}
+:root[data-palette='mantar'] .app-backdrop::before {
+  background-image: url("./assets/bg-mantar-back.svg");
+}
+:root[data-palette='mantar'] .app-backdrop::after {
+  background-image: url("./assets/bg-mantar-front.svg");
+  /* Clouds cross the sky; everything else stays where it is. */
+  animation: backdrop-clouds 90s ease-in-out infinite alternate;
+}
+@keyframes backdrop-clouds {
+  from { transform: translate3d(-5%, 0, 0); }
+  to { transform: translate3d(5%, 0, 0); }
+}
+:root[data-motion='off'] .app-backdrop *,
+:root[data-motion='off'] .app-backdrop::before,
+:root[data-motion='off'] .app-backdrop::after {
+  animation: none;
 }
 
 body {

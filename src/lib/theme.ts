@@ -25,6 +25,21 @@ export const PALETTES: Palette[] = [
     // No dark version, so the status bar keeps the light colour either way.
     bg: ['#fdf2e3', '#fdf2e3'],
   },
+  {
+    id: 'mantar',
+    name: 'Mantar Krallığı',
+    note: 'hep aydınlık',
+    swatch: ['#e0281e', '#7cc6f5', '#5cc46a', '#f0cf66'],
+    bg: ['#e6f6ff', '#e6f6ff'],
+  },
+  {
+    id: 'phantom',
+    name: 'Phantom',
+    note: 'hep karanlık',
+    swatch: ['#ff2d46', '#0e0e10', '#f6f6f6'],
+    // Dark whatever the phone says, so the status bar is too.
+    bg: ['#0e0e10', '#0e0e10'],
+  },
   { id: 'orman', name: 'Orman', swatch: ['#3f6b5c', '#dce6f3'], bg: ['#dce6f3', '#182030'] },
   { id: 'seker', name: 'Şeker', swatch: ['#d2403c', '#fde9e2'], bg: ['#fde9e2', '#2e1620'] },
   { id: 'pembe', name: 'Pembe', swatch: ['#cc1a71', '#ffe7f2'], bg: ['#ffe7f2', '#2e0f22'] },
@@ -81,5 +96,42 @@ export function usePalette(): string {
     },
     getPalette,
     () => DEFAULT_PALETTE,
+  )
+}
+
+// The backdrop's slow drift. On unless switched off; also kept in step with index.html.
+const MOTION_KEY = 'life-tracker:backdrop-motion'
+
+export function getBackdropMotion(): boolean {
+  try {
+    return localStorage.getItem(MOTION_KEY) !== 'off'
+  } catch {
+    return true
+  }
+}
+
+/** Puts the choice on <html>, where the stylesheet stops the animations for 'off'. */
+export function applyBackdropMotion(on: boolean): void {
+  document.documentElement.dataset.motion = on ? 'on' : 'off'
+}
+
+export function setBackdropMotion(on: boolean): void {
+  try {
+    localStorage.setItem(MOTION_KEY, on ? 'on' : 'off')
+  } catch {
+    // Private mode: the choice just doesn't stick.
+  }
+  applyBackdropMotion(on)
+  for (const listener of listeners) listener()
+}
+
+export function useBackdropMotion(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+    getBackdropMotion,
+    () => true,
   )
 }
