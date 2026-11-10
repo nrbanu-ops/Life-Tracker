@@ -8,7 +8,7 @@ export function YearReviewCard({ today }: { today: string }) {
   return (
     <Link
       to={`/ozet?yil=${year}`}
-      className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
+      className="mb-6 flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
     >
       <span className="text-2xl" aria-hidden>
         ✨

@@ -86,6 +86,12 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   )
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  // Folded for a new habit; open when the habit being edited already uses something in there.
+  const [more, setMore] = useState(
+    () =>
+      !!habit &&
+      !!(habit.why || habit.when || habit.cue || habit.minimumVersion || habit.focus || habit.effort || habit.stat || habit.projectId),
+  )
 
   const trimmedTitle = title.trim()
   const countable = kind === 'count' || kind === 'duration'
@@ -161,23 +167,6 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
           autoFocus={!habit}
           maxLength={80}
         />
-      </label>
-
-      <label className="flex flex-col gap-1.5">
-        <span className="text-sm text-muted">Neden? (isteğe bağlı)</span>
-        <input
-          id="habit-why"
-          value={why}
-          onChange={(e) => setWhy(e.target.value)}
-          placeholder={isQuit ? 'ör. Sabahları nefes nefese kalmamak için' : 'ör. Sabahları daha enerjik olmak için'}
-          className={inputClass}
-          maxLength={140}
-        />
-        <span className="text-xs text-muted">
-          {isQuit
-            ? 'Tekrar başlamak üzereyken sana hatırlatılır.'
-            : 'Günü atlamak üzereyken ve seri koruması kartında sana hatırlatılır.'}
-        </span>
       </label>
 
       <fieldset className="flex flex-col gap-2">
@@ -257,9 +246,8 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
         )}
       </fieldset>
 
-      {/* Quit habits have no schedule or minimum version. */}
+      {/* Quit habits have no schedule. */}
       {!isQuit && (
-        <>
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1.5 text-sm text-muted">Sıklık</legend>
             <Segmented
@@ -320,117 +308,160 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
               </div>
             )}
           </fieldset>
-
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1.5 text-sm text-muted">Günün hangi bölümünde?</legend>
-            <Segmented<DayPart | ''>
-              options={[
-                { value: '', label: 'Fark etmez' },
-                ...DAY_PARTS.map((part) => ({ value: part, label: DAY_PART_LABEL[part] })),
-              ]}
-              value={when}
-              onChange={setWhen}
-            />
-            <input
-              id="habit-cue"
-              value={cue}
-              onChange={(e) => setCue(e.target.value)}
-              placeholder="Tetikleyici: ör. çaydan sonra, işten gelince"
-              aria-label="Tetikleyici"
-              className={inputClass}
-              maxLength={60}
-            />
-            <span className="text-xs text-muted">
-              Saat yerine zaten her gün yaptığın bir şeye bağla; Bugün ekranı günün o bölümündekileri öne alır.
-            </span>
-          </fieldset>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm text-muted">Minimum versiyon (isteğe bağlı)</span>
-            <input
-              id="habit-minimum"
-              value={minimumVersion}
-              onChange={(e) => setMinimumVersion(e.target.value)}
-              placeholder="ör. 5 dk dil çalışması"
-              className={inputClass}
-              maxLength={80}
-            />
-            <span className="text-xs text-muted">Zor günlerde bunu yapman seriyi korur.</span>
-          </label>
-
-          <label className="flex items-start gap-3">
-            <input
-              id="habit-focus"
-              type="checkbox"
-              checked={focus}
-              disabled={!focus && focusTaken >= FOCUS_MAX}
-              onChange={(e) => setFocus(e.target.checked)}
-              className="mt-0.5 h-5 w-5 shrink-0 accent-accent disabled:opacity-40"
-            />
-            <span>
-              <span className="font-medium">Omurga habit</span>
-              <span className="block text-xs text-muted">
-                {!focus && focusTaken >= FOCUS_MAX
-                  ? `Zaten ${FOCUS_MAX} omurga habit var; birini çıkarmadan yenisini ekleyemezsin.`
-                  : `Odak modu açıkken Bugün ekranının en üstünde durur, gerisi katlanır. En fazla ${FOCUS_MAX} tane.`}
-              </span>
-            </span>
-          </label>
-
-          {levelingOn && (
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex flex-col gap-1.5">
-                <span className="text-sm text-muted">Zorluk</span>
-                <select value={effort} onChange={(e) => setEffort(e.target.value as EffortTier | '')} className={inputClass}>
-                  <option value="">Otomatik ({TIER_LABEL[guess.tier]})</option>
-                  {EFFORT_TIERS.map((tier) => (
-                    <option key={tier} value={tier}>
-                      {TIER_LABEL[tier]} · {TIER_XP[tier]} XP
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col gap-1.5">
-                <span className="text-sm text-muted">Stat</span>
-                <select value={stat} onChange={(e) => setStat(e.target.value as StatKey | '')} className={inputClass}>
-                  <option value="">Otomatik ({STAT_LABEL[guessStat]})</option>
-                  {STATS.map((key) => (
-                    <option key={key} value={key}>
-                      {STAT_LABEL[key]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <span className="col-span-2 -mt-1 text-xs text-muted">
-                {effort ? 'Senin seçimin; bugünden itibaren geçerli.' : `Uygulama karar veriyor: ${guess.reason}.`}
-              </span>
-            </div>
-          )}
-        </>
       )}
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-sm text-muted">Proje (isteğe bağlı)</span>
-        {projects.length > 0 ? (
-          <select
-            id="habit-project"
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            className={inputClass}
-          >
-            <option value="">Bağımsız habit</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.title}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="text-sm text-muted">
-            Henüz proje yok. Proje ekledikten sonra habit'i ona bağlayabilirsin.
+      {/* Name and rhythm are enough to start; everything that refines a habit waits behind this. */}
+      <button
+        type="button"
+        aria-expanded={more}
+        onClick={() => setMore((v) => !v)}
+        className="flex items-center justify-between gap-3 rounded-xl bg-bg px-3 py-3 text-left text-sm"
+      >
+        <span className="min-w-0">
+          <span className="block font-medium">Daha fazla seçenek</span>
+          <span className="block truncate text-muted">
+            {isQuit ? 'Neden, proje' : 'Neden, tetikleyici, minimum, omurga, proje'}
           </span>
-        )}
-      </label>
+        </span>
+        <span aria-hidden className={`text-xl text-muted transition-transform ${more ? 'rotate-90' : ''}`}>
+          ›
+        </span>
+      </button>
+
+      {more && (
+        <>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm text-muted">Neden? (isteğe bağlı)</span>
+            <input
+              id="habit-why"
+              value={why}
+              onChange={(e) => setWhy(e.target.value)}
+              placeholder={isQuit ? 'ör. Sabahları nefes nefese kalmamak için' : 'ör. Sabahları daha enerjik olmak için'}
+              className={inputClass}
+              maxLength={140}
+            />
+            <span className="text-xs text-muted">
+              {isQuit
+                ? 'Tekrar başlamak üzereyken sana hatırlatılır.'
+                : 'Günü atlamak üzereyken ve seri koruması kartında sana hatırlatılır.'}
+            </span>
+          </label>
+
+          {/* Quit habits have no time of day, minimum version or keystone mark. */}
+          {!isQuit && (
+            <>
+              <fieldset className="flex flex-col gap-2">
+                <legend className="mb-1.5 text-sm text-muted">Günün hangi bölümünde?</legend>
+                <Segmented<DayPart | ''>
+                  options={[
+                    { value: '', label: 'Fark etmez' },
+                    ...DAY_PARTS.map((part) => ({ value: part, label: DAY_PART_LABEL[part] })),
+                  ]}
+                  value={when}
+                  onChange={setWhen}
+                />
+                <input
+                  id="habit-cue"
+                  value={cue}
+                  onChange={(e) => setCue(e.target.value)}
+                  placeholder="Tetikleyici: ör. çaydan sonra, işten gelince"
+                  aria-label="Tetikleyici"
+                  className={inputClass}
+                  maxLength={60}
+                />
+                <span className="text-xs text-muted">
+                  Saat yerine zaten her gün yaptığın bir şeye bağla; Bugün ekranı günün o bölümündekileri öne alır.
+                </span>
+              </fieldset>
+
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm text-muted">Minimum versiyon (isteğe bağlı)</span>
+                <input
+                  id="habit-minimum"
+                  value={minimumVersion}
+                  onChange={(e) => setMinimumVersion(e.target.value)}
+                  placeholder="ör. 5 dk dil çalışması"
+                  className={inputClass}
+                  maxLength={80}
+                />
+                <span className="text-xs text-muted">Zor günlerde bunu yapman seriyi korur.</span>
+              </label>
+
+              <label className="flex items-start gap-3">
+                <input
+                  id="habit-focus"
+                  type="checkbox"
+                  checked={focus}
+                  disabled={!focus && focusTaken >= FOCUS_MAX}
+                  onChange={(e) => setFocus(e.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-accent disabled:opacity-40"
+                />
+                <span>
+                  <span className="font-medium">Omurga habit</span>
+                  <span className="block text-xs text-muted">
+                    {!focus && focusTaken >= FOCUS_MAX
+                      ? `Zaten ${FOCUS_MAX} omurga habit var; birini çıkarmadan yenisini ekleyemezsin.`
+                      : `Odak modu açıkken Bugün ekranının en üstünde durur, gerisi katlanır. En fazla ${FOCUS_MAX} tane.`}
+                  </span>
+                </span>
+              </label>
+
+              {levelingOn && (
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-sm text-muted">Zorluk</span>
+                    <select value={effort} onChange={(e) => setEffort(e.target.value as EffortTier | '')} className={inputClass}>
+                      <option value="">Otomatik ({TIER_LABEL[guess.tier]})</option>
+                      {EFFORT_TIERS.map((tier) => (
+                        <option key={tier} value={tier}>
+                          {TIER_LABEL[tier]} · {TIER_XP[tier]} XP
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-sm text-muted">Stat</span>
+                    <select value={stat} onChange={(e) => setStat(e.target.value as StatKey | '')} className={inputClass}>
+                      <option value="">Otomatik ({STAT_LABEL[guessStat]})</option>
+                      {STATS.map((key) => (
+                        <option key={key} value={key}>
+                          {STAT_LABEL[key]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <span className="col-span-2 -mt-1 text-xs text-muted">
+                    {effort ? 'Senin seçimin; bugünden itibaren geçerli.' : `Uygulama karar veriyor: ${guess.reason}.`}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm text-muted">Proje (isteğe bağlı)</span>
+            {projects.length > 0 ? (
+              <select
+                id="habit-project"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Bağımsız habit</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.title}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm text-muted">
+                Henüz proje yok. Proje ekledikten sonra habit'i ona bağlayabilirsin.
+              </span>
+            )}
+          </label>
+        </>
+      )}
 
       <div className="flex flex-col gap-2 pt-1">
         <button

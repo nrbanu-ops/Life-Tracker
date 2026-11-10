@@ -85,18 +85,6 @@ export function TodayPage() {
     <>
       <PageHeader title="Bugün" subtitle={subtitle} />
 
-      <LevelCard />
-
-      <BackupReminder />
-
-      <FreezeCard today={today} />
-
-      <MonthReviewCard today={today} variant="today" />
-
-      <WeekPlanCard today={today} />
-
-      <TodayTasks today={today} projectColor={projectColor} />
-
       {items.length === 0 && quitHabits.length > 0 ? null : items.length === 0 ? (
         <EmptyState
           title={hasActiveHabits ? 'Bugün planlı habit yok' : 'Henüz habit yok'}
@@ -186,7 +174,7 @@ export function TodayPage() {
                   type="button"
                   aria-expanded
                   onClick={() => setShowRest(false)}
-                  className="mb-6 px-1 text-sm text-muted"
+                  className="tap-text -mt-4 mb-3 text-sm text-muted"
                 >
                   Diğerlerini gizle
                 </button>
@@ -201,6 +189,26 @@ export function TodayPage() {
           />
         </>
       )}
+
+      {/*
+        Reminders queue here, most pressing first, and only the first one that has something to
+        say is shown: each renders nothing when it is not due, so the first child is the winner.
+        (Dialogs are left alone — a sheet opened from the visible card must still appear.)
+      */}
+      <div className="[&>*:not(:first-child):not(dialog)]:hidden">
+        <FreezeCard today={today} />
+        <WeekPlanCard today={today} variant="prompt" />
+        <BackupReminder />
+        <MonthReviewCard today={today} variant="today" />
+        <SundayReviewNudge today={today} />
+        <YearReviewCard today={today} />
+      </div>
+
+      <WeekPlanCard today={today} variant="plan" />
+
+      <TodayTasks today={today} projectColor={projectColor} />
+
+      <LevelCard />
 
       {quitHabits.length > 0 && (
         <section className={items.length > 0 ? 'mt-2' : ''}>
@@ -225,10 +233,6 @@ export function TodayPage() {
       )}
 
       <TodayMilestones />
-
-      <SundayReviewNudge today={today} />
-
-      <YearReviewCard today={today} />
 
       <MemoryCard today={today} />
 
@@ -282,7 +286,7 @@ function HabitGroup({ title, detail, items, today, hideDone, hard, projectColor,
           type="button"
           aria-expanded={revealed}
           onClick={() => setRevealed((v) => !v)}
-          className="mt-2 px-1 text-sm text-muted"
+          className="tap-text text-sm text-muted"
         >
           {revealed ? 'Tamamlananları gizle' : `✓ ${finished.length} tamamlandı · göster`}
         </button>

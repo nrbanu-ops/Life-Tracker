@@ -10,7 +10,16 @@ import { WeekPlanSheet } from './WeekPlanSheet'
  * This week's priorities on Bugün: the forward-looking half of the weekly habit, next to
  * the review that looks back. One tap ticks one off.
  */
-export function WeekPlanCard({ today }: { today: string }) {
+type Props = {
+  today: string
+  /**
+   * 'prompt' is only the Sunday/Monday invitation, so it can queue with the other reminders;
+   * 'plan' is the plan itself, or one quiet line on the days nothing asks for it.
+   */
+  variant: 'prompt' | 'plan'
+}
+
+export function WeekPlanCard({ today, variant }: Props) {
   const week = weekRange(today).start
   // null, not undefined, for "no plan": undefined still means the query is loading.
   const plan = useLiveQuery(async () => (await db.weekPlans.get(week)) ?? null, [week])
@@ -21,10 +30,13 @@ export function WeekPlanCard({ today }: { today: string }) {
   const { done, total } = planProgress(plan ?? undefined)
   const sheet = <WeekPlanSheet open={editing} week={week} plan={plan} onClose={() => setEditing(false)} />
 
+  if (variant === 'prompt' && prompt !== 'card') return null
+  if (variant === 'plan' && prompt === 'card') return null
+
   if (prompt === 'line') {
     return (
       <>
-        <button type="button" onClick={() => setEditing(true)} className="mb-6 px-1 text-sm text-muted">
+        <button type="button" onClick={() => setEditing(true)} className="tap-text mb-3 text-sm text-muted">
           🎯 Bu hafta için plan yok · planla
         </button>
         {sheet}
@@ -70,7 +82,7 @@ export function WeekPlanCard({ today }: { today: string }) {
                 type="button"
                 aria-pressed={priority.done}
                 onClick={() => setPriorityDone(week, index, !priority.done)}
-                className="flex w-full items-center gap-3 py-2 text-left"
+                className="flex w-full items-center gap-3 py-2.5 text-left"
               >
                 <span
                   aria-hidden
@@ -86,7 +98,7 @@ export function WeekPlanCard({ today }: { today: string }) {
           ))}
         </ul>
         {plan?.note && <p className="mt-1 text-sm whitespace-pre-wrap text-muted">{plan.note}</p>}
-        <button type="button" onClick={() => setEditing(true)} className="mt-2 text-sm text-muted">
+        <button type="button" onClick={() => setEditing(true)} className="tap-text -mb-3 -ml-1 text-sm text-muted">
           Düzenle
         </button>
       </section>

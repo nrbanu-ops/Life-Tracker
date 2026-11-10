@@ -63,7 +63,7 @@ export function FreezeCard({ today }: { today: string }) {
     <section className="mb-6 rounded-2xl border border-border bg-surface p-4">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-medium">❄️ Seri koruması</h2>
-        <button type="button" onClick={dismiss} className="text-sm text-muted">
+        <button type="button" onClick={dismiss} className="tap-reach shrink-0 text-sm text-muted">
           Şimdi değil
         </button>
       </div>

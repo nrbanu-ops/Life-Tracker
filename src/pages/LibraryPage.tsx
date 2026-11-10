@@ -72,7 +72,7 @@ export function LibraryPage() {
             type="button"
             onClick={() => navigate(-1)}
             aria-label="Geri"
-            className="-mr-2 rounded-full p-2 text-muted transition-colors hover:text-text"
+            className="-mr-2.5 -mt-1.5 rounded-full p-2.5 text-muted transition-colors hover:text-text"
           >
             <BackIcon width={22} height={22} />
           </button>

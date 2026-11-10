@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useEffect, useState, type ReactNode } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { BackupSection } from '../components/BackupSection'
 import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
@@ -27,6 +27,18 @@ export function SettingsPage() {
   const [showText, setShowText] = useState(false)
   const ai = useAiSettings()
   const levelingOn = useLevelingOn()
+  // Links such as /ayarlar#yedek open the group their section lives in and scroll to it.
+  const anchor = useLocation().hash.slice(1)
+  const [open, setOpen] = useState<string | undefined>(() => GROUP_OF[anchor])
+  // The anchor can also change while this page is already open (a link to another section).
+  const [seenAnchor, setSeenAnchor] = useState(anchor)
+  if (seenAnchor !== anchor) {
+    setSeenAnchor(anchor)
+    if (GROUP_OF[anchor]) setOpen(GROUP_OF[anchor])
+  }
+  useEffect(() => {
+    if (anchor) document.getElementById(anchor)?.scrollIntoView({ block: 'start' })
+  }, [anchor])
 
   return (
     <>
@@ -37,106 +49,164 @@ export function SettingsPage() {
             type="button"
             onClick={() => navigate(-1)}
             aria-label="Geri"
-            className="-mr-2 rounded-full p-2 text-muted transition-colors hover:text-text"
+            className="-mr-2.5 -mt-1.5 rounded-full p-2.5 text-muted transition-colors hover:text-text"
           >
             <BackIcon width={22} height={22} />
           </button>
         }
       />
 
-      <div className="flex flex-col gap-4">
-        {supportsReminders && <ReminderSection />}
+      <div className="flex flex-col gap-3">
+        <SettingsGroup id="gorunum" title="Görünüm" detail="Renk teması, Bugün ekranı" open={open} onToggle={setOpen}>
+          <ThemeSection />
+          <TodaySection />
+        </SettingsGroup>
 
-        <BackupSection />
+        <SettingsGroup id="veri" title="Veri ve yedek" detail="Yedekleme, depolama, sıfırlama" open={open} onToggle={setOpen}>
+          <BackupSection />
+          <StorageSection />
+          <ResetSection />
+        </SettingsGroup>
 
-        <StorageSection />
-
-        <ThemeSection />
-
-        <TodaySection />
-
-        <GeminiSection />
-
-        <section id="claude" className="rounded-2xl border border-border bg-surface p-4">
-          <Switch
-            label="Claude ile planlama"
-            checked={ai.claude}
-            onChange={(claude) => setAiSettings({ claude })}
-          />
-          <p className="mt-1 text-sm text-muted">
-            Projelerini claude.ai hesabınla planlarsın; mesajı kopyalayıp cevabı geri yapıştırırsın, ek
-            ücret yok.
-          </p>
-          {ai.claude && (
-            <>
-          <p className="mt-3 text-sm text-muted">Bir kere kurman yeterli:</p>
-          <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm">
-            <li>
-              <a
-                href="https://claude.ai/projects"
-                target="_blank"
-                rel="noreferrer"
-                className="text-accent underline"
-              >
-                claude.ai/projects
-              </a>{' '}
-              sayfasında yeni bir proje oluştur, adını <b>Life Tracker Planlayıcı</b> koy.
-            </li>
-            <li>Aşağıdaki talimatı kopyala.</li>
-            <li>
-              Claude'daki projede <b>talimatlar</b> (instructions) bölümüne yapıştırıp kaydet.
-            </li>
-          </ol>
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={async () => setCopied(await copyText(PLAN_INSTRUCTIONS))}
-              className="flex-1 rounded-xl bg-accent py-2.5 font-medium text-surface"
-            >
-              {copied ? 'Kopyalandı ✓' : 'Talimatı kopyala'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowText((v) => !v)}
-              aria-expanded={showText}
-              className="rounded-xl bg-bg px-4 py-2.5 text-sm"
-            >
-              {showText ? 'Gizle' : 'Göster'}
-            </button>
-          </div>
-          {copied === false && (
-            <p className="mt-2 text-sm text-p1">
-              Kopyalanamadı. "Göster" ile metni açıp elle kopyalayabilirsin.
+        <SettingsGroup
+          id="oyun"
+          title="Hatırlatma ve seviye"
+          detail={supportsReminders ? 'Günlük hatırlatma, seviye sistemi, ceza' : 'Seviye sistemi, ceza'}
+          open={open}
+          onToggle={setOpen}
+        >
+          {supportsReminders && <ReminderSection />}
+          <section id="seviye" className="rounded-2xl border border-border bg-surface p-4">
+            <Switch label="Seviye sistemi" checked={levelingOn} onChange={setLevelingOn} />
+            <p className="mt-1 text-sm text-muted">
+              Habit'ler, görevler ve günlük XP kazandırır; seviye, rank ve statlar Bugün ekranında ve Profil'de.
+              Kapatınca hiçbir yerde görünmez.
             </p>
-          )}
-          {(showText || copied === false) && (
-            <pre className="mt-3 max-h-80 overflow-auto rounded-xl bg-bg p-3 text-xs whitespace-pre-wrap">
-              {PLAN_INSTRUCTIONS}
-            </pre>
-          )}
-          <p className="mt-3 text-sm text-muted">
-            Sonra Projeler sekmesinde <b>✨ Claude ile planla</b> butonunu kullan.
-          </p>
-            </>
-          )}
-        </section>
+            {levelingOn && <PenaltySwitch />}
+          </section>
+        </SettingsGroup>
 
-        <section id="seviye" className="rounded-2xl border border-border bg-surface p-4">
-          <Switch label="Seviye sistemi" checked={levelingOn} onChange={setLevelingOn} />
-          <p className="mt-1 text-sm text-muted">
-            Habit'ler, görevler ve günlük XP kazandırır; seviye, rank ve statlar Bugün ekranında ve Profil'de.
-            Kapatınca hiçbir yerde görünmez.
-          </p>
-          {levelingOn && <PenaltySwitch />}
-        </section>
+        <SettingsGroup id="baglanti" title="Yapay zeka ve bağlantılar" detail="Gemini, Claude, film afişleri" open={open} onToggle={setOpen}>
+          <GeminiSection />
+          <section id="claude" className="rounded-2xl border border-border bg-surface p-4">
+            <Switch
+              label="Claude ile planlama"
+              checked={ai.claude}
+              onChange={(claude) => setAiSettings({ claude })}
+            />
+            <p className="mt-1 text-sm text-muted">
+              Projelerini claude.ai hesabınla planlarsın; mesajı kopyalayıp cevabı geri yapıştırırsın, ek
+              ücret yok.
+            </p>
+            {ai.claude && (
+              <>
+            <p className="mt-3 text-sm text-muted">Bir kere kurman yeterli:</p>
+            <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm">
+              <li>
+                <a
+                  href="https://claude.ai/projects"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent underline"
+                >
+                  claude.ai/projects
+                </a>{' '}
+                sayfasında yeni bir proje oluştur, adını <b>Life Tracker Planlayıcı</b> koy.
+              </li>
+              <li>Aşağıdaki talimatı kopyala.</li>
+              <li>
+                Claude'daki projede <b>talimatlar</b> (instructions) bölümüne yapıştırıp kaydet.
+              </li>
+            </ol>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={async () => setCopied(await copyText(PLAN_INSTRUCTIONS))}
+                className="flex-1 rounded-xl bg-accent py-2.5 font-medium text-surface"
+              >
+                {copied ? 'Kopyalandı ✓' : 'Talimatı kopyala'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowText((v) => !v)}
+                aria-expanded={showText}
+                className="rounded-xl bg-bg px-4 py-2.5 text-sm"
+              >
+                {showText ? 'Gizle' : 'Göster'}
+              </button>
+            </div>
+            {copied === false && (
+              <p className="mt-2 text-sm text-p1">
+                Kopyalanamadı. "Göster" ile metni açıp elle kopyalayabilirsin.
+              </p>
+            )}
+            {(showText || copied === false) && (
+              <pre className="mt-3 max-h-80 overflow-auto rounded-xl bg-bg p-3 text-xs whitespace-pre-wrap">
+                {PLAN_INSTRUCTIONS}
+              </pre>
+            )}
+            <p className="mt-3 text-sm text-muted">
+              Sonra Projeler sekmesinde <b>✨ Claude ile planla</b> butonunu kullan.
+            </p>
+              </>
+            )}
+          </section>
+          <TmdbKeySection />
+        </SettingsGroup>
 
-        <TmdbKeySection />
-
-        <UpdateSection />
-
-        <ResetSection />
+        <SettingsGroup id="uygulama" title="Uygulama" detail="Güncelleme" open={open} onToggle={setOpen}>
+          <UpdateSection />
+        </SettingsGroup>
       </div>
     </>
+  )
+}
+
+/** Which group each section (by its id) is folded into. */
+const GROUP_OF: Record<string, string> = {
+  tema: 'gorunum',
+  bugun: 'gorunum',
+  yedek: 'veri',
+  depolama: 'veri',
+  sifirla: 'veri',
+  hatirlatici: 'oyun',
+  seviye: 'oyun',
+  'yapay-zeka': 'baglanti',
+  claude: 'baglanti',
+  tmdb: 'baglanti',
+}
+
+type GroupProps = {
+  id: string
+  title: string
+  detail: string
+  /** The one group that is unfolded, if any. */
+  open: string | undefined
+  onToggle: (id: string | undefined) => void
+  children: ReactNode
+}
+
+/** One folded row of settings. Only one is open at a time, so the page stays a short list. */
+function SettingsGroup({ id, title, detail, open, onToggle, children }: GroupProps) {
+  const unfolded = open === id
+  return (
+    <div>
+      <button
+        type="button"
+        aria-expanded={unfolded}
+        onClick={() => onToggle(unfolded ? undefined : id)}
+        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 text-left"
+      >
+        <span className="min-w-0">
+          <span className="block font-medium">{title}</span>
+          <span className="block truncate text-sm text-muted">{detail}</span>
+        </span>
+        <span aria-hidden className={`text-xl text-muted transition-transform ${unfolded ? 'rotate-90' : ''}`}>
+          ›
+        </span>
+      </button>
+      {unfolded && <div className="mt-3 mb-2 flex flex-col gap-4">{children}</div>}
+    </div>
   )
 }
 

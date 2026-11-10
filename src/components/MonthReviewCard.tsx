@@ -65,7 +65,7 @@ export function MonthReviewCard({ today, variant }: Props) {
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-medium">📅 {review.label} bakışı</h2>
         {variant === 'today' && (
-          <button type="button" onClick={dismiss} className="shrink-0 text-sm text-muted">
+          <button type="button" onClick={dismiss} className="tap-reach shrink-0 text-sm text-muted">
             Kapat
           </button>
         )}

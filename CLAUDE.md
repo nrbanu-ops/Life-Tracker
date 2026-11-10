@@ -34,7 +34,11 @@ Tipler `src/db/types.ts`, Dexie şeması `src/db/db.ts` içinde. Tarihleri her z
 4. İstatistik: habit başına ısı haritası (son 12 ay), mevcut ve en uzun seri, haftalık/aylık başarı oranı, haftanın günlerine göre başarı oranı.
 5. Ayarlar: verileri JSON olarak dışa/içe aktar.
 
-Altta sabit sekme çubuğu (Bugün, Takvim, Projeler, Habit'ler, İstatistik). Günlük, Kütüphane, Zamanlayıcı ve Ayarlar köşede küçük ikonlar.
+Altta sabit sekme çubuğu (Bugün, Takvim, Projeler, Habit'ler, İstatistik). Başlıkta (`PageHeader`) üç düğme: Ara, Günlük ve "Daha fazla" — sonuncusu Kütüphane, Başarımlar, Zamanlayıcı ve Ayarlar'ı adlarıyla listeleyen bir `BottomSheet` açar.
+
+**Bugün'ün sırası** (habit işaretlemek kaydırmasız olsun diye): halka → zor gün satırı → habit grupları → hatırlatma yuvası → haftalık plan → görevler → seviye kartı → bıraktıkların → proje adımları → anı kartı → günlük. **Hatırlatma yuvası** tek bir `div`: içine sırayla `FreezeCard`, `WeekPlanCard variant="prompt"`, `BackupReminder`, `MonthReviewCard`, `SundayReviewNudge`, `YearReviewCard` konur; her biri vakti değilse hiçbir şey çizmediği için CSS (`[&>*:not(:first-child):not(dialog)]:hidden`) yalnızca ilk çizileni gösterir. Yeni bir hatırlatma kartı buraya, önem sırasındaki yerine eklenir.
+
+Dokunma alanları: yazı görünümlü düğmeler `.tap-text` (44 px yükseklik) ya da dar satırlarda `.tap-reach` (görünmez genişletme) sınıfını kullanır (`src/index.css`). Habit formunda ad, tür ve sıklık dışındaki her şey "Daha fazla seçenek" altında katlıdır. Ayarlar beş `SettingsGroup`'a katlıdır (aynı anda biri açık); `/ayarlar#<bölüm id>` bağlantıları `GROUP_OF` ile doğru grubu açıp bölüme kaydırır — yeni bir bölüm eklenince id'si bu tabloya yazılır.
 
 Ayarlar → **Bugün ekranı** (`TodaySection`, `src/lib/todaySetting.ts`): cihaza özel, yedeğe girmeyen görünüm anahtarları. "Tamamlananları gizle" açıkken Bugün'de işaretlenmiş habit'ler listeden çıkar ve her grubun altında `✓ n tamamlandı · göster` satırı kalır (`splitDone`, grup grup açılır); halka ve yüzde değişmez, çünkü gizleme sadece görünümü değiştirir. "Odak modu" açıkken `Habit.focus` ile işaretlenmiş en fazla `FOCUS_MAX` (3) habit üstte **Omurga** başlığı altında durur, gerisi tek bir `Diğerleri (n)` düğmesinin arkasına katlanır (`splitFocus`); halka ve haftalık sayaç yine bütün habit'leri sayar. Omurga kutusu habit formunda, 3 dolunca kapanır.
 

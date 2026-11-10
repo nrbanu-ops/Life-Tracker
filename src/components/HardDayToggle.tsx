@@ -16,7 +16,7 @@ export function HardDayToggle({ today, state }: Props) {
       <section className="mb-5 rounded-2xl border border-border bg-surface p-4">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-medium">🌧️ Zor gün modu açık</h2>
-          <button type="button" onClick={() => setHardDay(today, false)} className="shrink-0 text-sm text-muted">
+          <button type="button" onClick={() => setHardDay(today, false)} className="tap-reach shrink-0 text-sm text-muted">
             Kapat
           </button>
         </div>
@@ -29,8 +29,8 @@ export function HardDayToggle({ today, state }: Props) {
   }
   if (state.left <= 0) return null
   return (
-    <button type="button" onClick={() => setHardDay(today, true)} className="mb-5 px-1 text-left text-sm text-muted">
-      🌧️ Zor bir gün mü? Bugün minimum yetsin · bu ay {state.left} hak
+    <button type="button" onClick={() => setHardDay(today, true)} className="tap-text -mt-3 mb-2 text-left text-sm text-muted">
+      🌧️ Zor bir gün mü? Minimum yetsin · {state.left} hak
     </button>
   )
 }

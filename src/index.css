@@ -438,6 +438,25 @@
   }
 }
 
+@layer components {
+  /* A quiet text button: reads as a line of text, but gives the thumb the full 44px. */
+  .tap-text {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-inline: 0.25rem;
+  }
+  /* The same reach for a small button inside a tight row, without making the row any taller. */
+  .tap-reach {
+    position: relative;
+  }
+  .tap-reach::after {
+    content: '';
+    position: absolute;
+    inset: -0.75rem -0.5rem;
+  }
+}
+
 /* A light press on every button, so taps feel answered. */
 button:not(:disabled) {
   transition:

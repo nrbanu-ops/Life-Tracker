@@ -95,3 +95,11 @@ export const BackIcon =(props: SVGProps<SVGSVGElement>) => (
     <path d="M15 18l-6-6 6-6" />
   </svg>
 )
+
+export const MoreIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg {...base(props)}>
+    <circle cx="5" cy="12" r="1.4" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+    <circle cx="19" cy="12" r="1.4" fill="currentColor" />
+  </svg>
+)

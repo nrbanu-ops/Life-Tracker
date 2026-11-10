@@ -5,6 +5,21 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-10
 
+### Arayüz toparlandı
+- **Bugün'de habit'ler en üstte.** Halka ve habit listesi başlığın hemen altına geldi; işaretlemek
+  için artık kaydırmak gerekmiyor. Görevler, seviye kartı ve günlük altta.
+- **Hatırlatmalar sıraya girdi.** Seri koruması, haftayı planla, yedek, aylık bakış, haftalık bakış
+  ve yıl özeti kartlarından aynı anda yalnızca biri görünür; kapatınca sıradaki gelir.
+- **Başlıkta üç düğme:** Ara, Günlük ve "⋯ Daha fazla" (Kütüphane, Başarımlar, Zamanlayıcı,
+  Ayarlar — adlarıyla). Altı ikon yan yana sıkışmıyor, düğmeler de büyüdü.
+- **Habit formu kısaldı.** Yeni habit'te yalnızca ad, tür ve sıklık görünür; neden, tetikleyici,
+  minimum, omurga ve proje "Daha fazla seçenek" altında. Bunlardan birini kullanan habit'i
+  düzenlerken bölüm açık gelir.
+- **Ayarlar beş başlıkta:** Görünüm, Veri ve yedek, Hatırlatma ve seviye, Yapay zeka ve
+  bağlantılar, Uygulama. Başka ekrandan gelen bağlantılar doğru başlığı kendisi açar.
+- **Küçük yazı düğmeleri** ("göster", "Düzenle", "Şimdi değil", "Kapat", geri oku) parmakla
+  rahat tutulacak kadar büyük bir dokunma alanına sahip; görünüşleri aynı.
+
 ### Aylık bakış 📅
 - Geçen ayın bir önceki ayla karşılaştırması tek kartta: genel oran ve kaç puan değiştiği, en
   iyi giden habit, en çok artan, en çok düşen ve **küçültmen ya da arşivlemen gerekenler**
