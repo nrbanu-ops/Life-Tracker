@@ -1,7 +1,8 @@
 import { addDays, addMonths, endOfMonth, startOfMonth } from 'date-fns'
 import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey, weekRange } from './date'
-import { buildToday, dayProgress } from './today'
+import { isLongGoal } from './frequency'
+import { buildToday, dayProgress, isCompleted, type TodayItem } from './today'
 
 /** First day of the month containing `key`, as a day key. */
 export const monthOf = (key: string): string => toDateKey(startOfMonth(fromDateKey(key)))
@@ -21,7 +22,14 @@ export function monthGrid(month: string): string[] {
 
 export type DayStatus = { done: number; total: number }
 
-/** Habit completion for one day, by the same rules as the Today screen. */
+/**
+ * Habit completion for one day, by the same rules as the Today screen. A monthly or yearly
+ * goal counts only on the day it was done: every other day would look unfinished because of it.
+ */
 export function dayStatus(habits: Habit[], logs: HabitLog[], date: string): DayStatus {
-  return dayProgress(buildToday(habits, logs, date))
+  return dayProgress(countedOn(buildToday(habits, logs, date)))
 }
+
+/** The day's items that say something about that day. */
+export const countedOn = (items: TodayItem[]): TodayItem[] =>
+  items.filter((item) => !isLongGoal(item.habit) || isCompleted(item.status))

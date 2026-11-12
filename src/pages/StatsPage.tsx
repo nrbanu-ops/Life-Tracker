@@ -11,11 +11,12 @@ import { ProgressBar } from '../components/ProgressBar'
 import { RateChart, type RatePoint } from '../components/RateChart'
 import { Segmented } from '../components/Segmented'
 import { db } from '../db/db'
+import { logsCovering } from '../db/logs'
 import { MoodChart, type MoodPoint } from '../components/MoodChart'
 import type { DayMood, Habit, HabitLog, Level } from '../db/types'
 import { average, describeEffect, ENERGY_COLOR, ENERGY_EMOJI, habitEffects, MOOD_COLOR, MOOD_EMOJI } from '../lib/mood'
 import { fromDateKey, toDateKey, weekRange } from '../lib/date'
-import { describeFrequency, WEEKDAY_SHORT } from '../lib/frequency'
+import { describeFrequency, isLongGoal, PERIOD_NAME, WEEKDAY_SHORT } from '../lib/frequency'
 import { compareProjects, projectProgress } from '../lib/projects'
 import { formatElapsed, quitStats } from '../lib/quit'
 import {
@@ -28,6 +29,7 @@ import {
   weekdayRates,
   weeklyRates,
   type PeriodRate,
+  type Streaks,
 } from '../lib/stats'
 import { useNow } from '../lib/useNow'
 import { useTodayKey } from '../lib/useTodayKey'
@@ -42,7 +44,7 @@ export function StatsPage() {
   const from = heatStart < monthStart ? heatStart : monthStart
 
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray())
-  const logs = useLiveQuery(() => db.habitLogs.where('date').between(from, today, true, true).toArray(), [from, today], [])
+  const logs = useLiveQuery(() => logsCovering(from, today), [from, today], [])
   const projects = useLiveQuery(() => db.projects.toArray(), [], [])
   const milestones = useLiveQuery(() => db.milestones.toArray(), [], [])
   const moods = useLiveQuery(() => db.moods.where('date').between(from, today, true, true).toArray(), [from, today], [])
@@ -114,7 +116,7 @@ export function StatsPage() {
           <Tile label="Bu hafta" value={percent(week.rate)} detail={week.planned > 0 ? `${week.done}/${week.planned}` : undefined} />
           <Tile
             label="En iyi seri"
-            value={best && best.streak.current > 0 ? `${best.streak.current} ${best.streak.unit === 'week' ? 'hf' : 'gün'}` : '–'}
+            value={best && best.streak.current > 0 ? `${best.streak.current} ${streakUnit(best.streak.unit)}` : '–'}
             detail={best && best.streak.current > 0 ? best.habit.title : undefined}
           />
         </section>
@@ -194,6 +196,9 @@ const toPoints = (rates: PeriodRate[], label: (r: PeriodRate) => string, detail:
     planned: r.planned,
   }))
 
+/** "12 gün", "3 hafta", "2 yıl": what a streak is counted in. */
+const streakUnit = (unit: Streaks['unit']) => (unit === 'day' ? 'gün' : PERIOD_NAME[unit])
+
 type HabitStatsProps = { habit: Habit; logs: HabitLog[]; today: string; heatStart: string }
 
 function HabitStats({ habit, logs, today, heatStart }: HabitStatsProps) {
@@ -201,7 +206,7 @@ function HabitStats({ habit, logs, today, heatStart }: HabitStatsProps) {
   const streak = streaks(habit, logs, today)
   const [from30] = lastDays(today, 30)
   const rate30 = successRate(habit, logs, from30, today, today)
-  const unit = streak.unit === 'week' ? 'hafta' : 'gün'
+  const unit = streakUnit(streak.unit)
 
   const heatDays = daysUntilWeekEnd(heatStart, today)
   const states = dayStates(habit, logs, heatDays[0], heatDays[heatDays.length - 1], today)
@@ -259,13 +264,16 @@ function HabitStats({ habit, logs, today, heatStart }: HabitStatsProps) {
         <RateChart data={chart} />
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-4">
-        <h3 className="text-sm font-medium">Haftanın günleri</h3>
-        <p className="mb-3 text-xs text-muted">
-          {bestDay ? `En iyi günün: ${bestDay.label} (%${Math.round(bestDay.value ?? 0)}) · son 90 gün` : 'Son 90 gün'}
-        </p>
-        <RateChart data={weekdays} height={150} />
-      </div>
+      {/* A goal for the month or the year is not planned on any weekday. */}
+      {!isLongGoal(habit) && (
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <h3 className="text-sm font-medium">Haftanın günleri</h3>
+          <p className="mb-3 text-xs text-muted">
+            {bestDay ? `En iyi günün: ${bestDay.label} (%${Math.round(bestDay.value ?? 0)}) · son 90 gün` : 'Son 90 gün'}
+          </p>
+          <RateChart data={weekdays} height={150} />
+        </div>
+      )}
     </div>
   )
 }

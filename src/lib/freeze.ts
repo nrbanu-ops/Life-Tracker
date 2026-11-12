@@ -1,6 +1,7 @@
 import { addDays } from 'date-fns'
 import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
+import { isPeriodGoal } from './frequency'
 import { isCompleted, isExcused, isShownOn } from './today'
 
 /** Freezes a month gives. Two covers illness or a trip; more and it stops meaning anything. */
@@ -35,15 +36,15 @@ export type FreezeOffer = {
 /**
  * The one day per habit a freeze would actually buy back: the most recent planned day that
  * was missed. Anything missed before that is already gone, so when the run up to the day is
- * short — or the day is older than the window — nothing is offered. Weekly goals are left
- * out: one missed day does not break them.
+ * short — or the day is older than the window — nothing is offered. Weekly, monthly and yearly
+ * goals are left out: one missed day does not break them.
  */
 export function freezeOffers(habits: Habit[], logs: HabitLog[], today: string): FreezeOffer[] {
   const oldest = toDateKey(addDays(fromDateKey(today), -FREEZE_WINDOW_DAYS))
   const offers: FreezeOffer[] = []
 
   for (const habit of habits) {
-    if (habit.archived || habit.kind === 'quit' || habit.frequency.type === 'timesPerWeek') continue
+    if (habit.archived || habit.kind === 'quit' || isPeriodGoal(habit)) continue
     const byDate = new Map(logs.filter((l) => l.habitId === habit.id).map((l) => [l.date, l.status]))
     const created = toDateKey(new Date(habit.createdAt))
 

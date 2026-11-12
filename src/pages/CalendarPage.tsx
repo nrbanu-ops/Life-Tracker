@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router'
 import { DayDetail } from '../components/DayDetail'
 import { PageHeader } from '../components/PageHeader'
 import { db } from '../db/db'
+import { logsCovering } from '../db/logs'
 import type { Level } from '../db/types'
 import { dayStatus, monthGrid, monthOf, shiftMonth } from '../lib/calendar'
 import { fromDateKey, isDateKey } from '../lib/date'
@@ -40,7 +41,8 @@ export function CalendarPage() {
   const last = days[days.length - 1]
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray())
   const logs = useLiveQuery(
-    () => db.habitLogs.where('date').between(first, last, true, true).toArray(),
+    // Monthly and yearly goals count over their whole period, beyond the weeks on screen.
+    () => logsCovering(first, last),
     [first, last],
   )
   const tasks = useLiveQuery(() => db.tasks.toArray())

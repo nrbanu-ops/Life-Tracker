@@ -3,6 +3,24 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-12
+
+### Ayda ve yılda bir yapılanlar 🗓️
+- **Yeni sıklık: "Ayda X" ve "Yılda X".** Habit eklerken sıklık artık iki satır: üstte *Her gün /
+  Belirli günler*, altta *Haftada X / Ayda X / Yılda X*. Diş hekimi (yılda 2), derin temizlik
+  (ayda 1), check-up (yılda 1) gibi şeyler için.
+- **Bugün'de ayrı grup:** "Aylık ve yıllık hedefler". Satırın altında "Bu ay 0/2", "Bu yıl 1/2"
+  yazar; yaptığın gün dokunup işaretlersin. Hedefi dolan habit listeden çekilir, altta
+  "✓ 1 hedef tamam · göster" satırı kalır.
+- **Günün halkasını ve takvimi bozmaz:** bu hedefler günlük yüzdeye girmez; takvimde yalnızca
+  yaptığın gün sayılır. Günlük göreve ve "kusursuz gün"e de dahil değiller.
+- **Seri ay ya da yıl sayar** ("3 ay", "2 yıl"). Başarı oranında dönem tek sefer sayılır: hedefe
+  ulaştığın gün, ulaşamadıysan ayın/yılın son günü. Yani yılda bir yapılan şey "son 30 gün"
+  oranını düşürmez.
+- **XP:** her yapış puan kazandırır, hedefe ulaşınca küçük bir ek gelir; ceza açıksa eksik kalan
+  her kez için ay ya da yıl bitince düşülür (eklediğin ay/yıl hariç).
+- Yapay zekâ planı da bu sıklıkları tanır.
+
 ## 2026-11-10
 
 ### Fotoğrafa dokununca büyür 🔍

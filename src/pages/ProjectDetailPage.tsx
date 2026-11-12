@@ -16,6 +16,7 @@ import { ProjectForm } from '../components/ProjectForm'
 import { TaskRow } from '../components/TaskRow'
 import { TaskSheet, type TaskEditing } from '../components/TaskSheet'
 import { db } from '../db/db'
+import { logsCovering } from '../db/logs'
 import { setTaskDone } from '../db/tasks'
 import type { Habit, HabitLog } from '../db/types'
 import { buildProjectMessage } from '../lib/aiPlan'
@@ -47,7 +48,7 @@ export function ProjectDetailPage() {
   )
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray(), [], [])
   const logs = useLiveQuery(
-    () => db.habitLogs.where('date').between(from, today, true, true).toArray(),
+    () => logsCovering(from, today),
     [from, today],
     [],
   )

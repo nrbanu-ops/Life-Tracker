@@ -1,4 +1,5 @@
 import { todayKey, weekRange } from '../lib/date'
+import { periodGoal, periodRange } from '../lib/frequency'
 import { isExcused, withAmount } from '../lib/today'
 import { markXpWeekDirty } from './leveling'
 import { db, newId } from './db'
@@ -52,3 +53,29 @@ export async function addAmount(
     return habit
   })
 }
+
+/**
+ * The logs between `from` and `to`, plus what the monthly and yearly goals need on top: for
+ * those habits alone, the rest of the month or year the range starts and ends in. Their count
+ * ("Bu yıl 1/2") and their success rate are about the whole period, and reading a year of
+ * every habit's logs for the sake of one of them would be a waste on each tap.
+ */
+export async function logsCovering(from: string, to: string): Promise<HabitLog[]> {
+  const [logs, habits] = await Promise.all([
+    db.habitLogs.where('date').between(from, to, true, true).toArray(),
+    db.habits.toArray(),
+  ])
+  const extra = await Promise.all(
+    habits.flatMap((habit) => {
+      const goal = periodGoal(habit.frequency)
+      if (!goal || goal.period === 'week' || habit.kind === 'quit') return []
+      const start = periodRange(goal.period, from).start
+      const end = periodRange(goal.period, to).end
+      const of = (lower: string, upper: string, includeLower: boolean, includeUpper: boolean) =>
+        db.habitLogs.where('[habitId+date]').between([habit.id, lower], [habit.id, upper], includeLower, includeUpper).toArray()
+      return [...(start < from ? [of(start, from, true, false)] : []), ...(end > to ? [of(to, end, false, true)] : [])]
+    }),
+  )
+  return [...logs, ...extra.flat()]
+}
+

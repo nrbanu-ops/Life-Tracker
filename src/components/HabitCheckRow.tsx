@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import type { HabitLogStatus } from '../db/types'
 import { formatAmount } from '../lib/amount'
+import { PERIOD_THIS, periodGoal } from '../lib/frequency'
 import { DAY_PART_LABEL, isExcused, type TodayItem } from '../lib/today'
 
 type Props = {
@@ -15,7 +16,7 @@ type Props = {
 const LONG_PRESS_MS = 500
 
 export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
-  const { habit, status, value, weekCount, countsToday } = item
+  const { habit, status, value, goalCount, countsToday } = item
   const timer = useRef<number | undefined>(undefined)
   const longPressed = useRef(false)
 
@@ -39,9 +40,8 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
   if (habit.kind !== 'check' && habit.target && !isExcused(status)) {
     details.push(`${formatAmount(habit, value ?? 0)} / ${formatAmount(habit, habit.target)}`)
   }
-  if (habit.frequency.type === 'timesPerWeek') {
-    details.push(`Bu hafta ${weekCount}/${habit.frequency.count}`)
-  }
+  const goal = periodGoal(habit.frequency)
+  if (goal) details.push(`${PERIOD_THIS[goal.period]} ${goalCount ?? 0}/${goal.count}`)
 
   const progress =
     habit.kind !== 'check' && habit.target ? Math.min(1, (value ?? 0) / habit.target) : 0

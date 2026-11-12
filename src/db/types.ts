@@ -29,6 +29,9 @@ export type HabitFrequency =
   | { type: 'daily' }
   | { type: 'weekdays'; days: number[] } // 1 = Monday … 7 = Sunday
   | { type: 'timesPerWeek'; count: number }
+  // Things done now and then: any day of the month or year counts toward the goal.
+  | { type: 'timesPerMonth'; count: number }
+  | { type: 'timesPerYear'; count: number }
 
 /**
  * check: one tap marks it done. count/duration: progress toward `target`.

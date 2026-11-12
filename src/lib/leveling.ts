@@ -11,6 +11,7 @@ import type {
   UnlockedAchievement,
 } from '../db/types'
 import { fromDateKey, toDateKey, weekRange } from './date'
+import { dayCount, isLongGoal, isPeriodGoal, nextPeriod, periodGoal, periodRange } from './frequency'
 import { entryPhotos } from './journal'
 import { streaks, successRate } from './stats'
 import { isCompleted, isExcused, isShownOn } from './today'
@@ -262,7 +263,7 @@ export function statusFactor(habit: Habit, log: HabitLog): number {
 
 /** Streak bonus by days in a row (daily habits) … */
 export const dayStreakBonus = (run: number) => (run >= 100 ? 0.5 : run >= 30 ? 0.25 : run >= 7 ? 0.1 : 0)
-/** … or by weeks in a row that reached the target (weekly goals). */
+/** … or by periods in a row that reached the target (weekly, monthly and yearly goals). */
 export const weekStreakBonus = (run: number) => (run >= 15 ? 0.5 : run >= 5 ? 0.25 : run >= 2 ? 0.1 : 0)
 
 const COMEBACK = 0.5
@@ -304,19 +305,20 @@ function habitEvents(
     }
   }
 
-  if (habit.frequency.type === 'timesPerWeek') {
-    const { count } = habit.frequency
+  const goal = periodGoal(habit.frequency)
+  if (goal) {
+    // One rule for "so many times a week, a month, a year": only the length of the period differs.
+    const { count, period } = goal
     let run = 0
     let previousEmpty = false
-    for (let week = weekRange(created).start; week <= last; week = shift(week, 7)) {
+    for (let week = periodRange(period, created).start; week <= last; week = nextPeriod(period, week)) {
+      const weekEnd = periodRange(period, week).end
       let completed = 0
       let comebackUsed = false
       const bonus = weekStreakBonus(run)
       let anyPlanned = false
       let skipped = 0
-      for (let i = 0; i < 7; i++) {
-        const day = shift(week, i)
-        if (day < created || day > last) continue
+      for (let day = week < created ? created : week; day <= weekEnd && day <= last; day = shift(day, 1)) {
         const log = byDate.get(day)
         // A frozen day earns nothing and is fined nothing, exactly like a skipped one.
         if (isExcused(log?.status)) skipped++
@@ -325,7 +327,7 @@ function habitEvents(
         const factor = statusFactor(habit, log)
         if (factor === 0) continue
         if (isCompleted(log.status)) completed++
-        // Beyond the week's target each go counts half, so overdoing it isn't the way to level.
+        // Beyond the period's target each go counts half, so overdoing it isn't the way to level.
         const extra = isCompleted(log.status) && completed > count ? 0.5 : 1
         const comeback = previousEmpty && !comebackUsed && isCompleted(log.status)
         if (comeback) comebackUsed = true
@@ -333,14 +335,13 @@ function habitEvents(
           base(day) * factor * extra * (1 + overshoot(habit, log.value)) * (1 + bonus + (comeback ? COMEBACK : 0)) *
           lateFactor(day, log.loggedAt)
         emit(day, xp, comeback ? 'comeback' : undefined)
-        // Reaching the target: a fifth on top of the week's planned goes.
+        // Reaching the target: a fifth on top of the period's planned goes.
         if (isCompleted(log.status) && completed === count) emit(day, base(day) * count * 0.2 * lateFactor(day, log.loggedAt))
       }
-      const weekEnd = weekRange(week).end
       const weekOver = weekEnd < today
-      // Weekly goals are fined on the week's last day for each go short; skipped days lower the goal.
+      // Period goals are fined on the period's last day for each go short; skipped days lower the goal.
       if (weekOver && week >= created && penaltyFrom && week >= penaltyFrom) {
-        fine(weekEnd, base(weekEnd) * Math.max(0, Math.min(count, 7 - skipped) - completed))
+        fine(weekEnd, base(weekEnd) * Math.max(0, Math.min(count, dayCount(week, weekEnd) - skipped) - completed))
       }
       if (completed >= count) run++
       else if (weekOver) run = 0
@@ -412,7 +413,7 @@ function quitEvents(habit: Habit, from: string, to: string, today: string): XpEv
 /** Today's daily quest: the day's daily habits, at most the five hardest. */
 export function questHabits(habits: Habit[], day: string): Habit[] {
   return habits
-    .filter((h) => !h.archived && h.kind !== 'quit' && h.frequency.type !== 'timesPerWeek' && isShownOn(h, day))
+    .filter((h) => !h.archived && h.kind !== 'quit' && !isPeriodGoal(h) && isShownOn(h, day))
     .sort((a, b) => TIER_XP[tierOn(b, day)] - TIER_XP[tierOn(a, day)] || a.order - b.order)
     .slice(0, XP.questSize)
 }
@@ -471,7 +472,8 @@ export function emergencyQuest(data: Pick<XpData, 'habits' | 'logs'>, week: stri
   const from = shift(week, -28)
   const dayBefore = shift(week, -1)
   const candidates = data.habits
-    .filter((h) => !h.archived && h.kind !== 'quit' && dayOf(h.createdAt) <= shift(week, -14))
+    // A monthly or yearly goal is not something to do "a little more often this week".
+    .filter((h) => !h.archived && h.kind !== 'quit' && !isLongGoal(h) && dayOf(h.createdAt) <= shift(week, -14))
     .map((h) => ({ habit: h, ...successRate(h, data.logs, from, dayBefore, week) }))
     .filter((c) => c.planned >= 4 && c.rate !== undefined && c.rate < 0.8)
     .sort((a, b) => a.rate! - b.rate! || a.habit.order - b.habit.order)

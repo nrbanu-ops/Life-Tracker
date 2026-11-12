@@ -1,7 +1,8 @@
 import type { LogEntry } from '../db/logs'
 import type { DayPart, Habit, HabitLog, HabitLogStatus } from '../db/types'
 import { incrementOf } from './amount'
-import { toDateKey, weekRange, weekdayOf } from './date'
+import { toDateKey, weekdayOf } from './date'
+import { isPeriodGoal, periodGoal, periodRange } from './frequency'
 
 /** done and minimum both count as completed; partial, skipped and frozen do not. */
 export const isCompleted = (status: HabitLogStatus | undefined): boolean =>
@@ -20,7 +21,7 @@ export function isShownOn(habit: Habit, key: string): boolean {
   if (key < toDateKey(new Date(habit.createdAt))) return false
   const { frequency } = habit
   if (frequency.type === 'weekdays') return frequency.days.includes(weekdayOf(key))
-  // timesPerWeek habits can be done on any day, so they show every day.
+  // "X times a week / month / year" habits can be done on any day, so they show every day.
   return true
 }
 
@@ -63,45 +64,47 @@ export type TodayItem = {
   habit: Habit
   status?: HabitLogStatus
   value?: number
-  /** Only for timesPerWeek: completed days this week, today included. */
-  weekCount?: number
-  /** False when skipped, or when a timesPerWeek target is already met and today is not completed. */
+  /** Only for "X times a week / month / year": completed days in that period, today included. */
+  goalCount?: number
+  /** False when skipped, or when a period goal is already met and today is not completed. */
   countsToday: boolean
 }
 
 /**
- * Builds today's list from active habits and this week's logs.
- * `weekLogs` may contain other days; only the week of `today` is used.
+ * Builds today's list from active habits and their logs. `logs` may contain other days; it
+ * has to cover the week of `today`, and for a monthly or yearly goal that habit's whole
+ * month or year (`logsCovering` reads exactly that).
  */
-export function buildToday(habits: Habit[], weekLogs: HabitLog[], today: string): TodayItem[] {
-  const { start, end } = weekRange(today)
+export function buildToday(habits: Habit[], logs: HabitLog[], today: string): TodayItem[] {
   return habits
     // Quit habits have their own counter cards instead of daily check-ins.
     .filter((habit) => !habit.archived && habit.kind !== 'quit' && isShownOn(habit, today))
     .map((habit) => {
-      const logs = weekLogs.filter(
-        (log) => log.habitId === habit.id && log.date >= start && log.date <= end,
-      )
-      const todayLog = logs.find((log) => log.date === today)
+      const own = logs.filter((log) => log.habitId === habit.id)
+      const todayLog = own.find((log) => log.date === today)
       const base = { habit, status: todayLog?.status, value: todayLog?.value }
       if (isExcused(base.status)) return { ...base, countsToday: false }
-      if (habit.frequency.type !== 'timesPerWeek') return { ...base, countsToday: true }
-      const weekCount = logs.filter((log) => isCompleted(log.status)).length
-      const targetMet = weekCount >= habit.frequency.count
-      return { ...base, weekCount, countsToday: isCompleted(base.status) || !targetMet }
+      const goal = periodGoal(habit.frequency)
+      if (!goal) return { ...base, countsToday: true }
+      const { start, end } = periodRange(goal.period, today)
+      const goalCount = own.filter((log) => log.date >= start && log.date <= end && isCompleted(log.status)).length
+      return { ...base, goalCount, countsToday: isCompleted(base.status) || goalCount < goal.count }
     })
 }
 
-/** "Haftada X kez" habits are weekly goals; everything else (every day, set weekdays) is daily. */
+/** "Haftada X kez" habits are weekly goals; every day and set weekdays are daily. */
 export const isWeeklyGoal = (habit: Habit): boolean => habit.frequency.type === 'timesPerWeek'
 
-/** Weekly goals whose target this week is already reached, out of all weekly goals shown. */
-export function weekProgress(items: TodayItem[]): { done: number; total: number } {
-  const weekly = items.filter((item) => item.habit.frequency.type === 'timesPerWeek')
-  const done = weekly.filter(
-    (item) => item.habit.frequency.type === 'timesPerWeek' && (item.weekCount ?? 0) >= item.habit.frequency.count,
-  ).length
-  return { done, total: weekly.length }
+/** Planned day by day (every day, set weekdays): what the day's ring is about. */
+export const isDailyGoal = (habit: Habit): boolean => !isPeriodGoal(habit)
+
+/** Period goals whose target is already reached, out of all the period goals given. */
+export function goalProgress(items: TodayItem[]): { done: number; total: number } {
+  const goals = items.flatMap((item) => {
+    const goal = periodGoal(item.habit.frequency)
+    return goal ? [{ count: item.goalCount ?? 0, target: goal.count }] : []
+  })
+  return { done: goals.filter((g) => g.count >= g.target).length, total: goals.length }
 }
 
 /** Completed / counted items for the day ring; minimum counts as completed. */

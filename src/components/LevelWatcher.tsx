@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import { syncXpLedger, useLeveling } from '../db/leveling'
+import { PERIOD_ADJECTIVE } from '../lib/frequency'
 import type { Rank } from '../lib/leveling'
 import { useLevelingOn } from '../lib/levelingSetting'
 import { useTodayKey } from '../lib/useTodayKey'
@@ -133,7 +134,7 @@ export function LevelWatcher() {
                 <li key={p.habitId} className="flex justify-between gap-3">
                   <span className="truncate">
                     {p.title}
-                    {p.weekly && <span className="text-sys-muted"> · haftalık hedef</span>}
+                    {p.goal && <span className="text-sys-muted"> · {PERIOD_ADJECTIVE[p.goal]} hedef</span>}
                   </span>
                   <span className="font-mono tabular-nums" style={{ color: PENALTY_RED }}>
                     {Math.round(p.xp)} XP

@@ -8,6 +8,7 @@ import { setLog, type LogEntry } from '../db/logs'
 import { formatAmount, incrementOf } from '../lib/amount'
 import { todayKey } from '../lib/date'
 import { freezesLeft } from '../lib/freeze'
+import { isLongGoal } from '../lib/frequency'
 import { isCompleted, withAmount, type TodayItem } from '../lib/today'
 import { BottomSheet } from './BottomSheet'
 
@@ -135,7 +136,8 @@ function Actions({ item, date, onClose }: Required<Props>) {
       {!isToday && status === 'frozen' && (
         <SheetButton onClick={() => saveAndClose(undefined)}>Seri korumasını geri al</SheetButton>
       )}
-      {!isToday && status !== 'frozen' && !isCompleted(status) && freezesThisMonth !== undefined && (
+      {/* A monthly or yearly goal has no day to hold: one missed day does not break it. */}
+      {!isToday && status !== 'frozen' && !isCompleted(status) && !isLongGoal(habit) && freezesThisMonth !== undefined && (
         <SheetButton
           disabled={freezesThisMonth <= 0}
           onClick={async () => {

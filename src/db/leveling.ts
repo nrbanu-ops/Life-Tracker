@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { addDays } from 'date-fns'
 import { fromDateKey, toDateKey, weekRange } from '../lib/date'
+import { periodGoal, type GoalPeriod } from '../lib/frequency'
 import {
   emergencyProgress,
   emergencyQuest,
@@ -130,7 +131,8 @@ export type LevelState = LevelInfo & {
   emergency: EmergencyQuest & { done: number; met: boolean }
   titles: Title[]
   /** What yesterday's misses cost, per habit. */
-  penalties: { habitId: string; title: string; weekly: boolean; xp: number }[]
+  /** `goal`: the fine is for a weekly, monthly or yearly goal that fell short, not for a day. */
+  penalties: { habitId: string; title: string; goal?: GoalPeriod; xp: number }[]
 }
 
 /** The user's level, rank, stats and today's quest, kept live; undefined while loading. */
@@ -174,7 +176,7 @@ export function useLeveling(): LevelState | undefined {
       titles: titles({ level: info.level, summary, habits: data.habits, logs: data.logs, library: data.library, today }),
       penalties: penaltiesOn(data, shift(today, -1), today).map((e) => {
         const habit = data.habits.find((h) => h.id === e.habitId)
-        return { habitId: e.habitId!, title: habit?.title ?? '', weekly: habit?.frequency.type === 'timesPerWeek', xp: e.xp }
+        return { habitId: e.habitId!, title: habit?.title ?? '', goal: habit && periodGoal(habit.frequency)?.period, xp: e.xp }
       }),
     }
   }, [today])

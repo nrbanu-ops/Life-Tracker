@@ -25,19 +25,21 @@ import { YearReviewCard } from '../components/YearReviewCard'
 import { db } from '../db/db'
 import { markMilestoneCelebrated } from '../db/habits'
 import { useHardDay } from '../db/hardDay'
-import { setLog } from '../db/logs'
+import { logsCovering, setLog } from '../db/logs'
 import { fromDateKey, weekRange } from '../lib/date'
+import { isLongGoal } from '../lib/frequency'
 import { hardTap } from '../lib/hardDay'
 import {
   buildToday,
   dayProgress,
+  goalProgress,
+  isDailyGoal,
   isWeeklyGoal,
   partOfDay,
   sortByDayPart,
   splitDone,
   splitFocus,
   tapResult,
-  weekProgress,
   type TodayItem,
 } from '../lib/today'
 import { useFocusMode, useHideDone } from '../lib/todaySetting'
@@ -58,9 +60,10 @@ export function TodayPage() {
   const now = useNow()
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray())
   const projects = useLiveQuery(() => db.projects.toArray(), [], [])
+  // This week for everything; monthly and yearly goals bring their whole month or year along.
   const weekLogs = useLiveQuery(() => {
     const { start, end } = weekRange(today)
-    return db.habitLogs.where('date').between(start, end, true, true).toArray()
+    return logsCovering(start, end)
   }, [today])
 
   const subtitle = format(fromDateKey(today), 'd MMMM EEEE', { locale: tr })
@@ -71,11 +74,16 @@ export function TodayPage() {
   // What can be done at this hour comes first; the stored order decides the rest.
   const items = sortByDayPart(buildToday(habits, weekLogs, today), partOfDay(now.getHours()))
   // The ring and the weekly count are about the whole day, keystones included.
-  const { done, total } = dayProgress(items.filter((item) => !isWeeklyGoal(item.habit)))
-  const week = weekProgress(items.filter((item) => isWeeklyGoal(item.habit)))
+  const { done, total } = dayProgress(items.filter((item) => isDailyGoal(item.habit)))
+  const week = goalProgress(items.filter((item) => isWeeklyGoal(item.habit)))
+  const far = goalProgress(items.filter((item) => isLongGoal(item.habit)))
   const { focus: keystones, rest } = focusMode ? splitFocus(items) : { focus: [], rest: items }
-  const daily = rest.filter((item) => !isWeeklyGoal(item.habit))
+  const daily = rest.filter((item) => isDailyGoal(item.habit))
   const weekly = rest.filter((item) => isWeeklyGoal(item.habit))
+  // A monthly or yearly goal that is already reached has nothing to ask of today: it folds away.
+  const long = rest.filter((item) => isLongGoal(item.habit))
+  const longOpen = long.filter((item) => item.countsToday || item.status !== undefined)
+  const longMet = long.filter((item) => !longOpen.includes(item))
   const restHidden = keystones.length > 0 && rest.length > 0 && !showRest
   const projectColor = new Map(projects.map((p) => [p.id, p.color]))
   const hasActiveHabits = habits.some((h) => !h.archived)
@@ -91,7 +99,7 @@ export function TodayPage() {
           text={
             hasActiveHabits
               ? 'Keyfini çıkar, yarın görüşürüz.'
-              : 'Her gün ya da haftada birkaç kez yapmak istediğin şeyleri ekle.'
+              : 'Her gün, haftada birkaç kez ya da ayda yılda bir yapmak istediğin şeyleri ekle.'
           }
           action={
             !hasActiveHabits && (
@@ -107,7 +115,7 @@ export function TodayPage() {
         />
       ) : (
         <>
-          {items.some((item) => !isWeeklyGoal(item.habit)) && (
+          {items.some((item) => isDailyGoal(item.habit)) && (
             <section className="mb-5 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
               <ProgressRing done={done} total={total} />
               <div>
@@ -146,22 +154,31 @@ export function TodayPage() {
           ) : (
             <>
               {[
-                { key: 'daily', title: 'Günlük hedefler', detail: undefined, list: daily },
+                { key: 'daily', title: 'Günlük hedefler', detail: undefined, list: daily, met: [] },
                 {
                   key: 'weekly',
                   title: 'Haftalık hedefler',
                   detail:
                     week.done === week.total ? 'Bu hafta hepsi tamam 🎉' : `Bu hafta ${week.done}/${week.total} tamam`,
                   list: weekly,
+                  met: [],
+                },
+                {
+                  key: 'long',
+                  title: 'Aylık ve yıllık hedefler',
+                  detail: far.done === far.total ? 'Hepsi tamam 🎉' : `${far.done}/${far.total} tamam`,
+                  list: longOpen,
+                  met: longMet,
                 },
               ]
-                .filter((group) => group.list.length > 0)
+                .filter((group) => group.list.length + group.met.length > 0)
                 .map((group) => (
                   <HabitGroup
                     key={group.key}
                     title={group.title}
                     detail={group.detail}
                     items={group.list}
+                    met={group.met}
                     today={today}
                     hideDone={hideDone}
                     hard={hard}
@@ -247,6 +264,8 @@ type GroupProps = {
   title: string
   detail?: string
   items: TodayItem[]
+  /** Period goals already reached and not touched today: kept behind a fold of their own. */
+  met?: TodayItem[]
   today: string
   hideDone: boolean
   /** A hard day: a tap marks the minimum. */
@@ -256,11 +275,12 @@ type GroupProps = {
 }
 
 /** One titled block of today's habits, with the "hide completed" fold underneath it. */
-function HabitGroup({ title, detail, items, today, hideDone, hard, projectColor, onMore }: GroupProps) {
+function HabitGroup({ title, detail, items, met = [], today, hideDone, hard, projectColor, onMore }: GroupProps) {
   const [revealed, setRevealed] = useState(false)
+  const [metRevealed, setMetRevealed] = useState(false)
   const { open, done: finished } = splitDone(items)
   // Hiding only changes this list; the ring above still counts what was finished.
-  const shown = hideDone && !revealed ? open : items
+  const shown = [...(hideDone && !revealed ? open : items), ...(metRevealed ? met : [])]
 
   return (
     <section className="mb-6">
@@ -289,6 +309,16 @@ function HabitGroup({ title, detail, items, today, hideDone, hard, projectColor,
           className="tap-text text-sm text-muted"
         >
           {revealed ? 'Tamamlananları gizle' : `✓ ${finished.length} tamamlandı · göster`}
+        </button>
+      )}
+      {met.length > 0 && (
+        <button
+          type="button"
+          aria-expanded={metRevealed}
+          onClick={() => setMetRevealed((v) => !v)}
+          className="tap-text flex w-fit text-sm text-muted"
+        >
+          {metRevealed ? 'Hedefi tamam olanları gizle' : `✓ ${met.length} hedef tamam · göster`}
         </button>
       )}
     </section>

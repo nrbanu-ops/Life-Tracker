@@ -81,6 +81,26 @@ describe('parsePlan', () => {
     expect(plan.tasks).toEqual([{ title: 'Tartı al', date: undefined, priority: 4 }])
   })
 
+  it('reads monthly and yearly frequencies', () => {
+    const result = parsePlan(`{
+      "habits": [
+        { "title": "Uzun koşu", "frequency": { "type": "timesPerMonth", "count": 2 } },
+        { "title": "Check-up", "frequency": { "type": "timesPerYear", "count": 1 } },
+        { "title": "Bütçe", "frequency": "ayda 1" },
+        { "title": "Kan tahlili", "frequency": "yılda 2 kez" },
+        { "title": "Su", "frequency": "her gün" }
+      ]
+    }`)
+    if (!result.ok) throw new Error(result.error)
+    expect(result.plan.habits.map((h) => h.frequency)).toEqual([
+      { type: 'timesPerMonth', count: 2 },
+      { type: 'timesPerYear', count: 1 },
+      { type: 'timesPerMonth', count: 1 },
+      { type: 'timesPerYear', count: 2 },
+      { type: 'daily' },
+    ])
+  })
+
   it('reads a plan Claude wrote in its own shape', () => {
     const result = parsePlan(`{
       "goal": { "title": "Maraton bitirmek", "target_date": "2027-10" },

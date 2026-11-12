@@ -10,6 +10,7 @@ import type {
   ProjectAchievement,
   TaskPriority,
 } from '../db/types'
+import { PERIOD_EVERY, PERIOD_MAX, PERIOD_NAME, periodGoal } from './frequency'
 
 /**
  * Instructions for a claude.ai Project. The user pastes this once into the project's
@@ -31,9 +32,9 @@ Nasıl çalışalım:
 Format kuralları:
 - Tarihler "YYYY-MM-DD" biçiminde. Mesajımda bugünün tarihi yazıyorsa tarihleri ona göre hesapla.
 - kind: "check" (yapıldı/yapılmadı), "count" (sayı; "target" ve "unit" ile), "duration" (dakika; "target" ile).
-- frequency: {"type":"daily"} ya da {"type":"weekdays","days":[1,3,5]} (1=Pazartesi … 7=Pazar) ya da {"type":"timesPerWeek","count":3}
+- frequency: {"type":"daily"} ya da {"type":"weekdays","days":[1,3,5]} (1=Pazartesi … 7=Pazar) ya da {"type":"timesPerWeek","count":3}; ayda ya da yılda birkaç kez yapılan şeyler için {"type":"timesPerMonth","count":1} ya da {"type":"timesPerYear","count":2}
 - priority: 1=Acil, 2=Yüksek, 3=Orta, 4=Düşük
-- Başarımın "when" koşulu sadece şunlardan biri olabilir: bir adımın tamamlanması {"milestone":"<adımın tam adı>"}, bir habit'te seri {"habit":"<habit'in tam adı>","streak":14} (haftada X kez habit'lerinde hafta sayısı), bir habit'i toplam yapma {"habit":"<habit'in tam adı>","total":50}, proje ilerlemesi yüzdesi {"progress":75}, projede tamamlanan görev sayısı {"tasks":3}.
+- Başarımın "when" koşulu sadece şunlardan biri olabilir: bir adımın tamamlanması {"milestone":"<adımın tam adı>"}, bir habit'te seri {"habit":"<habit'in tam adı>","streak":14} (haftada / ayda / yılda X kez habit'lerinde hafta, ay ya da yıl sayısı), bir habit'i toplam yapma {"habit":"<habit'in tam adı>","total":50}, proje ilerlemesi yüzdesi {"progress":75}, projede tamamlanan görev sayısı {"tasks":3}.
 - Bilmediğin ya da gerekmeyen alanları hiç yazma. Bütün metinler Türkçe olsun.
 - Mevcut bir projeye ekleme yapıyorsak sadece yeni adımları, habit'leri ve görevleri yaz; var olanları tekrar etme.
 
@@ -109,7 +110,11 @@ export function buildAchievementsRequest(project: Project, milestones: Milestone
   if (tracked.length > 0) {
     lines.push("Habit'ler:")
     for (const h of tracked) {
-      lines.push(`- ${h.title} (${h.frequency.type === 'timesPerWeek' ? `haftada ${h.frequency.count} kez; seri hafta sayısıdır` : 'günlük'})`)
+      const goal = periodGoal(h.frequency)
+      const how = goal
+        ? `${PERIOD_EVERY[goal.period].toLocaleLowerCase('tr')} ${goal.count} kez; seri ${PERIOD_NAME[goal.period]} sayısıdır`
+        : 'günlük'
+      lines.push(`- ${h.title} (${how})`)
     }
   }
   return lines.join('\n')
@@ -201,6 +206,10 @@ function readFrequency(v: unknown): HabitFrequency {
     // "haftada 3", "3 times per week"
     const times = v.match(/(\d)/)
     if (times && /hafta|week/i.test(v)) return { type: 'timesPerWeek', count: Math.min(7, Number(times[1])) || 1 }
+    // "ayda 2", "yılda bir", "once a year"
+    const many = positiveInt(Number(v.match(/\d+/)?.[0]), PERIOD_MAX.year) ?? 1
+    if (/\bay(da|lık)?\b|month/i.test(v)) return { type: 'timesPerMonth', count: Math.min(PERIOD_MAX.month, many) }
+    if (/yıl|yil|sene|year|annual/i.test(v)) return { type: 'timesPerYear', count: many }
     return { type: 'daily' }
   }
   if (isObject(v)) {
@@ -210,6 +219,12 @@ function readFrequency(v: unknown): HabitFrequency {
     }
     const count = positiveInt(v.count ?? v.times, 7)
     if (count && (v.type === 'timesPerWeek' || v.type === 'weekly')) return { type: 'timesPerWeek', count }
+    if (v.type === 'timesPerMonth' || v.type === 'monthly') {
+      return { type: 'timesPerMonth', count: positiveInt(v.count ?? v.times, PERIOD_MAX.month) ?? 1 }
+    }
+    if (v.type === 'timesPerYear' || v.type === 'yearly') {
+      return { type: 'timesPerYear', count: positiveInt(v.count ?? v.times, PERIOD_MAX.year) ?? 1 }
+    }
   }
   return { type: 'daily' }
 }

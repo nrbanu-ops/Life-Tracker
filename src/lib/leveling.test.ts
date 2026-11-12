@@ -177,6 +177,17 @@ describe('fairness', () => {
     expect(xp({ value: 300 })).toBeCloseTo(base * 1.75)
   })
 
+  it('pays a monthly goal for each go, with a bonus for reaching it and half beyond', () => {
+    const h = habit('Koşu', { frequency: { type: 'timesPerMonth', count: 2 } }) // heavy, 25 XP
+    const one = habitXp(data([h], [done(h, day(0))]), 20)
+    const two = habitXp(data([h], [done(h, day(0)), done(h, day(10))]), 20)
+    const three = habitXp(data([h], [done(h, day(0)), done(h, day(10)), done(h, day(15))]), 20)
+    expect(one).toBe(25)
+    // The second go reaches the goal: a fifth of the month's two goes on top.
+    expect(two).toBe(25 + 25 + 10)
+    expect(three).toBe(two + 12.5)
+  })
+
   it('pays weekly goals half beyond their target', () => {
     const h = habit('Koşu', { frequency: { type: 'timesPerWeek', count: 2 } })
     const two = habitXp(data([h], [done(h, day(0)), done(h, day(1))]), 7)
@@ -195,6 +206,7 @@ describe('daily quest', () => {
       habit('Meditasyon'),
       habit('Vitamin'),
       habit('Haftalık', { frequency: { type: 'timesPerWeek', count: 2 } }),
+      habit('Maraton', { frequency: { type: 'timesPerYear', count: 1 } }),
     ]
     const state = questState(habits, [], day(0))
     expect(state.habits.map((h) => h.title)).toEqual(['Koşu', 'Okuma', 'Meditasyon', 'Su iç', 'Diş fırçalama'])
@@ -321,6 +333,16 @@ describe('penalties', () => {
     const after = fines(d, START, day(6), day(7))
     expect(after).toHaveLength(1)
     expect(after[0]).toMatchObject({ date: day(6), xp: -50 })
+  })
+
+  it('fines a monthly goal on the last day of its month, and never the month it was added in', () => {
+    // Added on 5 January: January is not fined, February (nothing done) is, on the 28th.
+    const gym = habit('Spor', { frequency: { type: 'timesPerMonth', count: 2 } }) // heavy, 25 XP
+    const d = data([gym], [done(gym, '2026-01-20')], { penaltyFrom: START })
+    expect(fines(d, START, '2026-02-10', '2026-02-11')).toEqual([])
+    const after = fines(d, START, '2026-03-05', '2026-03-06')
+    expect(after).toHaveLength(1)
+    expect(after[0]).toMatchObject({ date: '2026-02-28', xp: -50 })
   })
 
   it('caps a day, leaves archived habits and stats alone, and can lower the level', () => {

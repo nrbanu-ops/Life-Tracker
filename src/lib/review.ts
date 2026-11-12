@@ -2,6 +2,7 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import type { DayMood, Habit, HabitLog, JournalEntry, Task } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
+import { describeFrequency, isLongGoal, isPeriodGoal, periodGoal, periodRange } from './frequency'
 import { isCompleted, isShownOn } from './today'
 
 export const REVIEW_DAYS = 7
@@ -44,14 +45,14 @@ export function buildReviewRequest(data: ReviewData, today: string): string {
     const mood = data.moods.find((m) => m.date === day)
     if (mood?.mood) parts.push(`ruh hali ${mood.mood}/5`)
     if (mood?.energy) parts.push(`enerji ${mood.energy}/5`)
-    const daily = habits.filter((h) => h.frequency.type !== 'timesPerWeek' && isShownOn(h, day))
+    const daily = habits.filter((h) => !isPeriodGoal(h) && isShownOn(h, day))
     const done = daily.filter((h) => isCompleted(status.get(`${h.id}|${day}`)))
     const skipped = daily.filter((h) => status.get(`${h.id}|${day}`) === 'skipped')
     const held = daily.filter((h) => status.get(`${h.id}|${day}`) === 'frozen')
     const missed = daily.filter(
       (h) => !done.includes(h) && !skipped.includes(h) && !held.includes(h) && day < today,
     )
-    const weeklyDone = habits.filter((h) => h.frequency.type === 'timesPerWeek' && isCompleted(status.get(`${h.id}|${day}`)))
+    const weeklyDone = habits.filter((h) => isPeriodGoal(h) && isCompleted(status.get(`${h.id}|${day}`)))
     if (done.length + weeklyDone.length) parts.push(`yaptıkları: ${[...done, ...weeklyDone].map((h) => h.title).join(', ')}`)
     if (missed.length) parts.push(`yapmadıkları: ${missed.map((h) => h.title).join(', ')}`)
     if (skipped.length) parts.push(`atladıkları: ${skipped.map((h) => h.title).join(', ')}`)
@@ -72,6 +73,16 @@ export function buildReviewRequest(data: ReviewData, today: string): string {
     for (const h of weekly) {
       const count = days.filter((d) => isCompleted(status.get(`${h.id}|${d}`))).length
       lines.push(`- ${h.title}: ${count}/${h.frequency.type === 'timesPerWeek' ? h.frequency.count : '?'}`)
+    }
+  }
+  const long = habits.filter(isLongGoal)
+  if (long.length) {
+    lines.push('\nAylık ve yıllık hedefler (ayın ya da yılın başından bugüne):')
+    for (const h of long) {
+      const goal = periodGoal(h.frequency)!
+      const { start } = periodRange(goal.period, today)
+      const count = data.logs.filter((l) => l.habitId === h.id && l.date >= start && l.date <= today && isCompleted(l.status)).length
+      lines.push(`- ${h.title} (${describeFrequency(h.frequency).toLocaleLowerCase('tr')}): ${count}/${goal.count}`)
     }
   }
   lines.push('\nBu haftaya kısa bir haftalık bakış yaz.')

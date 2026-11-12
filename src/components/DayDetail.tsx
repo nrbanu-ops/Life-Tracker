@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { setLog } from '../db/logs'
 import { setTaskDone } from '../db/tasks'
 import type { Habit, HabitLog, Project, Task } from '../db/types'
+import { countedOn } from '../lib/calendar'
 import { fromDateKey } from '../lib/date'
 import { compareTasks } from '../lib/tasks'
 import { buildToday, dayProgress, tapResult } from '../lib/today'
@@ -17,7 +18,7 @@ type Props = {
   date: string
   today: string
   habits: Habit[]
-  /** Logs covering at least the week of `date`. */
+  /** Logs covering at least the week of `date`, and the month or year of the goals that run that long. */
   logs: HabitLog[]
   tasks: Task[]
   projects: Project[]
@@ -29,7 +30,7 @@ export function DayDetail({ date, today, habits, logs, tasks, projects }: Props)
   const [editing, setEditing] = useState<TaskEditing>(null)
 
   const items = buildToday(habits, logs, date)
-  const { done, total } = dayProgress(items)
+  const { done, total } = dayProgress(countedOn(items))
   const dayTasks = tasks.filter((t) => t.date === date).sort(compareTasks)
   const projectColor = new Map(projects.map((p) => [p.id, p.color]))
   const isFuture = date > today

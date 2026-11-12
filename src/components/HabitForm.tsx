@@ -5,7 +5,7 @@ import { db } from '../db/db'
 import { createHabit, deleteHabit, setHabitArchived, updateHabit, type HabitInput } from '../db/habits'
 import type { DayPart, Habit, HabitFrequency, HabitKind, Project } from '../db/types'
 import { DEFAULT_INCREMENT } from '../lib/amount'
-import { WEEKDAY_SHORT } from '../lib/frequency'
+import { frequencyOf, PERIOD_EVERY, PERIOD_MAX, periodGoal, WEEKDAY_SHORT } from '../lib/frequency'
 import {
   autoEffort,
   EFFORT_TIERS,
@@ -42,11 +42,17 @@ const kindOptions: { kind: HabitKind; label: string }[] = [
 /** Value format of <input type="datetime-local">, in local time. */
 const LOCAL_DATETIME = "yyyy-MM-dd'T'HH:mm"
 
-const frequencyOptions: { type: FrequencyType; label: string }[] = [
-  { type: 'daily', label: 'Her gün' },
-  { type: 'weekdays', label: 'Belirli günler' },
-  { type: 'timesPerWeek', label: 'Haftada X kez' },
+// Two rows: planned by the day on top, "so many times a week, a month, a year" underneath.
+const frequencyOptions: { type: FrequencyType; label: string; wide?: boolean }[] = [
+  { type: 'daily', label: 'Her gün', wide: true },
+  { type: 'weekdays', label: 'Belirli günler', wide: true },
+  { type: 'timesPerWeek', label: 'Haftada X' },
+  { type: 'timesPerMonth', label: 'Ayda X' },
+  { type: 'timesPerYear', label: 'Yılda X' },
 ]
+
+/** Where the counter starts when a period is picked: a few times a week, once a month or a year. */
+const startingCount = (type: FrequencyType) => (type === 'timesPerWeek' ? 3 : 1)
 
 const inputClass =
   'w-full rounded-xl border border-border bg-bg px-3 py-2.5 outline-none focus:border-accent'
@@ -68,7 +74,7 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   const [days, setDays] = useState<number[]>(
     initial?.type === 'weekdays' ? initial.days : [1, 2, 3, 4, 5],
   )
-  const [count, setCount] = useState(initial?.type === 'timesPerWeek' ? initial.count : 3)
+  const [count, setCount] = useState((initial && periodGoal(initial)?.count) ?? 3)
   const [minimumVersion, setMinimumVersion] = useState(habit?.minimumVersion ?? '')
   const [focus, setFocus] = useState(habit?.focus ?? false)
   const [why, setWhy] = useState(habit?.why ?? '')
@@ -94,6 +100,8 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   )
 
   const trimmedTitle = title.trim()
+  // Set for "X times a week / month / year"; the count is a placeholder, only the period is read.
+  const goalPeriod = periodGoal({ type: frequencyType, count: 1, days: [] } as HabitFrequency)?.period
   const countable = kind === 'count' || kind === 'duration'
   const isQuit = kind === 'quit'
   const daysMissing = !isQuit && frequencyType === 'weekdays' && days.length === 0
@@ -114,8 +122,13 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
 
   const buildFrequency = (): HabitFrequency => {
     if (frequencyType === 'weekdays') return { type: 'weekdays', days }
-    if (frequencyType === 'timesPerWeek') return { type: 'timesPerWeek', count }
-    return { type: 'daily' }
+    return goalPeriod ? frequencyOf(goalPeriod, Math.min(count, PERIOD_MAX[goalPeriod])) : { type: 'daily' }
+  }
+
+  const pickFrequency = (type: FrequencyType) => {
+    // The same number means something else per week than per year, so it starts over.
+    if (type !== frequencyType) setCount(startingCount(type))
+    setFrequencyType(type)
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -250,11 +263,21 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
       {!isQuit && (
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1.5 text-sm text-muted">Sıklık</legend>
-            <Segmented
-              options={frequencyOptions.map((o) => ({ value: o.type, label: o.label }))}
-              value={frequencyType}
-              onChange={setFrequencyType}
-            />
+            <div className="grid grid-cols-6 gap-1 rounded-xl bg-bg p-1">
+              {frequencyOptions.map((option) => (
+                <button
+                  key={option.type}
+                  type="button"
+                  onClick={() => pickFrequency(option.type)}
+                  aria-pressed={frequencyType === option.type}
+                  className={`rounded-lg px-2 py-2 text-sm transition-colors ${option.wide ? 'col-span-3' : 'col-span-2'} ${
+                    frequencyType === option.type ? 'bg-surface font-medium shadow-sm' : 'text-muted'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
 
             {frequencyType === 'weekdays' && (
               <div className="grid grid-cols-7 gap-1.5 pt-1">
@@ -281,9 +304,9 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
               <p className="text-sm text-red-600 dark:text-red-400">En az bir gün seç.</p>
             )}
 
-            {frequencyType === 'timesPerWeek' && (
+            {goalPeriod && (
               <div className="flex items-center justify-between rounded-xl bg-bg px-3 py-2">
-                <span className="text-sm">Haftada</span>
+                <span className="text-sm">{PERIOD_EVERY[goalPeriod]}</span>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -297,8 +320,8 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
                   <span className="w-12 text-center tabular-nums">{count} kez</span>
                   <button
                     type="button"
-                    onClick={() => setCount((c) => Math.min(7, c + 1))}
-                    disabled={count >= 7}
+                    onClick={() => setCount((c) => Math.min(PERIOD_MAX[goalPeriod], c + 1))}
+                    disabled={count >= PERIOD_MAX[goalPeriod]}
                     aria-label="Artır"
                     className="h-9 w-9 rounded-full bg-surface text-lg disabled:opacity-40"
                   >

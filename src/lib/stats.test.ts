@@ -238,3 +238,67 @@ describe('a frozen day', () => {
     expect(states.get('2026-10-27')).toBe('frozen')
   })
 })
+
+describe('monthly and yearly goals', () => {
+  const monthly = habit({ type: 'timesPerMonth', count: 2 })
+  const yearly = habit({ type: 'timesPerYear', count: 1 })
+
+  it('judges a finished month on its last day', () => {
+    const logs = [log('2026-09-10')]
+    // September ended one short of two: it shows up in the range that holds 30 September …
+    expect(successRate(monthly, logs, '2026-09-01', '2026-09-30', TODAY)).toEqual({ done: 1, planned: 2, rate: 0.5 })
+    expect(successRate(monthly, logs, '2026-09-28', '2026-10-04', TODAY)).toMatchObject({ done: 1, planned: 2 })
+    // … and in no other week of that month.
+    expect(successRate(monthly, logs, '2026-09-07', '2026-09-13', TODAY)).toEqual({ done: 0, planned: 0, rate: undefined })
+  })
+
+  it('counts a reached goal on the day it was reached', () => {
+    const logs = [log('2026-09-03'), log('2026-09-10'), log('2026-09-20')]
+    expect(successRate(monthly, logs, '2026-09-07', '2026-09-13', TODAY)).toEqual({ done: 2, planned: 2, rate: 1 })
+    expect(successRate(monthly, logs, '2026-09-28', '2026-10-04', TODAY)).toMatchObject({ planned: 0 })
+  })
+
+  it('leaves the running period out until its goal is reached', () => {
+    expect(successRate(monthly, [log('2026-10-05')], '2026-10-01', TODAY, TODAY)).toMatchObject({ planned: 0 })
+    expect(successRate(monthly, [log('2026-10-05'), log('2026-10-27')], '2026-10-01', TODAY, TODAY)).toMatchObject({
+      done: 2,
+      planned: 2,
+    })
+  })
+
+  it('does not charge a 30-day window with a goal that has all year', () => {
+    const [from] = lastDays(TODAY, 30)
+    expect(successRate(yearly, [], from, TODAY, TODAY)).toMatchObject({ planned: 0 })
+    // Done in March: counted in March, not in whatever window today falls in.
+    expect(successRate(yearly, [log('2026-03-08')], from, TODAY, TODAY)).toMatchObject({ planned: 0 })
+    expect(successRate(yearly, [log('2026-03-08')], '2026-03-01', '2026-03-31', TODAY)).toMatchObject({ done: 1, planned: 1 })
+  })
+
+  it('counts a missed year on 31 December', () => {
+    const old = habit({ type: 'timesPerYear', count: 1 }, { createdAt: new Date(2025, 2, 1).toISOString() })
+    expect(successRate(old, [], '2025-12-01', '2025-12-31', TODAY)).toEqual({ done: 0, planned: 1, rate: 0 })
+    expect(successRate(old, [], '2025-11-01', '2025-11-30', TODAY)).toMatchObject({ planned: 0 })
+  })
+
+  it('counts months in a row for a monthly goal', () => {
+    const h = habit({ type: 'timesPerMonth', count: 1 }, { createdAt: new Date(2026, 5, 20).toISOString() })
+    // June (the month it was added) missed, July to September done, October still running.
+    const logs = [log('2026-07-30'), log('2026-08-01'), log('2026-09-15')]
+    expect(streaks(h, logs, TODAY)).toEqual({ current: 3, longest: 3, unit: 'month' })
+    expect(streaks(h, [...logs, log('2026-10-02')], TODAY)).toMatchObject({ current: 4, longest: 4 })
+    // A month with nothing in between starts the count over.
+    expect(streaks(h, [log('2026-07-30'), log('2026-09-15')], TODAY)).toMatchObject({ current: 1, longest: 1 })
+  })
+
+  it('counts years in a row for a yearly goal', () => {
+    const h = habit({ type: 'timesPerYear', count: 1 }, { createdAt: new Date(2024, 0, 10).toISOString() })
+    expect(streaks(h, [log('2024-05-01'), log('2025-11-30')], TODAY)).toEqual({ current: 2, longest: 2, unit: 'year' })
+    expect(streaks(h, [log('2024-05-01')], TODAY)).toMatchObject({ current: 0, longest: 1 })
+  })
+
+  it('never marks a day as missed', () => {
+    const states = dayStates(yearly, [log('2026-10-20')], '2026-10-19', TODAY, TODAY)
+    expect(states.get('2026-10-19')).toBe('open')
+    expect(states.get('2026-10-20')).toBe('done')
+  })
+})

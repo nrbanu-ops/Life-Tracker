@@ -13,10 +13,11 @@ import type {
 } from '../db/types'
 import { addDays } from 'date-fns'
 import { fromDateKey, toDateKey } from './date'
+import { isPeriodGoal, PERIOD_ADJECTIVE } from './frequency'
 import { goalProgress } from './library'
 import { projectProgress } from './projects'
 import { quitStats } from './quit'
-import { streaks } from './stats'
+import { streaks, type Streaks } from './stats'
 import { isCompleted, isShownOn } from './today'
 
 export type AchievementData = {
@@ -97,7 +98,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Days where every daily goal was completed (skipped ones aside), and the longest run of them. */
 export function perfectDays(habits: Habit[], logs: HabitLog[], today: string): { total: number; longestRun: number } {
-  const daily = habits.filter((h) => !h.archived && h.kind !== 'quit' && h.frequency.type !== 'timesPerWeek')
+  const daily = habits.filter((h) => !h.archived && h.kind !== 'quit' && !isPeriodGoal(h))
   if (daily.length === 0) return { total: 0, longestRun: 0 }
   const status = new Map(logs.map((l) => [`${l.habitId}|${l.date}`, l.status]))
   const first = daily.map((h) => toDateKey(new Date(h.createdAt))).sort()[0]
@@ -129,7 +130,7 @@ export function evaluateAchievements(
 ): Achievement[] {
   const { habits, logs, projects, milestones, tasks, journal, library, libraryGoals } = data
   const habitStreaks = new Map(habits.map((h) => [h.id, streaks(h, logs, today)]))
-  const dayStreak = Math.max(0, ...habits.filter((h) => h.frequency.type !== 'timesPerWeek').map((h) => habitStreaks.get(h.id)!.longest))
+  const dayStreak = Math.max(0, ...habits.filter((h) => !isPeriodGoal(h)).map((h) => habitStreaks.get(h.id)!.longest))
   const weekStreak = Math.max(0, ...habits.filter((h) => h.frequency.type === 'timesPerWeek').map((h) => habitStreaks.get(h.id)!.longest))
   const completedLogs = logs.filter((l) => isCompleted(l.status))
   const perfect = perfectDays(habits, logs, today)
@@ -244,7 +245,7 @@ export function evaluateAchievements(
 function projectDrafts(
   project: Project,
   data: AchievementData,
-  habitStreaks: Map<string, { longest: number; unit: 'day' | 'week' }>,
+  habitStreaks: Map<string, Pick<Streaks, 'longest' | 'unit'>>,
   today: string,
 ): Draft[] {
   const milestones = data.milestones.filter((m) => m.projectId === project.id)
@@ -291,7 +292,7 @@ function measureRule(
   data: AchievementData,
   milestones: Milestone[],
   percent: number,
-  habitStreaks: Map<string, { longest: number; unit: 'day' | 'week' }>,
+  habitStreaks: Map<string, Pick<Streaks, 'longest' | 'unit'>>,
 ): { current: number; target: number; description: string } | undefined {
   switch (rule.type) {
     case 'milestone': {
@@ -304,7 +305,7 @@ function measureRule(
       const h = data.habits.find((x) => x.id === rule.habitId)
       const s = habitStreaks.get(rule.habitId)
       if (!h || !s) return undefined
-      const unit = s.unit === 'week' ? 'haftalık' : 'günlük'
+      const unit = s.unit === 'day' ? 'günlük' : PERIOD_ADJECTIVE[s.unit]
       return { current: s.longest, target: rule.count, description: `${h.title}: ${rule.count} ${unit} seri` }
     }
     case 'habitTotal': {

@@ -4,6 +4,7 @@ import { weekRange } from './date'
 import {
   buildToday,
   dayProgress,
+  isDailyGoal,
   isShownOn,
   isWeeklyGoal,
   nextStatus,
@@ -12,7 +13,7 @@ import {
   splitDone,
   splitFocus,
   tapResult,
-  weekProgress,
+  goalProgress,
   withAmount,
 } from './today'
 
@@ -122,7 +123,7 @@ describe('buildToday', () => {
       [log('a', '2026-10-25'), log('a', '2026-10-26'), log('a', WED)],
       WED,
     )
-    expect(items[0].weekCount).toBe(2)
+    expect(items[0].goalCount).toBe(2)
     expect(items[0].countsToday).toBe(true)
   })
 
@@ -151,7 +152,7 @@ describe('buildToday', () => {
       WED,
     )
     expect(items[1].value).toBe(3)
-    expect(items[2].weekCount).toBe(0)
+    expect(items[2].goalCount).toBe(0)
     expect(dayProgress(items)).toEqual({ done: 0, total: 2 })
   })
 })
@@ -168,7 +169,7 @@ describe('weekly goals', () => {
       [log('a', '2026-10-26'), log('a', '2026-10-27'), log('b', WED)],
       WED,
     )
-    expect(weekProgress(items)).toEqual({ done: 1, total: 2 })
+    expect(goalProgress(items)).toEqual({ done: 1, total: 2 })
   })
 })
 
@@ -248,5 +249,35 @@ describe('sortByDayPart', () => {
   it('changes nothing when no habit has a time', () => {
     const plain = [item('x'), item('y'), item('z')]
     expect(sortByDayPart(plain, 'evening').map((i) => i.habit.id)).toEqual(['x', 'y', 'z'])
+  })
+})
+
+describe('monthly and yearly goals', () => {
+  it('counts the whole month, not just this week', () => {
+    const items = buildToday(
+      [habit('a', { type: 'timesPerMonth', count: 2 })],
+      [log('a', '2026-09-30'), log('a', '2026-10-03')],
+      WED,
+    )
+    expect(items[0].goalCount).toBe(1)
+    expect(items[0].countsToday).toBe(true)
+  })
+
+  it('counts the whole year and steps back once the goal is reached', () => {
+    const items = buildToday(
+      [habit('a', { type: 'timesPerYear', count: 1 }), habit('b', { type: 'timesPerYear', count: 1 })],
+      [log('a', '2026-02-14'), log('b', '2025-12-31')],
+      WED,
+    )
+    expect(items[0]).toMatchObject({ goalCount: 1, countsToday: false })
+    expect(items[1]).toMatchObject({ goalCount: 0, countsToday: true })
+    expect(goalProgress(items)).toEqual({ done: 1, total: 2 })
+  })
+
+  it('is neither a daily nor a weekly goal', () => {
+    const yearly = habit('a', { type: 'timesPerYear', count: 1 })
+    expect(isWeeklyGoal(yearly)).toBe(false)
+    expect(isDailyGoal(yearly)).toBe(false)
+    expect(isDailyGoal(habit('b', { type: 'weekdays', days: [1] }))).toBe(true)
   })
 })

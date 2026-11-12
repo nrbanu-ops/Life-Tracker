@@ -12,6 +12,7 @@ import type {
   XpWeek,
 } from '../db/types'
 import { dayStatus } from './calendar'
+import { isLongGoal } from './frequency'
 import { isCompleted, isExcused, isShownOn } from './today'
 
 /**
@@ -161,7 +162,8 @@ export function yearSummary(data: YearData, year: number, today: string): YearSu
   for (const habit of data.habits) {
     const count = perHabit.get(habit.id) ?? 0
     if (count > 0 && (!topHabit || count > topHabit.done)) topHabit = { title: habit.title, done: count }
-    if (habit.kind === 'quit') continue
+    // A monthly or yearly goal has no run of days.
+    if (habit.kind === 'quit' || isLongGoal(habit)) continue
     const streak = longestStreak(habit, logs, days)
     if (streak > 0 && (!bestStreak || streak > bestStreak.days)) bestStreak = { title: habit.title, days: streak }
   }

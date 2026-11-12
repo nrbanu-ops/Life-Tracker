@@ -36,6 +36,13 @@ describe('dayStatus', () => {
     expect(dayStatus(habits, logs, '2026-10-20')).toEqual({ done: 1, total: 2 })
   })
 
+  it('counts a monthly or yearly goal only on the day it was done', () => {
+    const habits = [habit('a'), habit('trip', { frequency: { type: 'timesPerYear', count: 1 } })]
+    const logs: HabitLog[] = [{ id: 'l', habitId: 'trip', date: '2026-10-20', status: 'done' }]
+    expect(dayStatus(habits, [], '2026-10-19')).toEqual({ done: 0, total: 1 })
+    expect(dayStatus(habits, logs, '2026-10-20')).toEqual({ done: 1, total: 2 })
+  })
+
   it('leaves out days before a habit existed', () => {
     const habits = [habit('a'), habit('late', { createdAt: new Date(2026, 9, 25).toISOString() })]
     expect(dayStatus(habits, [], '2026-10-20')).toEqual({ done: 0, total: 1 })

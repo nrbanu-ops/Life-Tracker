@@ -28,7 +28,7 @@ Yeni bir kütüphane eklemeden önce kullanıcıya sor.
 Tipler `src/db/types.ts`, Dexie şeması `src/db/db.ts` içinde. Tarihleri her zaman yerel saatle `YYYY-MM-DD` string olarak sakla, UTC dönüşümü yapma (`src/lib/date.ts`).
 
 ## Ekranlar (MVP)
-1. Bugün (ana ekran): bugün planlanmış habit'ler tek dokunuşla işaretlenir; uzun basma veya ikinci dokunuş "minimum versiyon"; üstte günün tamamlanma oranı; aktif projelerin sıradaki milestone'ları. Habit'ler "Günlük hedefler" (her gün / belirli günler) ve "Haftalık hedefler" (haftada X kez) olarak ayrı listelenir; halka sadece günlükleri sayar, haftalıkların kendi "bu hafta x/y" sayacı var (`isWeeklyGoal`, `weekProgress`). Habit'ler sayfası da aynı gruplarla.
+1. Bugün (ana ekran): bugün planlanmış habit'ler tek dokunuşla işaretlenir; uzun basma veya ikinci dokunuş "minimum versiyon"; üstte günün tamamlanma oranı; aktif projelerin sıradaki milestone'ları. Habit'ler "Günlük hedefler" (her gün / belirli günler), "Haftalık hedefler" (haftada X kez) ve "Aylık ve yıllık hedefler" (ayda / yılda X kez) olarak ayrı listelenir; halka sadece günlükleri sayar, diğerlerinin kendi "bu hafta / bu ay / bu yıl x/y" sayacı var (`isDailyGoal`, `isWeeklyGoal`, `isLongGoal`, `goalProgress`). Hedefi dolmuş aylık/yıllık habit Bugün'de "✓ n hedef tamam · göster" satırının arkasına çekilir. Habit'ler sayfası da aynı gruplarla.
 2. Projeler: kartlar (başlık, renk, ilerleme çubuğu, hedef tarih); detayda milestone listesi (ekle, sırala, işaretle), bağlı habit'ler ve son 30 gündeki başarı oranları.
 3. Habit'ler: ekleme/düzenleme/arşivleme, sıklık seçimi, projeye bağlama.
 4. İstatistik: habit başına ısı haritası (son 12 ay), mevcut ve en uzun seri, haftalık/aylık başarı oranı, haftanın günlerine göre başarı oranı.
@@ -47,10 +47,12 @@ Ayarlar → **Bugün ekranı** (`TodaySection`, `src/lib/todaySetting.ts`): ciha
 - Seri (streak):
   - `daily` ve `weekdays`: sadece planlanan günler sayılır; planlanmamış günler seriyi bozmaz
   - `timesPerWeek`: hedefe ulaşılan ardışık haftalar sayılır
+  - `timesPerMonth` / `timesPerYear`: aynı kural, takvim ayı ya da yılıyla (seri birimi ay / yıl)
   - `minimum` durumu seriyi korur
   - Bugün henüz işaretlenmemişse seri bozulmuş sayılmaz
   - `skipped` (atlanan gün) seriyi bozmaz, planlanmamış gün gibi davranır
 - Başarı oranı: tamamlanan / planlanan gün sayısı (`minimum` da tamamlanmış sayılır; `skipped` günler hesaba katılmaz)
+- **Dönem hedefleri** ("haftada / ayda / yılda X kez") tek şekle indirgenir: `periodGoal(frequency)` → `{ period, count }`, aralık `periodRange`, sonraki dönem `nextPeriod` (`src/lib/frequency.ts`). Seri, XP ve ceza üç dönem için aynı döngüden geçer; yeni bir kural yazarken `frequency.type === 'timesPerWeek'` diye sorma, `periodGoal` / `isPeriodGoal` kullan. **Aylık ve yıllık** olanlar (`isLongGoal`) hiçbir günün parçası değildir: halka, takvim hücresi (`countedOn`), kusursuz gün, günlük görev, acil görev, seri koruması ve "haftanın günleri" grafiği onları saymaz. Başarı oranında dönem **tek bir güne** yazılır — hedefe ulaşılan gün, ulaşılamadıysa dönemin son günü — ve o günü içeren aralıkta sayılır (koşan dönem hedef dolana kadar sayılmaz); böylece yılda bir yapılan şey 30 günlük pencereyi düşürmez. Bunun için günlükler dönemin tamamını kapsamalı: ekranlar `logsCovering(from, to)` ile okur (`src/db/logs.ts`; aralık + sadece uzun hedefli habit'lerin ay/yıl geri kalanı, `[habitId+date]` indeksinden). Aylık bakış yıllık hedefleri dışarıda bırakır.
 - Habit türleri: `check` (tek dokunuş), `count` ve `duration` (günlük `target`'a ulaşınca `done`, altında `partial`)
 
 Bu hesaplamalar `src/lib/stats.ts` içinde saf fonksiyonlar olarak yazılır ve Vitest ile test edilir.

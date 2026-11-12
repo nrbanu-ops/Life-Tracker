@@ -9,7 +9,8 @@ import { db } from '../db/db'
 import type { Habit, Project } from '../db/types'
 import { describeTarget } from '../lib/amount'
 import { describeFrequency } from '../lib/frequency'
-import { isWeeklyGoal } from '../lib/today'
+import { isLongGoal } from '../lib/frequency'
+import { isDailyGoal, isWeeklyGoal } from '../lib/today'
 
 // Store only the id so the sheet always shows the live record.
 type Editing = { mode: 'new' } | { mode: 'edit'; id: string } | null
@@ -47,13 +48,14 @@ export function HabitsPage() {
       {habits === undefined ? null : active.length === 0 ? (
         <EmptyState
           title="Henüz habit yok"
-          text="Her gün ya da haftada birkaç kez yapmak istediğin şeyleri ekle."
+          text="Her gün, haftada birkaç kez ya da ayda yılda bir yapmak istediğin şeyleri ekle."
         />
       ) : (
         <div className="flex flex-col gap-6">
           {[
-            { title: 'Günlük hedefler', list: active.filter((h) => h.kind !== 'quit' && !isWeeklyGoal(h)) },
+            { title: 'Günlük hedefler', list: active.filter((h) => h.kind !== 'quit' && isDailyGoal(h)) },
             { title: 'Haftalık hedefler', list: active.filter((h) => h.kind !== 'quit' && isWeeklyGoal(h)) },
+            { title: 'Aylık ve yıllık hedefler', list: active.filter((h) => h.kind !== 'quit' && isLongGoal(h)) },
             { title: 'Bıraktıkların', list: active.filter((h) => h.kind === 'quit') },
           ]
             .filter((group) => group.list.length > 0)
