@@ -5,6 +5,12 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-12
 
+### Zor gün modu Ayarlar'a taşındı 🌧️
+- Açıp kapamak artık **Ayarlar → Görünüm → Bugün ekranı → Zor gün modu (bugün)** anahtarında;
+  altında bu ay kaç hakkın kaldığı yazar. Hak bitince anahtar soluklaşır.
+- Bugün'deki "Zor bir gün mü?" satırı kalktı. Mod açıkken Bugün'de kartı yine görünür (dokunuşlar
+  o gün farklı çalıştığı için) ve oradaki **Kapat** da çalışmaya devam eder.
+
 ### Statlar yenilendi: sekizli karma 🎭⚔️
 - **8 stat, iki aile.** *Beden:* Güç, Dayanıklılık, Duyu. *Karakter:* Bilgi, Beceri, Cesaret,
   Nezaket, Cazibe. Zekâ'nın adı **Bilgi**, Disiplin'in adı **Cesaret** oldu; puanların aynen duruyor.

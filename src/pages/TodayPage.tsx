@@ -11,7 +11,7 @@ import { MonthReviewCard } from '../components/MonthReviewCard'
 import { EmptyState } from '../components/EmptyState'
 import { FreezeCard } from '../components/FreezeCard'
 import { HabitActionSheet } from '../components/HabitActionSheet'
-import { HardDayToggle } from '../components/HardDayToggle'
+import { HardDayCard } from '../components/HardDayCard'
 import { HabitCheckRow } from '../components/HabitCheckRow'
 import { PageHeader } from '../components/PageHeader'
 import { ProgressRing } from '../components/ProgressRing'
@@ -127,7 +127,7 @@ export function TodayPage() {
             </section>
           )}
 
-          {hardDay && <HardDayToggle today={today} state={hardDay} />}
+          {hard && <HardDayCard today={today} />}
 
           {keystones.length > 0 && (
             <HabitGroup

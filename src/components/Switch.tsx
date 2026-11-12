@@ -2,17 +2,20 @@ type Props = {
   label: string
   checked: boolean
   onChange: (value: boolean) => void
+  /** Greyed out and inert, for a switch that cannot be used right now. */
+  disabled?: boolean
 }
 
 /** The on/off switch used by the settings sections. */
-export function Switch({ label, checked, onChange }: Props) {
+export function Switch({ label, checked, onChange, disabled = false }: Props) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3">
+    <label className={`flex items-center justify-between gap-3 ${disabled ? 'opacity-50' : 'cursor-pointer'}`}>
       <span className="font-medium">{label}</span>
       <input
         type="checkbox"
         role="switch"
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
         className="peer sr-only"
       />
