@@ -5,7 +5,15 @@ import { db } from '../db/db'
 import { createHabit, deleteHabit, setHabitArchived, updateHabit, type HabitInput } from '../db/habits'
 import type { DayPart, Habit, HabitFrequency, HabitKind, Project } from '../db/types'
 import { DEFAULT_INCREMENT } from '../lib/amount'
-import { frequencyOf, PERIOD_EVERY, PERIOD_MAX, periodGoal, WEEKDAY_SHORT } from '../lib/frequency'
+import {
+  frequencyOf,
+  INTERVAL_MAX,
+  INTERVAL_MIN,
+  PERIOD_EVERY,
+  PERIOD_MAX,
+  periodGoal,
+  WEEKDAY_SHORT,
+} from '../lib/frequency'
 import {
   autoEffort,
   EFFORT_TIERS,
@@ -42,13 +50,15 @@ const kindOptions: { kind: HabitKind; label: string }[] = [
 /** Value format of <input type="datetime-local">, in local time. */
 const LOCAL_DATETIME = "yyyy-MM-dd'T'HH:mm"
 
-// Two rows: planned by the day on top, "so many times a week, a month, a year" underneath.
-const frequencyOptions: { type: FrequencyType; label: string; wide?: boolean }[] = [
-  { type: 'daily', label: 'Her gün', wide: true },
-  { type: 'weekdays', label: 'Belirli günler', wide: true },
+// Planned by the day on top, then "so many times a week, a month, a year", and last the one
+// with no calendar period at all: again a set time after it was last done.
+const frequencyOptions: { type: FrequencyType; label: string }[] = [
+  { type: 'daily', label: 'Her gün' },
+  { type: 'weekdays', label: 'Belirli günler' },
   { type: 'timesPerWeek', label: 'Haftada X' },
   { type: 'timesPerMonth', label: 'Ayda X' },
   { type: 'timesPerYear', label: 'Yılda X' },
+  { type: 'everyMonths', label: 'X ayda bir' },
 ]
 
 /** Where the counter starts when a period is picked: a few times a week, once a month or a year. */
@@ -75,6 +85,9 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
     initial?.type === 'weekdays' ? initial.days : [1, 2, 3, 4, 5],
   )
   const [count, setCount] = useState((initial && periodGoal(initial)?.count) ?? 3)
+  const [months, setMonths] = useState(initial?.type === 'everyMonths' ? initial.months : 6)
+  // "Every N months" only: the day the first one is due. Empty means from today on.
+  const [firstDue, setFirstDue] = useState(initial?.type === 'everyMonths' ? (initial.start ?? '') : '')
   const [minimumVersion, setMinimumVersion] = useState(habit?.minimumVersion ?? '')
   const [focus, setFocus] = useState(habit?.focus ?? false)
   const [why, setWhy] = useState(habit?.why ?? '')
@@ -122,6 +135,7 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
 
   const buildFrequency = (): HabitFrequency => {
     if (frequencyType === 'weekdays') return { type: 'weekdays', days }
+    if (frequencyType === 'everyMonths') return { type: 'everyMonths', months, ...(firstDue ? { start: firstDue } : {}) }
     return goalPeriod ? frequencyOf(goalPeriod, Math.min(count, PERIOD_MAX[goalPeriod])) : { type: 'daily' }
   }
 
@@ -263,14 +277,14 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
       {!isQuit && (
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1.5 text-sm text-muted">Sıklık</legend>
-            <div className="grid grid-cols-6 gap-1 rounded-xl bg-bg p-1">
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-bg p-1">
               {frequencyOptions.map((option) => (
                 <button
                   key={option.type}
                   type="button"
                   onClick={() => pickFrequency(option.type)}
                   aria-pressed={frequencyType === option.type}
-                  className={`rounded-lg px-2 py-2 text-sm transition-colors ${option.wide ? 'col-span-3' : 'col-span-2'} ${
+                  className={`rounded-lg px-2 py-2 text-sm transition-colors ${
                     frequencyType === option.type ? 'bg-surface font-medium shadow-sm' : 'text-muted'
                   }`}
                 >
@@ -329,6 +343,48 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
                   </button>
                 </div>
               </div>
+            )}
+
+            {frequencyType === 'everyMonths' && (
+              <>
+                <div className="flex items-center justify-between rounded-xl bg-bg px-3 py-2">
+                  <span className="text-sm">Aralık</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setMonths((m) => Math.max(INTERVAL_MIN, m - 1))}
+                      disabled={months <= INTERVAL_MIN}
+                      aria-label="Azalt"
+                      className="h-9 w-9 rounded-full bg-surface text-lg disabled:opacity-40"
+                    >
+                      −
+                    </button>
+                    <span className="w-24 text-center tabular-nums">{months} ayda bir</span>
+                    <button
+                      type="button"
+                      onClick={() => setMonths((m) => Math.min(INTERVAL_MAX, m + 1))}
+                      disabled={months >= INTERVAL_MAX}
+                      aria-label="Artır"
+                      className="h-9 w-9 rounded-full bg-surface text-lg disabled:opacity-40"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-sm text-muted">Sıradaki ne zaman? (isteğe bağlı)</span>
+                  <input
+                    type="date"
+                    value={firstDue}
+                    onChange={(e) => setFirstDue(e.target.value)}
+                    className={inputClass}
+                  />
+                  <span className="text-xs text-muted">
+                    Boş bırakırsan bugünden başlar. O gün gelince Bugün'de görünür; işaretledikten sonra
+                    sıradaki tarih son yaptığın günden sayılır.
+                  </span>
+                </label>
+              </>
             )}
           </fieldset>
       )}

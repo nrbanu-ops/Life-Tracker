@@ -62,8 +62,15 @@ export function monthReview(habits: Habit[], logs: HabitLog[], today: string): M
   const before = span(monthBefore)
 
   const rows: HabitMonth[] = habits
-    // A yearly goal is judged over its year; one month of it says nothing.
-    .filter((habit) => !habit.archived && habit.kind !== 'quit' && habit.frequency.type !== 'timesPerYear')
+    // A yearly goal is judged over its year, one every few months over its whole history; one
+    // month of either says nothing.
+    .filter(
+      (habit) =>
+        !habit.archived &&
+        habit.kind !== 'quit' &&
+        habit.frequency.type !== 'timesPerYear' &&
+        habit.frequency.type !== 'everyMonths',
+    )
     .map((habit) => {
       const l = successRate(habit, logs, last.from, last.to, today)
       const b = successRate(habit, logs, before.from, before.to, today)

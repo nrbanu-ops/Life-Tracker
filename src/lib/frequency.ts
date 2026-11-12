@@ -56,14 +56,33 @@ type WithFrequency = Pick<Habit, 'frequency'>
 /** Counted over a period instead of planned day by day. */
 export const isPeriodGoal = (habit: WithFrequency): boolean => periodGoal(habit.frequency) !== undefined
 
+/** Planned day by day (every day, set weekdays): a day it is not done on is a day missed. */
+export const isPlannedDaily = (habit: WithFrequency): boolean =>
+  habit.frequency.type === 'daily' || habit.frequency.type === 'weekdays'
+
+/** The gap of an "every N months" habit, in months. */
+export const intervalOf = (frequency: HabitFrequency): number | undefined =>
+  frequency.type === 'everyMonths' ? Math.max(1, frequency.months) : undefined
+
+/** An "every N months" habit can be asked for between these. One month is "Ayda 1". */
+export const INTERVAL_MIN = 2
+export const INTERVAL_MAX = 24
+
 /**
- * A monthly or yearly goal. Unlike a weekly one it is not part of any single day: most days
- * pass without it, so it stays out of whatever judges a day (the ring, perfect days, quests).
+ * A monthly or yearly goal, or something done every few months. Unlike a weekly goal it is
+ * not part of any single day: most days pass without it, so it stays out of whatever judges
+ * a day (the ring, perfect days, quests).
  */
 export const isLongGoal = (habit: WithFrequency): boolean => {
   const goal = periodGoal(habit.frequency)
-  return goal !== undefined && goal.period !== 'week'
+  return goal ? goal.period !== 'week' : habit.frequency.type === 'everyMonths'
 }
+
+/** What a streak is counted in: days, calendar periods, or times in a row for "every N months". */
+export type StreakUnit = 'day' | GoalPeriod | 'time'
+
+/** "12 gün", "3 hafta", "2 kez" */
+export const STREAK_UNIT: Record<StreakUnit, string> = { day: 'gün', ...PERIOD_NAME, time: 'kez' }
 
 /** First and last day of the week (Monday–Sunday), month or year containing `key`. */
 export function periodRange(period: GoalPeriod, key: string): { start: string; end: string } {
@@ -85,6 +104,7 @@ export const dayCount = (from: string, to: string): number =>
 export function describeFrequency(frequency: HabitFrequency): string {
   const goal = periodGoal(frequency)
   if (goal) return `${PERIOD_EVERY[goal.period]} ${goal.count} kez`
+  if (frequency.type === 'everyMonths') return `${intervalOf(frequency)} ayda bir`
   if (frequency.type === 'weekdays') {
     const days = [...frequency.days].sort((a, b) => a - b)
     if (days.length === 7) return 'Her gün'

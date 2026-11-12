@@ -13,7 +13,7 @@ import type {
 } from '../db/types'
 import { addDays } from 'date-fns'
 import { fromDateKey, toDateKey } from './date'
-import { isPeriodGoal, PERIOD_ADJECTIVE } from './frequency'
+import { isPlannedDaily, PERIOD_ADJECTIVE } from './frequency'
 import { goalProgress } from './library'
 import { projectProgress } from './projects'
 import { quitStats } from './quit'
@@ -98,7 +98,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Days where every daily goal was completed (skipped ones aside), and the longest run of them. */
 export function perfectDays(habits: Habit[], logs: HabitLog[], today: string): { total: number; longestRun: number } {
-  const daily = habits.filter((h) => !h.archived && h.kind !== 'quit' && !isPeriodGoal(h))
+  const daily = habits.filter((h) => !h.archived && h.kind !== 'quit' && isPlannedDaily(h))
   if (daily.length === 0) return { total: 0, longestRun: 0 }
   const status = new Map(logs.map((l) => [`${l.habitId}|${l.date}`, l.status]))
   const first = daily.map((h) => toDateKey(new Date(h.createdAt))).sort()[0]
@@ -130,7 +130,7 @@ export function evaluateAchievements(
 ): Achievement[] {
   const { habits, logs, projects, milestones, tasks, journal, library, libraryGoals } = data
   const habitStreaks = new Map(habits.map((h) => [h.id, streaks(h, logs, today)]))
-  const dayStreak = Math.max(0, ...habits.filter((h) => !isPeriodGoal(h)).map((h) => habitStreaks.get(h.id)!.longest))
+  const dayStreak = Math.max(0, ...habits.filter((h) => isPlannedDaily(h)).map((h) => habitStreaks.get(h.id)!.longest))
   const weekStreak = Math.max(0, ...habits.filter((h) => h.frequency.type === 'timesPerWeek').map((h) => habitStreaks.get(h.id)!.longest))
   const completedLogs = logs.filter((l) => isCompleted(l.status))
   const perfect = perfectDays(habits, logs, today)
@@ -305,8 +305,8 @@ function measureRule(
       const h = data.habits.find((x) => x.id === rule.habitId)
       const s = habitStreaks.get(rule.habitId)
       if (!h || !s) return undefined
-      const unit = s.unit === 'day' ? 'günlük' : PERIOD_ADJECTIVE[s.unit]
-      return { current: s.longest, target: rule.count, description: `${h.title}: ${rule.count} ${unit} seri` }
+      const unit = s.unit === 'day' ? 'günlük seri' : s.unit === 'time' ? 'kez üst üste' : `${PERIOD_ADJECTIVE[s.unit]} seri`
+      return { current: s.longest, target: rule.count, description: `${h.title}: ${rule.count} ${unit}` }
     }
     case 'habitTotal': {
       const h = data.habits.find((x) => x.id === rule.habitId)

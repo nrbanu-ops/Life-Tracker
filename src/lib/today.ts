@@ -2,7 +2,8 @@ import type { LogEntry } from '../db/logs'
 import type { DayPart, Habit, HabitLog, HabitLogStatus } from '../db/types'
 import { incrementOf } from './amount'
 import { toDateKey, weekdayOf } from './date'
-import { isPeriodGoal, periodGoal, periodRange } from './frequency'
+import { dayCount, intervalOf, isPlannedDaily, periodGoal, periodRange } from './frequency'
+import { dueDay, plusMonths } from './interval'
 
 /** done and minimum both count as completed; partial, skipped and frozen do not. */
 export const isCompleted = (status: HabitLogStatus | undefined): boolean =>
@@ -66,14 +67,21 @@ export type TodayItem = {
   value?: number
   /** Only for "X times a week / month / year": completed days in that period, today included. */
   goalCount?: number
-  /** False when skipped, or when a period goal is already met and today is not completed. */
+  /** Only for "every N months": the day it is next due, counting today if it was done today. */
+  nextDue?: string
+  /** Only for "every N months", and only while it is waiting to be done: days past its due day. */
+  overdue?: number
+  /**
+   * False when skipped, when a period goal is already met and today is not completed, or
+   * when an "every N months" habit is not due yet.
+   */
   countsToday: boolean
 }
 
 /**
  * Builds today's list from active habits and their logs. `logs` may contain other days; it
- * has to cover the week of `today`, and for a monthly or yearly goal that habit's whole
- * month or year (`logsCovering` reads exactly that).
+ * has to cover the week of `today`, for a monthly or yearly goal that habit's whole month or
+ * year, and for an "every N months" habit everything before (`logsCovering` reads exactly that).
  */
 export function buildToday(habits: Habit[], logs: HabitLog[], today: string): TodayItem[] {
   return habits
@@ -83,6 +91,20 @@ export function buildToday(habits: Habit[], logs: HabitLog[], today: string): To
       const own = logs.filter((log) => log.habitId === habit.id)
       const todayLog = own.find((log) => log.date === today)
       const base = { habit, status: todayLog?.status, value: todayLog?.value }
+      const months = intervalOf(habit.frequency)
+      if (months) {
+        // Asked for from its due day on, until it is done; then the clock starts again.
+        const before = own.filter((log) => log.date < today && isCompleted(log.status)).map((log) => log.date)
+        const due = dueDay(habit, before, today)
+        const doneToday = isCompleted(base.status)
+        const overdue = !doneToday && due <= today ? dayCount(due, today) - 1 : undefined
+        return {
+          ...base,
+          nextDue: doneToday ? plusMonths(today, months) : due,
+          overdue,
+          countsToday: doneToday || (overdue !== undefined && !isExcused(base.status)),
+        }
+      }
       if (isExcused(base.status)) return { ...base, countsToday: false }
       const goal = periodGoal(habit.frequency)
       if (!goal) return { ...base, countsToday: true }
@@ -96,15 +118,19 @@ export function buildToday(habits: Habit[], logs: HabitLog[], today: string): To
 export const isWeeklyGoal = (habit: Habit): boolean => habit.frequency.type === 'timesPerWeek'
 
 /** Planned day by day (every day, set weekdays): what the day's ring is about. */
-export const isDailyGoal = (habit: Habit): boolean => !isPeriodGoal(habit)
+export const isDailyGoal = (habit: Habit): boolean => isPlannedDaily(habit)
 
-/** Period goals whose target is already reached, out of all the period goals given. */
+/**
+ * Goals with nothing left to ask, out of all the non-daily goals given: a period goal whose
+ * target is reached, an "every N months" habit that is done or not due yet.
+ */
 export function goalProgress(items: TodayItem[]): { done: number; total: number } {
   const goals = items.flatMap((item) => {
     const goal = periodGoal(item.habit.frequency)
-    return goal ? [{ count: item.goalCount ?? 0, target: goal.count }] : []
+    if (goal) return [(item.goalCount ?? 0) >= goal.count]
+    return item.nextDue ? [item.overdue === undefined] : []
   })
-  return { done: goals.filter((g) => g.count >= g.target).length, total: goals.length }
+  return { done: goals.filter(Boolean).length, total: goals.length }
 }
 
 /** Completed / counted items for the day ring; minimum counts as completed. */

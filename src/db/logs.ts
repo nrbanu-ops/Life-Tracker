@@ -1,5 +1,5 @@
 import { todayKey, weekRange } from '../lib/date'
-import { periodGoal, periodRange } from '../lib/frequency'
+import { intervalOf, periodGoal, periodRange } from '../lib/frequency'
 import { isExcused, withAmount } from '../lib/today'
 import { markXpWeekDirty } from './leveling'
 import { db, newId } from './db'
@@ -59,6 +59,8 @@ export async function addAmount(
  * those habits alone, the rest of the month or year the range starts and ends in. Their count
  * ("Bu yıl 1/2") and their success rate are about the whole period, and reading a year of
  * every habit's logs for the sake of one of them would be a waste on each tap.
+ * An "every N months" habit brings all of its logs: when it is next due hangs on the last
+ * time it was done, however long ago, and there are only a handful of them.
  */
 export async function logsCovering(from: string, to: string): Promise<HabitLog[]> {
   const [logs, habits] = await Promise.all([
@@ -67,8 +69,12 @@ export async function logsCovering(from: string, to: string): Promise<HabitLog[]
   ])
   const extra = await Promise.all(
     habits.flatMap((habit) => {
+      if (habit.kind === 'quit') return []
+      if (intervalOf(habit.frequency)) {
+        return [db.habitLogs.where('habitId').equals(habit.id).filter((l) => l.date < from || l.date > to).toArray()]
+      }
       const goal = periodGoal(habit.frequency)
-      if (!goal || goal.period === 'week' || habit.kind === 'quit') return []
+      if (!goal || goal.period === 'week') return []
       const start = periodRange(goal.period, from).start
       const end = periodRange(goal.period, to).end
       const of = (lower: string, upper: string, includeLower: boolean, includeUpper: boolean) =>

@@ -32,6 +32,9 @@ export type HabitFrequency =
   // Things done now and then: any day of the month or year counts toward the goal.
   | { type: 'timesPerMonth'; count: number }
   | { type: 'timesPerYear'; count: number }
+  // "Every 6 months": due again that long after it was last done, whenever that was.
+  // `start` is the day the first one is due; the day the habit was added when absent.
+  | { type: 'everyMonths'; months: number; start?: string }
 
 /**
  * check: one tap marks it done. count/duration: progress toward `target`.

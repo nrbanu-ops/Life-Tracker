@@ -5,6 +5,17 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-12
 
+### "X ayda bir" ⏳
+- **Yeni sıklık: "X ayda bir"** (2–24 ay). "Yılda 2 kez"den farkı: takvim yılına değil, **son
+  yaptığın güne** bakar. Diş hekimine Kasım'da gittiysen "6 ayda bir" Mayıs'ta tekrar çıkar.
+- **Bugün'de** zamanı gelene kadar "✓ … şimdilik tamam · göster" satırının arkasında bekler,
+  altında "Sıradaki 12 May 2027" yazar. Günü gelince listeye çıkar: "Zamanı geldi", sonra
+  "8 gün gecikti". İşaretleyince sayaç o günden yeniden başlar.
+- **Sıradaki ne zaman?** Eklerken ilk tarihi seçebilirsin (boş bırakırsan bugünden başlar).
+- **Geç kalmak ceza değil.** Seri ve ceza için ölçü, zamanı geldikten sonra bir aralık daha
+  (6 ayda birse 6 ay daha) hiç yapmadan geçmesi. Seri "kez" sayar: üst üste kaç kez kaçırmadan.
+- Sıklık seçici üç satır oldu; "✓ n hedef tamam" satırı artık "şimdilik tamam" diyor.
+
 ### İki aydınlık tema daha 🍋🏖️
 - **Limonata:** limon sarısından misket limonuna, oradan naneye inen dalgalar; yaprak yeşili düğmeler.
 - **Kumsal:** kuru kumdan ıslak kuma, köpüğe ve sığ denize; deniz yeşili düğmeler.

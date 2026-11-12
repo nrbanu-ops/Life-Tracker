@@ -88,7 +88,9 @@ describe('parsePlan', () => {
         { "title": "Check-up", "frequency": { "type": "timesPerYear", "count": 1 } },
         { "title": "Bütçe", "frequency": "ayda 1" },
         { "title": "Kan tahlili", "frequency": "yılda 2 kez" },
-        { "title": "Su", "frequency": "her gün" }
+        { "title": "Su", "frequency": "her gün" },
+        { "title": "Diş hekimi", "frequency": { "type": "everyMonths", "months": 6 } },
+        { "title": "Saç", "frequency": "3 ayda bir" }
       ]
     }`)
     if (!result.ok) throw new Error(result.error)
@@ -98,6 +100,8 @@ describe('parsePlan', () => {
       { type: 'timesPerMonth', count: 1 },
       { type: 'timesPerYear', count: 2 },
       { type: 'daily' },
+      { type: 'everyMonths', months: 6 },
+      { type: 'everyMonths', months: 3 },
     ])
   })
 

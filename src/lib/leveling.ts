@@ -11,7 +11,8 @@ import type {
   UnlockedAchievement,
 } from '../db/types'
 import { fromDateKey, toDateKey, weekRange } from './date'
-import { dayCount, isLongGoal, isPeriodGoal, nextPeriod, periodGoal, periodRange } from './frequency'
+import { dayCount, intervalOf, isLongGoal, isPlannedDaily, nextPeriod, periodGoal, periodRange } from './frequency'
+import { intervalCycles } from './interval'
 import { entryPhotos } from './journal'
 import { streaks, successRate } from './stats'
 import { isCompleted, isExcused, isShownOn } from './today'
@@ -305,6 +306,19 @@ function habitEvents(
     }
   }
 
+  if (intervalOf(habit.frequency)) {
+    // "Every N months": each time it is done earns its XP; each deadline that goes by costs one.
+    for (const log of own) {
+      if (log.date < created || log.date > last) continue
+      emit(log.date, base(log.date) * statusFactor(habit, log) * (1 + overshoot(habit, log.value)) * lateFactor(log.date, log.loggedAt))
+    }
+    const completed = own.filter((l) => isCompleted(l.status)).map((l) => l.date)
+    for (const cycle of intervalCycles(habit, completed, today)) {
+      for (const deadline of cycle.missed) fine(deadline, base(deadline))
+    }
+    return events
+  }
+
   const goal = periodGoal(habit.frequency)
   if (goal) {
     // One rule for "so many times a week, a month, a year": only the length of the period differs.
@@ -413,7 +427,7 @@ function quitEvents(habit: Habit, from: string, to: string, today: string): XpEv
 /** Today's daily quest: the day's daily habits, at most the five hardest. */
 export function questHabits(habits: Habit[], day: string): Habit[] {
   return habits
-    .filter((h) => !h.archived && h.kind !== 'quit' && !isPeriodGoal(h) && isShownOn(h, day))
+    .filter((h) => !h.archived && h.kind !== 'quit' && isPlannedDaily(h) && isShownOn(h, day))
     .sort((a, b) => TIER_XP[tierOn(b, day)] - TIER_XP[tierOn(a, day)] || a.order - b.order)
     .slice(0, XP.questSize)
 }
@@ -472,7 +486,7 @@ export function emergencyQuest(data: Pick<XpData, 'habits' | 'logs'>, week: stri
   const from = shift(week, -28)
   const dayBefore = shift(week, -1)
   const candidates = data.habits
-    // A monthly or yearly goal is not something to do "a little more often this week".
+    // A monthly or yearly goal, or one every few months, is not something to do "a little more often this week".
     .filter((h) => !h.archived && h.kind !== 'quit' && !isLongGoal(h) && dayOf(h.createdAt) <= shift(week, -14))
     .map((h) => ({ habit: h, ...successRate(h, data.logs, from, dayBefore, week) }))
     .filter((c) => c.planned >= 4 && c.rate !== undefined && c.rate < 0.8)

@@ -1,7 +1,8 @@
 import { addDays, addMonths, endOfMonth, startOfMonth } from 'date-fns'
 import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey, weekdayOf, weekRange } from './date'
-import { dayCount, isPeriodGoal, nextPeriod, periodGoal, periodRange, type GoalPeriod } from './frequency'
+import { dayCount, intervalOf, isPlannedDaily, nextPeriod, periodGoal, periodRange, type StreakUnit } from './frequency'
+import { intervalCycles } from './interval'
 import { isCompleted, isExcused, isShownOn } from './today'
 
 export type SuccessRate = {
@@ -21,6 +22,8 @@ export type SuccessRate = {
  * was reached, or its last day when it never was — and counts in the range that holds that
  * day. So a week or a 30-day window is not charged with a goal that had the whole year to
  * happen. `logs` must reach back to the start of the period `from` falls in.
+ * everyMonths: each turn is judged on one day too — the day it was done, or each deadline (a
+ * whole interval past its due day) that went by without it. `logs` must hold all of the habit's.
  */
 export function successRate(
   habit: Habit,
@@ -41,7 +44,16 @@ export function successRate(
   let planned = 0
 
   const goal = periodGoal(habit.frequency)
-  if (goal && goal.period !== 'week') {
+  if (intervalOf(habit.frequency)) {
+    for (const cycle of intervalCycles(habit, completedDays(habit, logs), today)) {
+      const inRange = (day: string) => day >= from && day <= to
+      planned += cycle.missed.filter(inRange).length
+      if (cycle.doneOn && inRange(cycle.doneOn)) {
+        planned++
+        done++
+      }
+    }
+  } else if (goal && goal.period !== 'week') {
     const own = logs.filter((l) => l.habitId === habit.id).sort((a, b) => a.date.localeCompare(b.date))
     const earliest = from > created ? from : created
     for (let p = periodRange(goal.period, earliest).start; p <= to; p = nextPeriod(goal.period, p)) {
@@ -92,6 +104,10 @@ export function lastDays(today: string, days: number): [string, string] {
 
 const createdKey = (habit: Habit) => toDateKey(new Date(habit.createdAt))
 
+/** The days the habit was done (done or minimum). */
+const completedDays = (habit: Habit, logs: HabitLog[]): string[] =>
+  logs.filter((l) => l.habitId === habit.id && isCompleted(l.status)).map((l) => l.date)
+
 function daysBetween(from: string, to: string): string[] {
   const days: string[] = []
   for (let d = fromDateKey(from); toDateKey(d) <= to; d = addDays(d, 1)) days.push(toDateKey(d))
@@ -101,8 +117,11 @@ function daysBetween(from: string, to: string): string[] {
 export type Streaks = {
   current: number
   longest: number
-  /** daily/weekdays count days; period goals count the weeks, months or years that reached the target. */
-  unit: 'day' | GoalPeriod
+  /**
+   * daily/weekdays count days; period goals count the weeks, months or years that reached the
+   * target; "every N months" counts the times in a row it was done before a deadline passed.
+   */
+  unit: StreakUnit
 }
 
 /**
@@ -118,6 +137,15 @@ export function streaks(habit: Habit, logs: HabitLog[], today: string): Streaks 
   let run = 0
   let longest = 0
 
+  if (intervalOf(habit.frequency)) {
+    for (const cycle of intervalCycles(habit, completedDays(habit, logs), today)) {
+      // A deadline that went by ends the run; doing it afterwards starts a new one.
+      if (cycle.missed.length > 0) run = 0
+      if (cycle.doneOn) run++
+      longest = Math.max(longest, run)
+    }
+    return { current: run, longest, unit: 'time' }
+  }
   if (goal) {
     for (let p = periodRange(goal.period, start).start; p <= today; p = nextPeriod(goal.period, p)) {
       const { end } = periodRange(goal.period, p)
@@ -158,7 +186,7 @@ export type DayState = 'done' | 'minimum' | 'partial' | 'skipped' | 'frozen' | '
 
 /**
  * done/minimum/partial/skipped come from the log. missed: planned and past, nothing done.
- * open: could still be done (today, or any day of a period goal). none: before the habit or not planned.
+ * open: could still be done (today, or any day of a habit not planned by the day). none: before the habit or not planned.
  */
 export function dayStates(habit: Habit, logs: HabitLog[], from: string, to: string, today: string) {
   const byDate = new Map(logs.filter((l) => l.habitId === habit.id).map((l) => [l.date, l.status]))
@@ -168,7 +196,7 @@ export function dayStates(habit: Habit, logs: HabitLog[], from: string, to: stri
     const status = byDate.get(day)
     if (status) states.set(day, status)
     else if (day < created || day > today || !isShownOn(habit, day)) states.set(day, 'none')
-    else if (day === today || isPeriodGoal(habit)) states.set(day, 'open')
+    else if (day === today || !isPlannedDaily(habit)) states.set(day, 'open')
     else states.set(day, 'missed')
   }
   return states

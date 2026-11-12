@@ -16,7 +16,9 @@ import { MoodChart, type MoodPoint } from '../components/MoodChart'
 import type { DayMood, Habit, HabitLog, Level } from '../db/types'
 import { average, describeEffect, ENERGY_COLOR, ENERGY_EMOJI, habitEffects, MOOD_COLOR, MOOD_EMOJI } from '../lib/mood'
 import { fromDateKey, toDateKey, weekRange } from '../lib/date'
-import { describeFrequency, isLongGoal, PERIOD_NAME, WEEKDAY_SHORT } from '../lib/frequency'
+import { describeFrequency, intervalOf, isLongGoal, STREAK_UNIT, WEEKDAY_SHORT } from '../lib/frequency'
+import { dueDay } from '../lib/interval'
+import { isCompleted } from '../lib/today'
 import { compareProjects, projectProgress } from '../lib/projects'
 import { formatElapsed, quitStats } from '../lib/quit'
 import {
@@ -196,8 +198,7 @@ const toPoints = (rates: PeriodRate[], label: (r: PeriodRate) => string, detail:
     planned: r.planned,
   }))
 
-/** "12 gün", "3 hafta", "2 yıl": what a streak is counted in. */
-const streakUnit = (unit: Streaks['unit']) => (unit === 'day' ? 'gün' : PERIOD_NAME[unit])
+const streakUnit = (unit: Streaks['unit']) => STREAK_UNIT[unit]
 
 type HabitStatsProps = { habit: Habit; logs: HabitLog[]; today: string; heatStart: string }
 
@@ -207,6 +208,9 @@ function HabitStats({ habit, logs, today, heatStart }: HabitStatsProps) {
   const [from30] = lastDays(today, 30)
   const rate30 = successRate(habit, logs, from30, today, today)
   const unit = streakUnit(streak.unit)
+  const nextDue = intervalOf(habit.frequency)
+    ? dueDay(habit, logs.filter((l) => l.habitId === habit.id && isCompleted(l.status)).map((l) => l.date), today)
+    : undefined
 
   const heatDays = daysUntilWeekEnd(heatStart, today)
   const states = dayStates(habit, logs, heatDays[0], heatDays[heatDays.length - 1], today)
@@ -235,7 +239,10 @@ function HabitStats({ habit, logs, today, heatStart }: HabitStatsProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="-mt-2 text-sm text-muted">{describeFrequency(habit.frequency)}</p>
+      <p className="-mt-2 text-sm text-muted">
+        {describeFrequency(habit.frequency)}
+        {nextDue && ` · ${nextDue <= today ? 'zamanı geldi' : `sıradaki ${format(fromDateKey(nextDue), 'd MMMM yyyy', { locale: tr })}`}`}
+      </p>
       <div className="grid grid-cols-3 gap-3">
         <Tile label="Seri" value={String(streak.current)} detail={unit} />
         <Tile label="En uzun" value={String(streak.longest)} detail={unit} />

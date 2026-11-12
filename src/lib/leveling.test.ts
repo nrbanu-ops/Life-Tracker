@@ -188,6 +188,12 @@ describe('fairness', () => {
     expect(three).toBe(two + 12.5)
   })
 
+  it('pays an every-N-months habit each time it is done', () => {
+    const h = habit('Koşu', { frequency: { type: 'everyMonths', months: 2 } }) // heavy, 25 XP
+    expect(habitXp(data([h], [done(h, day(0))]), 20)).toBe(25)
+    expect(habitXp(data([h], [done(h, day(0)), done(h, day(15), { status: 'minimum' })]), 20)).toBe(37.5)
+  })
+
   it('pays weekly goals half beyond their target', () => {
     const h = habit('Koşu', { frequency: { type: 'timesPerWeek', count: 2 } })
     const two = habitXp(data([h], [done(h, day(0)), done(h, day(1))]), 7)
@@ -207,6 +213,7 @@ describe('daily quest', () => {
       habit('Vitamin'),
       habit('Haftalık', { frequency: { type: 'timesPerWeek', count: 2 } }),
       habit('Maraton', { frequency: { type: 'timesPerYear', count: 1 } }),
+      habit('Triatlon', { frequency: { type: 'everyMonths', months: 6 } }),
     ]
     const state = questState(habits, [], day(0))
     expect(state.habits.map((h) => h.title)).toEqual(['Koşu', 'Okuma', 'Meditasyon', 'Su iç', 'Diş fırçalama'])
@@ -343,6 +350,19 @@ describe('penalties', () => {
     const after = fines(d, START, '2026-03-05', '2026-03-06')
     expect(after).toHaveLength(1)
     expect(after[0]).toMatchObject({ date: '2026-02-28', xp: -50 })
+  })
+
+  it('fines an every-N-months habit once a whole interval has gone by, not for being late', () => {
+    // Added and due on 5 January; the deadline is 5 March.
+    const gym = habit('Spor', { frequency: { type: 'everyMonths', months: 2 } }) // heavy, 25 XP
+    const d = data([gym], [], { penaltyFrom: START })
+    expect(fines(d, START, '2026-03-05', '2026-03-05')).toEqual([])
+    const after = fines(d, START, '2026-03-10', '2026-03-10')
+    expect(after).toHaveLength(1)
+    expect(after[0]).toMatchObject({ date: '2026-03-05', xp: -25 })
+    // Done late, on 20 February: nothing to fine.
+    const late = data([gym], [done(gym, '2026-02-20')], { penaltyFrom: START })
+    expect(fines(late, START, '2026-03-10', '2026-03-10')).toEqual([])
   })
 
   it('caps a day, leaves archived habits and stats alone, and can lower the level', () => {

@@ -1,7 +1,7 @@
 import { addDays } from 'date-fns'
 import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
-import { isPeriodGoal } from './frequency'
+import { isPlannedDaily } from './frequency'
 import { isCompleted, isExcused, isShownOn } from './today'
 
 /** Freezes a month gives. Two covers illness or a trip; more and it stops meaning anything. */
@@ -44,7 +44,7 @@ export function freezeOffers(habits: Habit[], logs: HabitLog[], today: string): 
   const offers: FreezeOffer[] = []
 
   for (const habit of habits) {
-    if (habit.archived || habit.kind === 'quit' || isPeriodGoal(habit)) continue
+    if (habit.archived || habit.kind === 'quit' || !isPlannedDaily(habit)) continue
     const byDate = new Map(logs.filter((l) => l.habitId === habit.id).map((l) => [l.date, l.status]))
     const created = toDateKey(new Date(habit.createdAt))
 

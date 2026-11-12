@@ -52,3 +52,12 @@ describe('period goals', () => {
     expect(dayCount('2026-10-28', '2026-10-28')).toBe(1)
   })
 })
+
+describe('every N months', () => {
+  it('is described and counted among the long goals, not the period goals', () => {
+    const frequency = { type: 'everyMonths', months: 6 } as const
+    expect(describeFrequency(frequency)).toBe('6 ayda bir')
+    expect(periodGoal(frequency)).toBeUndefined()
+    expect(isLongGoal({ frequency })).toBe(true)
+  })
+})

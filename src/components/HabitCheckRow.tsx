@@ -1,7 +1,10 @@
+import { format } from 'date-fns'
+import { tr } from 'date-fns/locale'
 import { useRef } from 'react'
 import type { HabitLogStatus } from '../db/types'
 import { formatAmount } from '../lib/amount'
-import { PERIOD_THIS, periodGoal } from '../lib/frequency'
+import { fromDateKey } from '../lib/date'
+import { describeFrequency, PERIOD_THIS, periodGoal } from '../lib/frequency'
 import { DAY_PART_LABEL, isExcused, type TodayItem } from '../lib/today'
 
 type Props = {
@@ -16,7 +19,7 @@ type Props = {
 const LONG_PRESS_MS = 500
 
 export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
-  const { habit, status, value, goalCount, countsToday } = item
+  const { habit, status, value, goalCount, nextDue, overdue, countsToday } = item
   const timer = useRef<number | undefined>(undefined)
   const longPressed = useRef(false)
 
@@ -42,6 +45,17 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
   }
   const goal = periodGoal(habit.frequency)
   if (goal) details.push(`${PERIOD_THIS[goal.period]} ${goalCount ?? 0}/${goal.count}`)
+  if (nextDue) {
+    // "Every N months": waiting to be done, or when it comes round again.
+    details.push(
+      describeFrequency(habit.frequency),
+      overdue === undefined
+        ? `Sıradaki ${format(fromDateKey(nextDue), 'd MMM yyyy', { locale: tr })}`
+        : overdue === 0
+          ? 'Zamanı geldi'
+          : `${overdue} gün gecikti`,
+    )
+  }
 
   const progress =
     habit.kind !== 'check' && habit.target ? Math.min(1, (value ?? 0) / habit.target) : 0

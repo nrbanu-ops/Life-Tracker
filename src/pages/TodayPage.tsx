@@ -80,7 +80,7 @@ export function TodayPage() {
   const { focus: keystones, rest } = focusMode ? splitFocus(items) : { focus: [], rest: items }
   const daily = rest.filter((item) => isDailyGoal(item.habit))
   const weekly = rest.filter((item) => isWeeklyGoal(item.habit))
-  // A monthly or yearly goal that is already reached has nothing to ask of today: it folds away.
+  // A monthly or yearly goal already reached, or one not due for months, has nothing to ask of today: it folds away.
   const long = rest.filter((item) => isLongGoal(item.habit))
   const longOpen = long.filter((item) => item.countsToday || item.status !== undefined)
   const longMet = long.filter((item) => !longOpen.includes(item))
@@ -264,7 +264,7 @@ type GroupProps = {
   title: string
   detail?: string
   items: TodayItem[]
-  /** Period goals already reached and not touched today: kept behind a fold of their own. */
+  /** Goals with nothing to ask today (reached, or not due yet): kept behind a fold of their own. */
   met?: TodayItem[]
   today: string
   hideDone: boolean
@@ -318,7 +318,7 @@ function HabitGroup({ title, detail, items, met = [], today, hideDone, hard, pro
           onClick={() => setMetRevealed((v) => !v)}
           className="tap-text flex w-fit text-sm text-muted"
         >
-          {metRevealed ? 'Hedefi tamam olanları gizle' : `✓ ${met.length} hedef tamam · göster`}
+          {metRevealed ? 'Şimdilik tamam olanları gizle' : `✓ ${met.length} hedef şimdilik tamam · göster`}
         </button>
       )}
     </section>

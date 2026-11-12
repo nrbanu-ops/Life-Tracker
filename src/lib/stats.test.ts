@@ -302,3 +302,36 @@ describe('monthly and yearly goals', () => {
     expect(states.get('2026-10-20')).toBe('done')
   })
 })
+
+describe('every N months', () => {
+  // Added 1 January 2026; today is 28 October 2026.
+  const h = habit({ type: 'everyMonths', months: 3 })
+
+  it('counts times in a row done before a whole interval went by', () => {
+    // 5 Jan, then 20 May (due 5 Apr, deadline 5 Jul: in time), then 1 Sep (due 20 Aug).
+    const logs = [log('2026-01-05'), log('2026-05-20'), log('2026-09-01')]
+    expect(streaks(h, logs, TODAY)).toEqual({ current: 3, longest: 3, unit: 'time' })
+  })
+
+  it('starts over after a deadline is missed', () => {
+    // Done 5 Jan, due 5 Apr, deadline 5 Jul passed; done again 1 Aug.
+    expect(streaks(h, [log('2026-01-05'), log('2026-08-01')], TODAY)).toEqual({ current: 1, longest: 1, unit: 'time' })
+    // Never done: deadlines 1 Apr, 1 Jul and 1 Oct are behind us.
+    expect(streaks(h, [], TODAY)).toEqual({ current: 0, longest: 0, unit: 'time' })
+    // Done twice in time, then nothing since February: the run is gone.
+    expect(streaks(h, [log('2026-01-05'), log('2026-02-01')], TODAY)).toMatchObject({ current: 0, longest: 2 })
+  })
+
+  it('judges each turn on one day: done, or a deadline gone by', () => {
+    const logs = [log('2026-01-05'), log('2026-08-01')]
+    expect(successRate(h, logs, '2026-01-01', '2026-01-31', TODAY)).toEqual({ done: 1, planned: 1, rate: 1 })
+    // The missed deadline of 5 July, and nothing else that month.
+    expect(successRate(h, logs, '2026-07-01', '2026-07-31', TODAY)).toEqual({ done: 0, planned: 1, rate: 0 })
+    expect(successRate(h, logs, '2026-06-01', '2026-06-30', TODAY)).toMatchObject({ planned: 0 })
+    expect(successRate(h, logs, '2026-01-01', TODAY, TODAY)).toMatchObject({ done: 2, planned: 3 })
+  })
+
+  it('never marks a day as missed', () => {
+    expect(dayStates(h, [], '2026-10-27', TODAY, TODAY).get('2026-10-27')).toBe('open')
+  })
+})

@@ -281,3 +281,40 @@ describe('monthly and yearly goals', () => {
     expect(isDailyGoal(habit('b', { type: 'weekdays', days: [1] }))).toBe(true)
   })
 })
+
+describe('every N months', () => {
+  // Added on 1 January 2026 (see `habit`), so first due that day unless a start is given.
+  const dentist = habit('a', { type: 'everyMonths', months: 6 })
+
+  it('waits on the list from its due day until it is done', () => {
+    const [item] = buildToday([dentist], [log('a', '2026-04-20')], WED)
+    // Due again 20 October; today is the 28th.
+    expect(item).toMatchObject({ nextDue: '2026-10-20', overdue: 8, countsToday: true })
+    expect(goalProgress([item])).toEqual({ done: 0, total: 1 })
+  })
+
+  it('steps back until it is due', () => {
+    const [item] = buildToday([dentist], [log('a', '2026-06-01')], WED)
+    expect(item).toMatchObject({ nextDue: '2026-12-01', countsToday: false })
+    expect(item.overdue).toBeUndefined()
+    expect(goalProgress([item])).toEqual({ done: 1, total: 1 })
+  })
+
+  it('shows the next round once done today', () => {
+    const [item] = buildToday([dentist], [log('a', '2026-04-20'), log('a', WED)], WED)
+    expect(item).toMatchObject({ status: 'done', nextDue: '2027-04-28', countsToday: true })
+    expect(item.overdue).toBeUndefined()
+  })
+
+  it('starts on the chosen day', () => {
+    const later = habit('a', { type: 'everyMonths', months: 3, start: '2026-11-15' })
+    expect(buildToday([later], [], WED)[0]).toMatchObject({ nextDue: '2026-11-15', countsToday: false })
+    expect(buildToday([later], [], '2026-11-15')[0]).toMatchObject({ overdue: 0, countsToday: true })
+  })
+
+  it('looks at a past day with what was known then', () => {
+    // On 1 May the April visit had happened; the one on 28 October had not.
+    const [item] = buildToday([dentist], [log('a', '2026-04-20'), log('a', WED)], '2026-05-01')
+    expect(item).toMatchObject({ nextDue: '2026-10-20', countsToday: false })
+  })
+})
