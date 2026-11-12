@@ -30,19 +30,92 @@ export const TIER_XP: Record<EffortTier, number> = { light: 5, medium: 12, heavy
 
 export const TIER_LABEL: Record<EffortTier, string> = { light: 'Hafif', medium: 'Orta', heavy: 'Ağır', intense: 'Zorlu' }
 
-export type StatKey = 'str' | 'int' | 'vit' | 'sen' | 'dis'
+/**
+ * Eight stats in two families. The body ones are a hunter's status screen (strength, vitality,
+ * sense); the character ones are the sides of a person that everyday life trains (knowledge,
+ * proficiency, guts, kindness, charm).
+ * The keys are stored — on habits, in frozen weeks, in backups — so the two that changed their
+ * name keep their first key: `int` is Bilgi (once Zekâ), `dis` is Cesaret (once Disiplin).
+ */
+export type StatKey = 'str' | 'vit' | 'sen' | 'int' | 'pro' | 'dis' | 'kin' | 'cha'
 
-export const STATS: StatKey[] = ['str', 'int', 'vit', 'sen', 'dis']
+/** In the order they are drawn: body first, then character. */
+export const STATS: StatKey[] = ['str', 'vit', 'sen', 'int', 'pro', 'dis', 'kin', 'cha']
 
 export const STAT_LABEL: Record<StatKey, string> = {
   str: 'Güç',
-  int: 'Zekâ',
   vit: 'Dayanıklılık',
   sen: 'Duyu',
-  dis: 'Disiplin',
+  int: 'Bilgi',
+  pro: 'Beceri',
+  dis: 'Cesaret',
+  kin: 'Nezaket',
+  cha: 'Cazibe',
 }
 
-export const STAT_SHORT: Record<StatKey, string> = { str: 'GÜÇ', int: 'ZEK', vit: 'DAY', sen: 'DUY', dis: 'DİS' }
+export const STAT_SHORT: Record<StatKey, string> = {
+  str: 'GÜÇ',
+  vit: 'DAY',
+  sen: 'DUY',
+  int: 'BİL',
+  pro: 'BEC',
+  dis: 'CES',
+  kin: 'NEZ',
+  cha: 'CAZ',
+}
+
+export const STAT_GROUPS: { title: string; stats: StatKey[] }[] = [
+  { title: 'Beden', stats: ['str', 'vit', 'sen'] },
+  { title: 'Karakter', stats: ['int', 'pro', 'dis', 'kin', 'cha'] },
+]
+
+/** What feeds each stat, in the user's words. */
+export const STAT_ABOUT: Record<StatKey, string> = {
+  str: 'Spor, koşu, yürüyüş, hareket',
+  vit: 'Su, uyku, beslenme, bıraktıkların',
+  sen: 'Meditasyon, günlük, ruh hali, film ve dizi',
+  int: 'Okuma, ders, dil, kitaplar',
+  pro: 'Pratik, üretmek, görevler, proje adımları',
+  dis: 'İrade: her habit biraz, günlük ve acil görev',
+  kin: 'Aile, arkadaş, hayvan, bitki, iyilik',
+  cha: 'Bakım, giyim, düzen, temizlik',
+}
+
+/** A stat's five ranks, lowest first: where its number stands, said in a word. */
+export const STAT_RANKS: Record<StatKey, [string, string, string, string, string]> = {
+  str: ['Hamlamış', 'Isınmış', 'Formda', 'Çelik Gibi', 'Dağ Deviren'],
+  vit: ['Yorgun', 'Dinç', 'Zinde', 'Yıkılmaz', 'Tükenmez'],
+  sen: ['Dalgın', 'Uyanık', 'Keskin', 'Sezgili', 'Her Şeyi Gören'],
+  int: ['Meraklı', 'Öğrenci', 'Bilgili', 'Âlim', 'Ayaklı Kütüphane'],
+  pro: ['Acemi', 'Eli Yatkın', 'Hünerli', 'Usta', 'On Parmağında On Marifet'],
+  dis: ['Çekingen', 'Azimli', 'Gözü Pek', 'Yılmaz', 'Korkusuz'],
+  kin: ['Mesafeli', 'Düşünceli', 'Cana Yakın', 'Eli Açık', 'Gönül İnsanı'],
+  cha: ['Silik', 'Bakımlı', 'Hoş', 'Göz Alıcı', 'Büyüleyici'],
+}
+
+/** The stat value each rank starts at. The value is √XP, so the last one is 2 500 XP in one stat. */
+export const STAT_RANK_AT = [0, 8, 18, 32, 50]
+
+export type StatRank = {
+  /** 1–5. */
+  rank: number
+  name: string
+  /** The rank after this one and the value it starts at; absent at the top. */
+  next?: { name: string; at: number }
+  /** 0–1 of the way from this rank to the next; 1 at the top. */
+  ratio: number
+}
+
+export function statRank(key: StatKey, xp: number | undefined): StatRank {
+  const value = Math.sqrt(Math.max(0, xp ?? 0))
+  let index = 0
+  while (index < STAT_RANK_AT.length - 1 && value >= STAT_RANK_AT[index + 1]) index++
+  const names = STAT_RANKS[key]
+  if (index === STAT_RANK_AT.length - 1) return { rank: index + 1, name: names[index], ratio: 1 }
+  const from = STAT_RANK_AT[index]
+  const to = STAT_RANK_AT[index + 1]
+  return { rank: index + 1, name: names[index], next: { name: names[index + 1], at: to }, ratio: (value - from) / (to - from) }
+}
 
 // Word stems matched at the start of a word ("koş" → koşu, koşmak); "=" means the whole word.
 const TIER_WORDS: [EffortTier, string[]][] = [
@@ -64,23 +137,43 @@ const TIER_WORDS: [EffortTier, string[]][] = [
   ],
 ]
 
+// The first row that matches wins, so the narrow ones come before the broad ones: "soğuk duş" is
+// guts before "duş" is charm, "yüz yıka" is charm before "yüz" is swimming, "piyano çalış" is
+// proficiency before "çalış" is knowledge, "yemek yap" before "yemek".
 const STAT_WORDS: [StatKey, string[]][] = [
+  ['dis', ['soğuk duş', 'erken kalk', 'sunum yap', 'topluluk önünde', 'yüzleş', 'konfor alan']],
+  [
+    'kin',
+    ['anne', 'baba', 'aile', 'arkadaş', 'dost', 'kardeş', 'çocuk', 'dede', 'nine', 'babaanne', 'kedi', 'köpek', 'evcil',
+      'bitki', 'çiçek', 'sula', 'bağış', 'gönüllü', 'yardım', 'teşekkür', 'iltifat', 'mektup', 'hediye', 'ziyaret', 'iyilik'],
+  ],
+  [
+    'cha',
+    ['yüz yıka', 'yüz bak', 'cilt', 'krem', 'nemlendir', 'güneş kremi', 'saç', 'makyaj', 'tıraş', 'duş', 'banyo', 'diş',
+      'tırnak', 'parfüm', 'kıyafet', 'giyin', 'ütü', 'duruş', 'postür', 'gülümse', 'temizlik', 'temizle', 'topla', 'toparla',
+      '=düzen', 'düzenle', 'çamaşır', 'bulaşık'],
+  ],
   [
     'str',
     ['koş', 'spor', 'antrenman', 'ağırlık', 'fitness', 'gym', 'salon', 'yüzme', 'yüz', 'bisiklet', 'egzersiz', 'idman',
       'şınav', 'mekik', 'squat', 'plank', 'pilates', 'yoga', 'esne', 'yürü', 'adım', 'maraton', 'crossfit', 'hiit'],
   ],
   [
+    'pro',
+    ['piyano', 'gitar', 'keman', 'enstrüman', 'pratik', 'kod', 'çiz', 'resim', 'boya', 'yemek yap', 'tarif', 'örgü', 'dikiş',
+      'el işi', 'fotoğraf', 'yazı yaz', 'blog', 'tasarım', 'maket', 'tamir', 'bahçe'],
+  ],
+  [
     'int',
-    ['oku', 'kitap', 'ders', 'çalış', 'dil', 'ingilizce', 'almanca', 'duolingo', 'kod', 'öğren', 'sayfa', 'kurs', 'tez',
-      'sınav', 'makale', 'podcast', 'piyano', 'gitar', 'enstrüman', 'pratik'],
+    ['oku', 'kitap', 'ders', 'çalış', 'dil', 'ingilizce', 'almanca', 'duolingo', 'öğren', 'sayfa', 'kurs', 'tez', 'sınav',
+      'makale', 'podcast', 'belgesel', 'kelime'],
   ],
   [
     'vit',
-    ['=su', 'su iç', 'uyku', 'uyu', 'vitamin', 'ilaç', 'sebze', 'meyve', 'beslen', 'diş', 'cilt', 'krem', 'sigara',
-      'alkol', 'şeker', 'kahve', 'tartıl', 'kahvaltı', 'takviye', 'protein', 'yemek'],
+    ['=su', 'su iç', 'uyku', 'uyu', 'vitamin', 'ilaç', 'sebze', 'meyve', 'beslen', 'sigara', 'alkol', 'şeker', 'kahve',
+      'tartıl', 'kahvaltı', 'takviye', 'protein', 'yemek'],
   ],
-  ['sen', ['meditasyon', 'nefes', 'günlük', 'şükür', 'dua', 'namaz', 'sessiz', 'doğa', 'farkındalık', 'terapi', 'çiz', 'resim']],
+  ['sen', ['meditasyon', 'nefes', 'günlük', 'şükür', 'dua', 'namaz', 'sessiz', 'doğa', 'farkındalık', 'terapi', 'müzik dinle']],
 ]
 
 const LETTER = /[a-zçğıöşüâîû]/
@@ -108,7 +201,7 @@ function findWord<T>(title: string, table: [T, string[]][]): { value: T; word: s
   return undefined
 }
 
-/** The habit's stat: chosen by the user, else guessed from its name; Disiplin when nothing fits. */
+/** The habit's stat: chosen by the user, else guessed from its name; Cesaret when nothing fits. */
 export function statOf(habit: Pick<Habit, 'title' | 'kind' | 'stat'>): StatKey {
   if (habit.stat) return habit.stat
   // Staying off something is endurance, whatever it is.
@@ -580,13 +673,14 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
     const xp = Math.min(XP.task[task.priority] ?? 3, XP.taskDayCap - used)
     if (xp <= 0) continue
     taskDay.set(date, used + xp)
-    events.push({ date, xp, source: 'task', stat: 'dis' })
+    // Getting things done is a skill of its own: tasks and project work train Beceri.
+    events.push({ date, xp, source: 'task', stat: 'pro' })
   }
 
   const projectCreated = new Map(data.projects.map((p) => [p.id, dayOf(p.createdAt)]))
   for (const m of data.milestones) {
     const date = m.done ? (m.doneAt ?? projectCreated.get(m.projectId)) : undefined
-    if (inRange(date)) events.push({ date, xp: XP.milestone, source: 'milestone', stat: 'dis' })
+    if (inRange(date)) events.push({ date, xp: XP.milestone, source: 'milestone', stat: 'pro' })
   }
   for (const p of data.projects) {
     if (p.status !== 'done') continue
@@ -594,7 +688,7 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
     const lastStep = steps.map((m) => m.doneAt).filter(Boolean).sort().at(-1)
     const date = p.completedAt ? dayOf(p.completedAt) : (lastStep ?? dayOf(p.createdAt))
     const xp = Math.min(XP.project.base + steps.length * XP.project.perStep, XP.project.max)
-    if (inRange(date)) events.push({ date, xp, source: 'project', stat: 'dis' })
+    if (inRange(date)) events.push({ date, xp, source: 'project', stat: 'pro' })
   }
 
   const journalDays = new Set(
@@ -657,7 +751,7 @@ export type XpSummary = {
 
 export const emptySummary = (): XpSummary => ({ xp: 0, days: {}, sources: {}, stats: {}, counts: {} })
 
-/** Habit XP goes 80% to the habit's stat and 20% to Disiplin: every habit done is also discipline. */
+/** Habit XP goes 80% to the habit's stat and 20% to Cesaret: every habit done took some will as well. */
 export function summarize(events: XpEvent[], into: XpSummary = emptySummary()): XpSummary {
   for (const e of events) {
     into.xp += e.xp
@@ -731,10 +825,14 @@ export function titles({ level, summary, habits, logs, library, today }: TitleIn
     ['iron-will', 'Demir İrade', 'Bir şeyi 90 gün bırak', quitDays >= 90],
     ['bookworm', 'Kitap Kurdu', 'Bir yılda 12 kitap bitir', Math.max(0, ...booksByYear.values()) >= 12],
     ['iron-fist', 'Demir Yumruk', 'Güç 30', stat('str') >= 30],
-    ['sage', 'Bilge', 'Zekâ 30', stat('int') >= 30],
+    ['sage', 'Bilge', 'Bilgi 30', stat('int') >= 30],
     ['unshakable', 'Sarsılmaz', 'Dayanıklılık 30', stat('vit') >= 30],
     ['watcher', 'Gözlemci', 'Duyu 30', stat('sen') >= 30],
-    ['disciplined', 'Disiplin Ustası', 'Disiplin 30', stat('dis') >= 30],
+    // The id is from when this stat was Disiplin; ids are stored (the worn title), names are not.
+    ['disciplined', 'Yürekli', 'Cesaret 30', stat('dis') >= 30],
+    ['artisan', 'Zanaatkâr', 'Beceri 30', stat('pro') >= 30],
+    ['kindred', 'Gönül Dostu', 'Nezaket 30', stat('kin') >= 30],
+    ['radiant', 'Işıltılı', 'Cazibe 30', stat('cha') >= 30],
     ['shadow', 'Gölge Hükümdarı', 'S-Rank ol', level >= 65],
   ]
   return list.map(([id, name, how, earned]) => ({ id, name, how, earned }))

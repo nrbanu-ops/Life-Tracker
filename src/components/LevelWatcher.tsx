@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router'
 import { syncXpLedger, useLeveling } from '../db/leveling'
 import { PERIOD_ADJECTIVE } from '../lib/frequency'
-import type { Rank } from '../lib/leveling'
+import { STAT_LABEL, statRank, STATS, type Rank, type StatKey } from '../lib/leveling'
 import { useLevelingOn } from '../lib/levelingSetting'
 import { useTodayKey } from '../lib/useTodayKey'
 import { levelText, RANK_COLOR, RANK_TITLE } from '../lib/levelingUi'
@@ -12,7 +12,15 @@ const GAIN_MS = 1600
 const TOAST_MS = 5000
 const LEVEL_UP_MS = 4000
 
-type Seen = { earned: number; penalty: number; level: number; rank: Rank; titles: Set<string> }
+type Seen = {
+  earned: number
+  penalty: number
+  level: number
+  rank: Rank
+  titles: Set<string>
+  /** The highest rank (1–5) each stat has been seen at. */
+  stats: Record<StatKey, number>
+}
 
 // The day the penalty window was last closed, so it opens once a day.
 const PENALTY_SEEN = 'life-tracker:penalty-seen'
@@ -31,7 +39,7 @@ const RANK_ORDER: Rank[] = ['E', 'D', 'C', 'B', 'A', 'S']
 
 /**
  * Freezes closed weeks into the XP ledger, and shows what XP does: a small "+14 XP" as it comes
- * in, a system message on a new title, a window on a level up and a bigger one on a new rank,
+ * in, a system message on a new title or a stat's new rank, a window on a level up and a bigger one on a new rank,
  * and in the morning what yesterday's misses cost.
  */
 export function LevelWatcher() {
@@ -66,6 +74,9 @@ export function LevelWatcher() {
       level: fined ? state.level : Math.max(state.level, before?.level ?? 0),
       rank: before && !fined && RANK_ORDER.indexOf(before.rank) > RANK_ORDER.indexOf(state.rank) ? before.rank : state.rank,
       titles: new Set([...titlesEarned, ...(before?.titles ?? [])]),
+      stats: Object.fromEntries(
+        STATS.map((key) => [key, Math.max(statRank(key, state.summary.stats[key]).rank, before?.stats[key] ?? 0)]),
+      ) as Record<StatKey, number>,
     }
     // The first value is where the user already is: nothing to celebrate.
     if (!before || !on) return
@@ -73,6 +84,9 @@ export function LevelWatcher() {
     if (delta >= 0.5) setGain((g) => g + delta)
     const fresh = state.titles.find((t) => t.earned && !before.titles.has(t.id))
     if (fresh) setMessage(`Unvan kazandın · ${fresh.name}`)
+    // A stat reaching its next rank: said once, by the name it now carries.
+    const risen = STATS.find((key) => statRank(key, state.summary.stats[key]).rank > before.stats[key])
+    if (risen && !fresh) setMessage(`${STAT_LABEL[risen]} yükseldi · ${statRank(risen, state.summary.stats[risen]).name}`)
     if (state.level > before.level) {
       if (RANK_ORDER.indexOf(state.rank) > RANK_ORDER.indexOf(before.rank)) setRankUp(state.rank)
       else setLevelUp(state.level)

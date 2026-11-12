@@ -75,7 +75,7 @@ export type Habit = {
   focus?: boolean
   /** Leveling: effort tier and stat chosen by the user; the app guesses them otherwise. */
   effort?: 'light' | 'medium' | 'heavy' | 'intense'
-  stat?: 'str' | 'int' | 'vit' | 'sen' | 'dis'
+  stat?: 'str' | 'int' | 'vit' | 'sen' | 'dis' | 'pro' | 'kin' | 'cha'
   /** The tier in use from each day on, so a change never alters XP already earned. */
   effortLog?: { from: string; tier: 'light' | 'medium' | 'heavy' | 'intense' }[]
   archived: boolean

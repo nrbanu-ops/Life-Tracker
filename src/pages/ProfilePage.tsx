@@ -30,9 +30,12 @@ import {
   nextRank,
   rankStart,
   SOURCE_LABEL,
+  STAT_ABOUT,
+  STAT_GROUPS,
   STAT_LABEL,
   STAT_SHORT,
   statOf,
+  statRank,
   STATS,
   statValue,
   TIER_LABEL,
@@ -71,7 +74,13 @@ export function ProfilePage() {
   const { level, into, needed, rank, summary, emergency } = state
   const wornTitle = state.titles.find((t) => t.id === worn && t.earned)
   const upcoming = nextRank(rank)
-  const stats = STATS.map((key) => ({ key, label: STAT_SHORT[key], name: STAT_LABEL[key], value: statValue(summary.stats[key]) }))
+  const stats = STATS.map((key) => ({
+    key,
+    label: STAT_SHORT[key],
+    name: STAT_LABEL[key],
+    value: statValue(summary.stats[key]),
+    rank: statRank(key, summary.stats[key]),
+  }))
   const weakest = [...stats].sort((a, b) => a.value - b.value)[0]
   const days = Array.from({ length: 30 }, (_, i) => {
     const key = toDateKey(addDays(fromDateKey(today), i - 29))
@@ -178,8 +187,8 @@ export function ProfilePage() {
         </SystemWindow>
 
         <SystemWindow label="Statlar" className="p-4">
-          <p className="text-sm text-sys-muted">Her habit kendi statını büyütür, biraz da Disiplin'i.</p>
-          <ResponsiveContainer width="100%" height={220}>
+          <p className="text-sm text-sys-muted">Her habit kendi statını büyütür, biraz da Cesaret'i.</p>
+          <ResponsiveContainer width="100%" height={230}>
             <RadarChart data={stats} outerRadius="72%">
               <PolarGrid stroke="var(--color-sys-line)" />
               <PolarAngleAxis dataKey="label" tick={{ ...tick, fontSize: 12 }} />
@@ -197,14 +206,43 @@ export function ProfilePage() {
               <Radar dataKey="value" stroke={SYS} strokeWidth={2} fill={SYS} fillOpacity={0.25} isAnimationActive={false} />
             </RadarChart>
           </ResponsiveContainer>
-          <ul className="grid grid-cols-5 gap-1 text-center">
-            {stats.map((s) => (
-              <li key={s.key}>
-                <span className="block font-mono text-lg font-bold tabular-nums text-sys-glow">{s.value}</span>
-                <span className="block text-[11px] text-sys-muted">{s.name}</span>
-              </li>
-            ))}
-          </ul>
+          {STAT_GROUPS.map((group) => (
+            <div key={group.title} className="mt-3">
+              <h3 className="sys-label mb-1 text-sys-muted">{group.title}</h3>
+              <ul className="divide-y divide-sys-line">
+                {group.stats.map((key) => {
+                  const s = stats.find((x) => x.key === key)!
+                  return (
+                    <li key={key} className="py-2.5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="min-w-0">
+                          <span className="font-medium">{s.name}</span>
+                          <span className="ml-2 text-sm text-sys-glow">{s.rank.name}</span>
+                        </span>
+                        <span className="shrink-0 font-mono text-lg font-bold tabular-nums text-sys-glow">{s.value}</span>
+                      </div>
+                      {/* Five segments, one per rank: the full ones are behind, the running one fills up. */}
+                      <div
+                        className="mt-1.5 grid grid-cols-5 gap-1"
+                        role="img"
+                        aria-label={`${s.name}: 5 rütbeden ${s.rank.rank}.`}
+                      >
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <SystemBar key={n} ratio={n <= s.rank.rank ? 1 : n === s.rank.rank + 1 ? s.rank.ratio : 0} />
+                        ))}
+                      </div>
+                      <p className="mt-1.5 flex justify-between gap-3 text-[11px] text-sys-muted">
+                        <span className="min-w-0 truncate">{STAT_ABOUT[key]}</span>
+                        <span className="shrink-0 font-mono tabular-nums">
+                          {s.rank.next ? `${s.rank.next.name} · ${s.rank.next.at}` : 'EN YÜKSEK'}
+                        </span>
+                      </p>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
           {summary.xp > 0 && (
             <p className="mt-3 text-xs text-sys-muted">
               En zayıf statın: <b className="text-sys-text">{weakest.name}</b>
@@ -305,6 +343,11 @@ export function ProfilePage() {
               Ceza (Ayarlar'dan kapatılabilir): planlanıp yapılmayan habit, yapınca kazandıracağı kadar XP götürür;
               günde en fazla 100. Atlanan gün ve minimum cezasız, kısmi yarı ceza; haftalık hedefte eksik kalan her kez
               hafta bitince. Dünü sonradan işaretlersen ceza kalkar. Seviye düşebilir, statlar düşmez.
+            </li>
+            <li>
+              Statlar: bir habit'in XP'sinin %80'i kendi statına, %20'si Cesaret'e gider. Görevler ve proje adımları
+              Beceri'yi, günlük ve ruh hali Duyu'yu, bitirdiğin kitaplar Bilgi'yi büyütür. Her statın 5 rütbesi var
+              (8, 18, 32 ve 50'de yükselir).
             </li>
             <li>Biten haftalar kaydedilir; habit silsen de o XP kalır.</li>
           </ul>

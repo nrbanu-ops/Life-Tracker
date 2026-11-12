@@ -5,6 +5,24 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-12
 
+### Statlar yenilendi: sekizli karma 🎭⚔️
+- **8 stat, iki aile.** *Beden:* Güç, Dayanıklılık, Duyu. *Karakter:* Bilgi, Beceri, Cesaret,
+  Nezaket, Cazibe. Zekâ'nın adı **Bilgi**, Disiplin'in adı **Cesaret** oldu; puanların aynen duruyor.
+- **Her statın 5 rütbesi var**, adıyla: Güç'te Hamlamış → Isınmış → Formda → Çelik Gibi → Dağ
+  Deviren; Bilgi'de Meraklı → … → Ayaklı Kütüphane gibi. Stat 8, 18, 32 ve 50'ye gelince
+  yükselir; yükselince üstte kısa bir bildirim çıkar ("Bilgi yükseldi · Âlim").
+- **Profil → Statlar** sekizgen oldu; altında her stat için rütbesi, beş parçalı çubuğu, neyin
+  büyüttüğü ve sıradaki rütbe yazar.
+- **Yeni statları ne büyütür:** *Beceri* — enstrüman, çizim, kod, yemek yapmak, ayrıca görevler
+  ve proje adımları. *Nezaket* — aile, arkadaş, evcil hayvan, bitki sulamak. *Cazibe* — cilt,
+  saç, diş, duş, toparlamak, temizlik. *Cesaret* — soğuk duş, erken kalkmak; adından bir şey
+  çıkmayan habit'ler ve her habit'in beşte biri de buraya gider.
+- Uygulamanın tahmini yanlışsa habit'i düzenle → Daha fazla seçenek → **Stat**'tan değiştir.
+- 3 yeni unvan: Zanaatkâr (Beceri 30), Gönül Dostu (Nezaket 30), Işıltılı (Cazibe 30);
+  "Disiplin Ustası" artık "Yürekli" (Cesaret 30).
+- Geçmiş haftalar yeniden dağıtılmaz: o XP eski statında kalır, yeni statlar bu haftadan
+  itibaren dolar.
+
 ### "X ayda bir" ⏳
 - **Yeni sıklık: "X ayda bir"** (2–24 ay). "Yılda 2 kez"den farkı: takvim yılına değil, **son
   yaptığın güne** bakar. Diş hekimine Kasım'da gittiysen "6 ayda bir" Mayıs'ta tekrar çıkar.

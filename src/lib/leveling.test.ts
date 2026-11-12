@@ -8,7 +8,10 @@ import {
   levelFor,
   questState,
   rankFor,
+  STAT_RANKS,
+  STATS,
   statOf,
+  statRank,
   summarize,
   tierOn,
   titles,
@@ -86,7 +89,18 @@ describe('effort', () => {
     expect(statOf(habit('İngilizce çalış'))).toBe('int')
     expect(statOf(habit('Su iç'))).toBe('vit')
     expect(statOf(habit('Meditasyon'))).toBe('sen')
-    expect(statOf(habit('Odayı topla'))).toBe('dis')
+    expect(statOf(habit('Odayı topla'))).toBe('cha')
+    expect(statOf(habit('Cilt bakımı'))).toBe('cha')
+    expect(statOf(habit('Annemi ara'))).toBe('kin')
+    expect(statOf(habit('Çiçekleri sula'))).toBe('kin')
+    expect(statOf(habit('Piyano çalış'))).toBe('pro')
+    expect(statOf(habit('Yemek yap'))).toBe('pro')
+    expect(statOf(habit('Soğuk duş'))).toBe('dis')
+    // The narrow match comes first, and a word is not matched inside another.
+    expect(statOf(habit('Düzenli uyku'))).toBe('vit')
+    expect(statOf(habit('Ders çalış'))).toBe('int')
+    // Nothing fits: doing it anyway is will.
+    expect(statOf(habit('Balkona çık'))).toBe('dis')
     expect(statOf(habit('Koşu', { stat: 'sen' }))).toBe('sen')
   })
 
@@ -425,5 +439,34 @@ describe('hard days', () => {
     // Day 9 earns the 7-day streak bonus only when day 8 was actually done.
     expect(xpOn(broken, [day(8)])).toBeLessThan(xpOn(kept))
     expect(xpOn(broken, [day(8)])).toBe(xpOn(broken))
+  })
+})
+
+describe('stats', () => {
+  it('has five ranks for every stat', () => {
+    for (const key of STATS) expect(STAT_RANKS[key]).toHaveLength(5)
+    expect(STATS).toHaveLength(8)
+  })
+
+  it('names where a stat stands and how far the next rank is', () => {
+    expect(statRank('int', 0)).toEqual({ rank: 1, name: 'Meraklı', next: { name: 'Öğrenci', at: 8 }, ratio: 0 })
+    // √64 = 8: the second rank starts exactly there.
+    expect(statRank('int', 64)).toMatchObject({ rank: 2, name: 'Öğrenci', ratio: 0 })
+    // √169 = 13, halfway from 8 to 18.
+    expect(statRank('str', 169)).toMatchObject({ rank: 2, name: 'Isınmış', ratio: 0.5 })
+    expect(statRank('cha', 2500)).toEqual({ rank: 5, name: 'Büyüleyici', ratio: 1 })
+    expect(statRank('cha', undefined).rank).toBe(1)
+  })
+
+  it('sends tasks and project steps to Beceri, and a fifth of every habit to Cesaret', () => {
+    const run = habit('Koşu')
+    const d = data([run], [done(run, day(0))], {
+      tasks: [{ id: 't', title: 'Fatura', priority: 1, done: true, completedAt: `${day(0)}T10:00:00`, createdAt: `${day(0)}T09:00:00` }],
+    })
+    const events = xpEvents(d, START, day(0), day(0))
+    expect(events.find((e) => e.source === 'task')?.stat).toBe('pro')
+    const { stats } = summarize(events.filter((e) => e.source === 'habit'))
+    expect(stats.str).toBeCloseTo(20)
+    expect(stats.dis).toBeCloseTo(5)
   })
 })
