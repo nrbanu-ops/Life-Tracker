@@ -33,6 +33,20 @@ export const PALETTES: Palette[] = [
     bg: ['#e6f6ff', '#e6f6ff'],
   },
   {
+    id: 'limonata',
+    name: 'Limonata',
+    note: 'hep aydınlık',
+    swatch: ['#276f2b', '#fcedaa', '#b8e2bc'],
+    bg: ['#fffbe3', '#fffbe3'],
+  },
+  {
+    id: 'kumsal',
+    name: 'Kumsal',
+    note: 'hep aydınlık',
+    swatch: ['#08666f', '#f5dfb8', '#9edde4'],
+    bg: ['#fdf6e7', '#fdf6e7'],
+  },
+  {
     id: 'phantom',
     name: 'Phantom',
     note: 'hep karanlık',

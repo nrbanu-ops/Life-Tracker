@@ -403,6 +403,103 @@
   filter: none;
 }
 
+/*
+ * Limonata and Kumsal: two more palettes that stay bright whatever the phone says, built the
+ * way Gökkuşağı is — every variable written out, no dark counterpart, and the ten bands named
+ * one by one, because each runs between two hues instead of deepening a single one.
+ * The bands stay pastel all the way down: headings sit straight on them in --color-muted.
+ */
+:root[data-palette='limonata'] {
+  color-scheme: light;
+  --color-bg: #fffbe3;
+  --color-surface: #ffffff;
+  --color-text: #2b2f1c;
+  --color-muted: #555b38;
+  --color-border: #efe7bd;
+  --color-accent: #276f2b;
+  --color-accent-soft: #e3f2d2;
+  --color-p1: #cf3a2b;
+  --color-p2: #a87a00;
+  --color-p3: #2f74b5;
+  /* The leveling window as a lemon-paper card with a leaf-green edge. */
+  --color-sys-bg: #fffdf0;
+  --color-sys-panel: #fbf3c4;
+  --color-sys-line: #e6d98a;
+  --color-sys-edge: #276f2b;
+  --color-sys-glow: #a87a00;
+  --color-sys-text: #2b2f1c;
+  --color-sys-muted: #555b38;
+  --color-sys-warn: #cf4520;
+  --color-sys-danger: #c62828;
+  --color-rank-e: #6b7a94;
+  --color-rank-d: #1f9e52;
+  --color-rank-c: #1d7fd4;
+  --color-rank-b: #7c5cd6;
+  --color-rank-a: #d6453f;
+  --color-rank-s: #b07d08;
+  --color-backdrop-tint: #e6d24a;
+  /* Lemon at the top, through lime, to mint at the bottom of the glass. */
+  --wave-1: #fff6cf;
+  --wave-2: #fff1bb;
+  --wave-3: #fcedaa;
+  --wave-4: #f4eca4;
+  --wave-5: #e9eba3;
+  --wave-6: #ddeaa6;
+  --wave-7: #d0e8ac;
+  --wave-8: #c4e5b4;
+  --wave-9: #b8e2bc;
+  --wave-10: #addec3;
+}
+:root[data-palette='kumsal'] {
+  color-scheme: light;
+  --color-bg: #fdf6e7;
+  --color-surface: #ffffff;
+  --color-text: #26323a;
+  --color-muted: #46535b;
+  --color-border: #eadfc8;
+  --color-accent: #08666f;
+  --color-accent-soft: #d5f0ee;
+  /* Coral, sun and sea. */
+  --color-p1: #d3452f;
+  --color-p2: #a87a00;
+  --color-p3: #1c74c4;
+  /* The leveling window as a sand-coloured card with a sea-green edge. */
+  --color-sys-bg: #fffaf0;
+  --color-sys-panel: #f9edd3;
+  --color-sys-line: #e6cfa0;
+  --color-sys-edge: #08666f;
+  --color-sys-glow: #a87a00;
+  --color-sys-text: #26323a;
+  --color-sys-muted: #46535b;
+  --color-sys-warn: #cf4520;
+  --color-sys-danger: #c62828;
+  --color-rank-e: #6b7a94;
+  --color-rank-d: #1f9e52;
+  --color-rank-c: #1d7fd4;
+  --color-rank-b: #7c5cd6;
+  --color-rank-a: #d6453f;
+  --color-rank-s: #b07d08;
+  --color-backdrop-tint: #8fd5e3;
+  /* Mirrored, so the shoreline does not run the same way as Limonata's glass. */
+  --backdrop-flip-x: -1;
+  /* Dry sand, wet sand, foam, then the shallows. */
+  --wave-1: #fbeed6;
+  --wave-2: #f8e6c5;
+  --wave-3: #f5dfb8;
+  --wave-4: #f0dcb4;
+  --wave-5: #e6e0bf;
+  --wave-6: #d6e6cf;
+  --wave-7: #c3e8dc;
+  --wave-8: #b0e4e2;
+  --wave-9: #9edde4;
+  --wave-10: #90d6e3;
+}
+:root[data-palette='limonata'] .map-tiles,
+:root[data-palette='kumsal'] .map-tiles {
+  /* The page stays light, so the map must not be inverted for the phone's dark mode. */
+  filter: none;
+}
+
 /* Heatmap: one hue from light to dark (partial → minimum → done), derived per theme. */
 :root {
   --color-heat-1: color-mix(in oklab, var(--color-accent) 28%, var(--color-surface));

@@ -5,6 +5,12 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-12
 
+### İki aydınlık tema daha 🍋🏖️
+- **Limonata:** limon sarısından misket limonuna, oradan naneye inen dalgalar; yaprak yeşili düğmeler.
+- **Kumsal:** kuru kumdan ıslak kuma, köpüğe ve sığ denize; deniz yeşili düğmeler.
+- İkisi de **hep aydınlık**: telefon karanlık modda olsa bile açık kalır (Gökkuşağı ve Mantar
+  Krallığı gibi). Seviye penceresi de bu temalarda aydınlık. Ayarlar → Renk teması.
+
 ### Ayda ve yılda bir yapılanlar 🗓️
 - **Yeni sıklık: "Ayda X" ve "Yılda X".** Habit eklerken sıklık artık iki satır: üstte *Her gün /
   Belirli günler*, altta *Haftada X / Ayda X / Yılda X*. Diş hekimi (yılda 2), derin temizlik
