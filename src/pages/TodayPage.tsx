@@ -37,6 +37,7 @@ import {
   isWeeklyGoal,
   partOfDay,
   sortByDayPart,
+  splitCurrent,
   splitDone,
   splitFocus,
   tapResult,
@@ -76,15 +77,16 @@ export function TodayPage() {
   // The ring and the weekly count are about the whole day, keystones included.
   const { done, total } = dayProgress(items.filter((item) => isDailyGoal(item.habit)))
   const week = goalProgress(items.filter((item) => isWeeklyGoal(item.habit)))
-  const far = goalProgress(items.filter((item) => isLongGoal(item.habit)))
   const { focus: keystones, rest } = focusMode ? splitFocus(items) : { focus: [], rest: items }
   const daily = rest.filter((item) => isDailyGoal(item.habit))
   const weekly = rest.filter((item) => isWeeklyGoal(item.habit))
-  // A monthly or yearly goal already reached, or one not due for months, has nothing to ask of today: it folds away.
-  const long = rest.filter((item) => isLongGoal(item.habit))
-  const longOpen = long.filter((item) => item.countsToday || item.status !== undefined)
-  const longMet = long.filter((item) => !longOpen.includes(item))
-  const restHidden = keystones.length > 0 && rest.length > 0 && !showRest
+  // Monthly, yearly and "every N months" goals are not habits of the day: the ones whose turn
+  // it is sit with the tasks under Yapılacaklar, the rest fold away there.
+  const long = splitCurrent(rest.filter((item) => isLongGoal(item.habit)))
+  // What focus mode folds behind "Diğerleri": the day's and the week's habits.
+  const folded = daily.length + weekly.length
+  const restHidden = keystones.length > 0 && folded > 0 && !showRest
+  const tap = (item: TodayItem) => setLog(item.habit.id, today, (hard ? hardTap : tapResult)(item.habit, item))
   const projectColor = new Map(projects.map((p) => [p.id, p.color]))
   const hasActiveHabits = habits.some((h) => !h.archived)
   const quitHabits = habits.filter((h) => !h.archived && h.kind === 'quit')
@@ -133,10 +135,9 @@ export function TodayPage() {
             <HabitGroup
               title="Omurga"
               items={keystones}
-              today={today}
               hideDone={hideDone}
-              hard={hard}
               projectColor={projectColor}
+              onTap={tap}
               onMore={setActionHabitId}
             />
           )}
@@ -149,44 +150,34 @@ export function TodayPage() {
               className="mb-6 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-muted"
             >
               <span>Diğerleri</span>
-              <span className="tabular-nums">{rest.length} ▾</span>
+              <span className="tabular-nums">{folded} ▾</span>
             </button>
           ) : (
             <>
               {[
-                { key: 'daily', title: 'Günlük hedefler', detail: undefined, list: daily, met: [] },
+                { key: 'daily', title: 'Günlük hedefler', detail: undefined, list: daily },
                 {
                   key: 'weekly',
                   title: 'Haftalık hedefler',
                   detail:
                     week.done === week.total ? 'Bu hafta hepsi tamam 🎉' : `Bu hafta ${week.done}/${week.total} tamam`,
                   list: weekly,
-                  met: [],
-                },
-                {
-                  key: 'long',
-                  title: 'Aylık ve yıllık hedefler',
-                  detail: far.done === far.total ? 'Hepsi tamam 🎉' : `${far.done}/${far.total} tamam`,
-                  list: longOpen,
-                  met: longMet,
                 },
               ]
-                .filter((group) => group.list.length + group.met.length > 0)
+                .filter((group) => group.list.length > 0)
                 .map((group) => (
                   <HabitGroup
                     key={group.key}
                     title={group.title}
                     detail={group.detail}
                     items={group.list}
-                    met={group.met}
-                    today={today}
                     hideDone={hideDone}
-                    hard={hard}
                     projectColor={projectColor}
+                    onTap={tap}
                     onMore={setActionHabitId}
                   />
                 ))}
-              {keystones.length > 0 && rest.length > 0 && (
+              {keystones.length > 0 && folded > 0 && (
                 <button
                   type="button"
                   aria-expanded
@@ -223,7 +214,14 @@ export function TodayPage() {
 
       <WeekPlanCard today={today} variant="plan" />
 
-      <TodayTasks today={today} projectColor={projectColor} />
+      <TodayTasks
+        today={today}
+        projectColor={projectColor}
+        goals={long.current}
+        waitingGoals={long.waiting}
+        onGoalTap={tap}
+        onGoalMore={setActionHabitId}
+      />
 
       <LevelCard />
 
@@ -264,23 +262,18 @@ type GroupProps = {
   title: string
   detail?: string
   items: TodayItem[]
-  /** Goals with nothing to ask today (reached, or not due yet): kept behind a fold of their own. */
-  met?: TodayItem[]
-  today: string
   hideDone: boolean
-  /** A hard day: a tap marks the minimum. */
-  hard: boolean
   projectColor: Map<string, string>
+  onTap: (item: TodayItem) => void
   onMore: (habitId: string) => void
 }
 
 /** One titled block of today's habits, with the "hide completed" fold underneath it. */
-function HabitGroup({ title, detail, items, met = [], today, hideDone, hard, projectColor, onMore }: GroupProps) {
+function HabitGroup({ title, detail, items, hideDone, projectColor, onTap, onMore }: GroupProps) {
   const [revealed, setRevealed] = useState(false)
-  const [metRevealed, setMetRevealed] = useState(false)
   const { open, done: finished } = splitDone(items)
   // Hiding only changes this list; the ring above still counts what was finished.
-  const shown = [...(hideDone && !revealed ? open : items), ...(metRevealed ? met : [])]
+  const shown = hideDone && !revealed ? open : items
 
   return (
     <section className="mb-6">
@@ -295,7 +288,7 @@ function HabitGroup({ title, detail, items, met = [], today, hideDone, hard, pro
               key={item.habit.id}
               item={item}
               projectColor={item.habit.projectId ? projectColor.get(item.habit.projectId) : undefined}
-              onTap={() => setLog(item.habit.id, today, (hard ? hardTap : tapResult)(item.habit, item))}
+              onTap={() => onTap(item)}
               onMore={() => onMore(item.habit.id)}
             />
           ))}
@@ -309,16 +302,6 @@ function HabitGroup({ title, detail, items, met = [], today, hideDone, hard, pro
           className="tap-text text-sm text-muted"
         >
           {revealed ? 'Tamamlananları gizle' : `✓ ${finished.length} tamamlandı · göster`}
-        </button>
-      )}
-      {met.length > 0 && (
-        <button
-          type="button"
-          aria-expanded={metRevealed}
-          onClick={() => setMetRevealed((v) => !v)}
-          className="tap-text flex w-fit text-sm text-muted"
-        >
-          {metRevealed ? 'Şimdilik tamam olanları gizle' : `✓ ${met.length} hedef şimdilik tamam · göster`}
         </button>
       )}
     </section>

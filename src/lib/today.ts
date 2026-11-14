@@ -133,6 +133,16 @@ export function goalProgress(items: TodayItem[]): { done: number; total: number 
   return { done: goals.filter(Boolean).length, total: goals.length }
 }
 
+/**
+ * Monthly, yearly and "every N months" goals split by whether they ask anything of today:
+ * `current` still has something to do (or was marked today, so it can be taken back),
+ * `waiting` has its target reached or is not due yet.
+ */
+export function splitCurrent(items: TodayItem[]): { current: TodayItem[]; waiting: TodayItem[] } {
+  const isCurrent = (item: TodayItem) => item.countsToday || item.status !== undefined
+  return { current: items.filter(isCurrent), waiting: items.filter((item) => !isCurrent(item)) }
+}
+
 /** Completed / counted items for the day ring; minimum counts as completed. */
 export function dayProgress(items: TodayItem[]): { done: number; total: number } {
   const counted = items.filter((item) => item.countsToday)

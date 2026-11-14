@@ -5,6 +5,8 @@ type Props = {
   task: Task
   today: string
   projectColor?: string
+  /** Listed together with habit rows: the check box takes a habit mark's width so the titles line up. */
+  besideHabits?: boolean
   onToggle: () => void
   onEdit: () => void
 }
@@ -16,7 +18,7 @@ const PRIORITY_COLOR: Record<TaskPriority, string> = {
   4: 'var(--color-border)',
 }
 
-export function TaskRow({ task, today, projectColor, onToggle, onEdit }: Props) {
+export function TaskRow({ task, today, projectColor, besideHabits = false, onToggle, onEdit }: Props) {
   const due = describeDue(task, today)
   const overdue = isOverdue(task, today)
   const color = PRIORITY_COLOR[task.priority]
@@ -31,7 +33,7 @@ export function TaskRow({ task, today, projectColor, onToggle, onEdit }: Props) 
         onClick={onToggle}
         aria-label={`${task.title}: ${task.done ? 'tamamlandı, geri al' : 'tamamla'}`}
         aria-pressed={task.done}
-        className="flex shrink-0 touch-manipulation items-center self-stretch py-3.5 pr-3 pl-4"
+        className={`flex shrink-0 touch-manipulation items-center self-stretch py-3.5 pr-3 pl-4 ${besideHabits ? 'w-[3.75rem] justify-center' : ''}`}
       >
         <span
           className="flex h-6 w-6 items-center justify-center rounded-full border-2"

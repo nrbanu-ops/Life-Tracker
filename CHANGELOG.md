@@ -3,6 +3,17 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-14
+
+### Aylık ve yıllık hedefler Yapılacaklar'da 🗒️
+- Bugün'de **"Aylık ve yıllık hedefler"** diye ayrı bir grup yok artık. Sırası gelenler (bu ay /
+  bu yıl hedefi dolmamış olanlar ve zamanı gelen "X ayda bir"ler) görevlerinle birlikte tek
+  bölümde: **Yapılacaklar**. Eskiden "Görevler" yazan bölüm bu; başlıktaki sayaç ikisini birlikte sayar.
+- İşaretlemek aynı: tek dokunuş, ⋯ ya da uzun basınca seçenekler.
+- Hedefi dolmuş ya da zamanı gelmemiş olanlar bölümün altındaki "✓ n hedef şimdilik tamam ·
+  göster" satırının arkasında, istersen yine işaretlersin.
+- Habit'ler sayfası değişmedi.
+
 ## 2026-11-12
 
 ### Zor gün modu Ayarlar'a taşındı 🌧️

@@ -10,6 +10,7 @@ import {
   nextStatus,
   partOfDay,
   sortByDayPart,
+  splitCurrent,
   splitDone,
   splitFocus,
   tapResult,
@@ -272,6 +273,23 @@ describe('monthly and yearly goals', () => {
     expect(items[0]).toMatchObject({ goalCount: 1, countsToday: false })
     expect(items[1]).toMatchObject({ goalCount: 0, countsToday: true })
     expect(goalProgress(items)).toEqual({ done: 1, total: 2 })
+  })
+
+  it('splits the ones that still ask something from the ones that can wait', () => {
+    const items = buildToday(
+      [
+        habit('open', { type: 'timesPerMonth', count: 2 }),
+        habit('met', { type: 'timesPerYear', count: 1 }),
+        habit('skipped', { type: 'timesPerMonth', count: 1 }),
+        habit('notDue', { type: 'everyMonths', months: 6 }),
+      ],
+      [log('open', '2026-10-03'), log('met', '2026-02-14'), log('skipped', WED, 'skipped'), log('notDue', '2026-06-01')],
+      WED,
+    )
+    const { current, waiting } = splitCurrent(items)
+    // A skip made today stays in sight so it can be undone.
+    expect(current.map((i) => i.habit.id)).toEqual(['open', 'skipped'])
+    expect(waiting.map((i) => i.habit.id)).toEqual(['met', 'notDue'])
   })
 
   it('is neither a daily nor a weekly goal', () => {
