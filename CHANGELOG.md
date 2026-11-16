@@ -3,6 +3,19 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-16
+
+### Zincir: her habit'in altında 🔗
+- **Habit'ler** sayfasında her habit'in altında artık zinciri var: son 14 planlı günün halka
+  halka çizilir, yaptığın günler birbirine bağlanır, kaçırdığın gün boş halka olarak zinciri koparır.
+  Atladığın ya da seri korumasıyla tuttuğun gün küçük nokta olur, zincir içinden geçer; bugün
+  kesikli halkadır.
+- Altında tek satırda: **zincirin kaç gündür sürdüğü**, en uzun zincirin, eklediğin günden
+  beri **başarı oranın** ve habit'i **ne kadar süredir** takip ettiğin ("3 aydır").
+- Haftalık hedeflerde her halka bir hafta (son 12), aylık/yıllıklarda bir ay ya da yıl, "X ayda
+  bir"lerde bir tur.
+- Projeye bağlı habit'in zinciri projenin rengiyle çizilir.
+
 ## 2026-11-14
 
 ### Aylık ve yıllık hedefler Yapılacaklar'da 🗒️

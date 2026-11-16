@@ -1,16 +1,18 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { BottomSheet } from '../components/BottomSheet'
 import { EmptyState } from '../components/EmptyState'
+import { HabitChain } from '../components/HabitChain'
 import { HabitForm } from '../components/HabitForm'
 import { PageHeader } from '../components/PageHeader'
 import { db } from '../db/db'
-import type { Habit, Project } from '../db/types'
+import type { Habit, HabitLog, Project } from '../db/types'
 import { describeTarget } from '../lib/amount'
 import { describeFrequency } from '../lib/frequency'
 import { isLongGoal } from '../lib/frequency'
 import { isDailyGoal, isWeeklyGoal } from '../lib/today'
+import { useTodayKey } from '../lib/useTodayKey'
 
 // Store only the id so the sheet always shows the live record.
 type Editing = { mode: 'new' } | { mode: 'edit'; id: string } | null
@@ -18,6 +20,14 @@ type Editing = { mode: 'new' } | { mode: 'edit'; id: string } | null
 export function HabitsPage() {
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray())
   const projects = useLiveQuery(() => db.projects.orderBy('createdAt').toArray(), [], [])
+  // The chain under each habit needs its whole history: the streak and the rate run from day one.
+  const logs = useLiveQuery(() => db.habitLogs.toArray(), [], [])
+  const today = useTodayKey()
+  const logsByHabit = useMemo(() => {
+    const map = new Map<string, HabitLog[]>()
+    for (const log of logs) map.set(log.habitId, [...(map.get(log.habitId) ?? []), log])
+    return map
+  }, [logs])
   const location = useLocation()
   const navigate = useNavigate()
   // Other screens can open the new-habit sheet by linking here with { newHabit: true }.
@@ -64,7 +74,12 @@ export function HabitsPage() {
                 <h2 className="mb-2 text-sm font-medium text-muted">
                   {group.title} · {group.list.length}
                 </h2>
-                <HabitList habits={group.list} projectById={projectById} onSelect={select} />
+                <HabitList
+                  habits={group.list}
+                  projectById={projectById}
+                  onSelect={select}
+                  chain={{ logsByHabit, today }}
+                />
               </section>
             ))}
         </div>
@@ -131,9 +146,11 @@ type ListProps = {
   habits: Habit[]
   projectById: Map<string, Project>
   onSelect: (habit: Habit) => void
+  /** Draws each habit's chain under it; left out for the archive. */
+  chain?: { logsByHabit: Map<string, HabitLog[]>; today: string }
 }
 
-function HabitList({ habits, projectById, onSelect }: ListProps) {
+function HabitList({ habits, projectById, onSelect, chain }: ListProps) {
   return (
     <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
       {habits.map((habit) => {
@@ -156,6 +173,14 @@ function HabitList({ habits, projectById, onSelect }: ListProps) {
                   {project && ` · ${project.title}`}
                   {habit.minimumVersion && ` · Min: ${habit.minimumVersion}`}
                 </span>
+                {chain && (
+                  <HabitChain
+                    habit={habit}
+                    logs={chain.logsByHabit.get(habit.id) ?? []}
+                    today={chain.today}
+                    color={project?.color}
+                  />
+                )}
               </span>
               <span className="text-muted" aria-hidden>
                 ›
