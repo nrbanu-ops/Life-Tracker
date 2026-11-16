@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Habit, HabitFrequency, HabitLog } from '../db/types'
-import { CHAIN_LENGTH, habitChain, holds, trackedFor } from './chain'
+import { CHAIN_LENGTH, chainDays, habitChain, holds, trackedFor } from './chain'
 import { streaks } from './stats'
 
 const habit = (frequency: HabitFrequency, createdAt = '2026-01-01T00:00:00.000Z', extra: Partial<Habit> = {}): Habit => ({
@@ -116,6 +116,59 @@ describe('habitChain', () => {
     for (const [h, logs] of cases) {
       expect(tail(habitChain(h, logs, TODAY))).toBe(streaks(h, logs, TODAY).current)
     }
+  })
+})
+
+describe('chainDays', () => {
+  const joints = (days: Map<string, { left: boolean; right: boolean }>, key: string) => {
+    const day = days.get(key)!
+    return `${day.left ? '<' : ''}${day.right ? '>' : ''}`
+  }
+
+  it('joins days in a row that hold and stops at a missed one', () => {
+    const days = chainDays(
+      habit({ type: 'daily' }),
+      [log('2026-10-20'), log('2026-10-21', 'minimum'), log('2026-10-22', 'skipped'), log('2026-10-23'), log('2026-10-25')],
+      '2026-10-19',
+      '2026-10-25',
+      TODAY,
+    )
+    expect([...days.keys()]).toHaveLength(7)
+    expect(days.get('2026-10-19')!.state).toBe('missed')
+    expect(joints(days, '2026-10-20')).toBe('>')
+    expect(joints(days, '2026-10-21')).toBe('<>')
+    expect(joints(days, '2026-10-22')).toBe('<>')
+    expect(joints(days, '2026-10-23')).toBe('<')
+    // The 24th was missed, so the 25th stands alone.
+    expect(joints(days, '2026-10-25')).toBe('')
+  })
+
+  it('runs through the days a habit is not planned on', () => {
+    // Monday, Wednesday, Friday: 19, 21, 23.
+    const days = chainDays(
+      habit({ type: 'weekdays', days: [1, 3, 5] }),
+      [log('2026-10-19'), log('2026-10-21')],
+      '2026-10-19',
+      '2026-10-23',
+      TODAY,
+    )
+    expect(days.get('2026-10-20')!.state).toBe('none')
+    expect(joints(days, '2026-10-19')).toBe('>')
+    expect(joints(days, '2026-10-20')).toBe('<>')
+    expect(joints(days, '2026-10-21')).toBe('<')
+    expect(joints(days, '2026-10-22')).toBe('')
+  })
+
+  it('draws a chain that enters the range from before it', () => {
+    const days = chainDays(habit({ type: 'daily' }), [log('2026-09-30'), log('2026-10-01')], '2026-10-01', '2026-10-02', TODAY)
+    expect(joints(days, '2026-10-01')).toBe('<')
+  })
+
+  it('does not join the days of a habit that is not planned by the day', () => {
+    const days = chainDays(habit({ type: 'timesPerWeek', count: 2 }), [log('2026-10-20'), log('2026-10-21')], '2026-10-19', '2026-10-25', TODAY)
+    expect(days.get('2026-10-20')!.state).toBe('done')
+    expect(joints(days, '2026-10-20')).toBe('')
+    expect(joints(days, '2026-10-21')).toBe('')
   })
 })
 

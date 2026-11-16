@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { BottomSheet } from '../components/BottomSheet'
+import { ChainSheet } from '../components/ChainSheet'
 import { EmptyState } from '../components/EmptyState'
 import { HabitChain } from '../components/HabitChain'
 import { HabitForm } from '../components/HabitForm'
@@ -39,6 +40,8 @@ export function HabitsPage() {
     if (location.state?.newHabit) navigate('.', { replace: true, state: null })
   }, [location.state, navigate])
   const [showArchived, setShowArchived] = useState(false)
+  // Tapping a habit opens its chain; editing is a button in there. Only the id, as above.
+  const [chainId, setChainId] = useState<string>()
 
   const active = habits?.filter((h) => !h.archived) ?? []
   const archived = habits?.filter((h) => h.archived) ?? []
@@ -49,7 +52,10 @@ export function HabitsPage() {
   const selectableProjects = projects.filter(
     (p) => p.status !== 'done' || editingHabit?.projectId === p.id,
   )
-  const select = (habit: Habit) => setEditing({ mode: 'edit', id: habit.id })
+  const edit = (habit: Habit) => setEditing({ mode: 'edit', id: habit.id })
+  // Quit habits have a counter instead of a chain, so they go straight to the form.
+  const select = (habit: Habit) => (habit.kind === 'quit' ? edit(habit) : setChainId(habit.id))
+  const chainHabit = active.find((h) => h.id === chainId)
 
   return (
     <>
@@ -97,7 +103,7 @@ export function HabitsPage() {
           </button>
           {showArchived && (
             <div className="mt-3 opacity-70">
-              <HabitList habits={archived} projectById={projectById} onSelect={select} />
+              <HabitList habits={archived} projectById={projectById} onSelect={edit} />
             </div>
           )}
         </section>
@@ -122,6 +128,37 @@ export function HabitsPage() {
           Yeni habit
         </button>
       </div>
+
+      <BottomSheet
+        open={chainHabit !== undefined}
+        title={chainHabit?.title ?? ''}
+        onClose={() => setChainId(undefined)}
+        action={
+          chainHabit && (
+            <button
+              type="button"
+              onClick={() => {
+                setChainId(undefined)
+                edit(chainHabit)
+              }}
+              className="shrink-0 rounded-full border border-border px-4 py-2 text-sm"
+            >
+              Düzenle
+            </button>
+          )
+        }
+      >
+        {chainHabit && (
+          <ChainSheet
+            // Remount per habit so the month and year shown start from today.
+            key={chainHabit.id}
+            habit={chainHabit}
+            logs={logsByHabit.get(chainHabit.id) ?? []}
+            today={today}
+            color={chainHabit.projectId ? projectById.get(chainHabit.projectId)?.color : undefined}
+          />
+        )}
+      </BottomSheet>
 
       <BottomSheet
         open={editing !== null}

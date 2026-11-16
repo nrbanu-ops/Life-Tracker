@@ -1,6 +1,7 @@
-import { Fragment, type CSSProperties } from 'react'
+import { Fragment } from 'react'
 import type { Habit, HabitLog } from '../db/types'
 import { habitChain, holds, trackedFor, type LinkState } from '../lib/chain'
+import { chainColors } from '../lib/chainUi'
 import { STREAK_UNIT } from '../lib/frequency'
 import { streaks, successRate } from '../lib/stats'
 import { toDateKey } from '../lib/date'
@@ -26,19 +27,17 @@ const DOT: Record<LinkState, string> = {
 const joint = (from: LinkState, to: LinkState): string =>
   !holds(from) ? '' : holds(to) ? 'bg-(--chain)' : to === 'open' ? 'bg-(--chain) opacity-30' : ''
 
+type SummaryProps = Pick<Props, 'habit' | 'logs' | 'today'>
+
 /**
- * "Don't break the chain" for one habit: its last links joined while they hold, and under
- * them how long the chain is now, the longest it has been, the success rate since the habit
- * began, and how long it has been followed.
+ * One line under a chain: how long it is now, the longest it has been, the success rate since
+ * the habit began, and how long the habit has been followed.
  */
-export function HabitChain({ habit, logs, today, color }: Props) {
-  const links = habitChain(habit, logs, today)
-  if (links.length === 0) return null
+export function ChainSummary({ habit, logs, today }: SummaryProps) {
   const { current, longest, unit } = streaks(habit, logs, today)
   const { rate } = successRate(habit, logs, toDateKey(new Date(habit.createdAt)), today, today)
   const name = STREAK_UNIT[unit]
-
-  const summary = [
+  const parts = [
     current > 0 ? `🔗 ${current} ${name}` : longest > 0 ? 'Zincir koptu' : 'Zincir henüz başlamadı',
     longest > current && `en uzun ${longest} ${name}`,
     rate !== undefined && `%${Math.round(rate * 100)} başarı`,
@@ -46,8 +45,21 @@ export function HabitChain({ habit, logs, today, color }: Props) {
   ].filter(Boolean)
 
   return (
-    <span className="mt-2 block" style={{ '--chain': color ?? 'var(--color-accent)' } as CSSProperties}>
-      <span className="flex items-center" aria-hidden>
+    <span className="block text-xs text-muted">
+      <span className={current > 0 ? 'font-medium text-text' : ''}>{parts[0]}</span>
+      {parts.slice(1).map((part) => ` · ${part}`)}
+    </span>
+  )
+}
+
+/** "Don't break the chain" for one habit: its last links joined while they hold, and the summary under them. */
+export function HabitChain({ habit, logs, today, color }: Props) {
+  const links = habitChain(habit, logs, today)
+  if (links.length === 0) return null
+
+  return (
+    <span className="mt-2 block" style={chainColors(color)}>
+      <span className="mb-1.5 flex items-center" aria-hidden>
         {links.map((link, i) => (
           <Fragment key={link.key}>
             {i > 0 && <span className={`h-[3px] max-w-5 flex-1 ${joint(links[i - 1].state, link.state)}`} />}
@@ -55,10 +67,7 @@ export function HabitChain({ habit, logs, today, color }: Props) {
           </Fragment>
         ))}
       </span>
-      <span className="mt-1.5 block text-xs text-muted">
-        <span className={current > 0 ? 'font-medium text-text' : ''}>{summary[0]}</span>
-        {summary.slice(1).map((part) => ` · ${part}`)}
-      </span>
+      <ChainSummary habit={habit} logs={logs} today={today} />
     </span>
   )
 }

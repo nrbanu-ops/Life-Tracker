@@ -4,11 +4,13 @@ type Props = {
   open: boolean
   title: string
   onClose: () => void
+  /** A button shown beside the title. */
+  action?: ReactNode
   children: ReactNode
 }
 
 /** Modal panel that slides up from the bottom, built on the native <dialog>. */
-export function BottomSheet({ open, title, onClose, children }: Props) {
+export function BottomSheet({ open, title, onClose, action, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -39,7 +41,10 @@ export function BottomSheet({ open, title, onClose, children }: Props) {
         style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
       >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" aria-hidden />
-        <h2 className="mb-4 text-lg font-semibold">{title}</h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="min-w-0 truncate text-lg font-semibold">{title}</h2>
+          {action}
+        </div>
         {children}
       </div>
     </dialog>

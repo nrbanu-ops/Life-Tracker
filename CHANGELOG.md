@@ -5,6 +5,15 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-16
 
+### Zincirin ayı ve yılı 🗓️
+- **Habit'ler**'de bir habit'e dokununca artık zincir paneli açılır: üstte son günler, altında
+  **Ay** ve **Yıl** görünümü.
+- **Ay:** takvim gibi; yaptığın günler dolu, art arda olanlar çizgiyle birbirine bağlı, kaçan gün
+  boş halka. ‹ › ile önceki aylara gidersin; başlığın altında o ayın gün sayısı ve başarı oranı yazar.
+- **Yıl:** on iki ay alt alta, her gün bir kare; her ayın sağında başarı oranı. ‹ › ile önceki yıllar.
+- Habit'i düzenlemek için panelin sağ üstündeki **Düzenle**'ye dokun (bir dokunuş fazla oldu).
+  Bırakma habit'leri eskisi gibi doğrudan düzenlemeyi açar.
+
 ### Zincir: her habit'in altında 🔗
 - **Habit'ler** sayfasında her habit'in altında artık zinciri var: son 14 planlı günün halka
   halka çizilir, yaptığın günler birbirine bağlanır, kaçırdığın gün boş halka olarak zinciri koparır.

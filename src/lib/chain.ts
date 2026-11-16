@@ -1,8 +1,9 @@
 import { addDays, differenceInMonths, differenceInYears } from 'date-fns'
 import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
-import { dayCount, intervalOf, nextPeriod, periodGoal, periodRange, type StreakUnit } from './frequency'
+import { dayCount, intervalOf, isPlannedDaily, nextPeriod, periodGoal, periodRange, type StreakUnit } from './frequency'
 import { intervalCycles } from './interval'
+import { dayStates, type DayState } from './stats'
 import { isCompleted, isExcused, isShownOn } from './today'
 
 // "Don't break the chain": a habit's recent history as links, newest last. A link is one
@@ -78,6 +79,49 @@ export function habitChain(habit: Habit, logs: HabitLog[], today: string): Chain
     links.unshift({ key: day, state })
   }
   return links
+}
+
+/** One day of the calendar views: how it went, and whether the chain reaches it from either side. */
+export type ChainDay = { state: DayState; left: boolean; right: boolean }
+
+const dayHolds = (state: DayState): boolean =>
+  state === 'done' || state === 'minimum' || state === 'skipped' || state === 'frozen'
+
+/**
+ * Every day from `from` to `to` for the month and year views. For a habit planned by the day,
+ * `left` / `right` say the chain runs on to the planned day before / after: two planned days
+ * in a row that both hold are joined, and so are the unplanned days lying between them (a
+ * Mon–Wed–Fri chain runs straight through Tuesday). Other habits have no day-to-day chain —
+ * theirs is made of weeks, months or turns — so their days are never joined.
+ * `logs` must hold the habit's own for the range and a week either side.
+ */
+export function chainDays(habit: Habit, logs: HabitLog[], from: string, to: string, today: string): Map<string, ChainDay> {
+  // A week of margin, so a chain entering or leaving the range is drawn to its edge.
+  const start = toDateKey(addDays(fromDateKey(from), -7))
+  const end = toDateKey(addDays(fromDateKey(to), 7))
+  const states = dayStates(habit, logs, start, end, today)
+  const days = new Map<string, ChainDay>([...states].map(([key, state]) => [key, { state, left: false, right: false }]))
+
+  if (isPlannedDaily(habit)) {
+    let last: string | undefined
+    let between: string[] = []
+    for (const [key, day] of days) {
+      if (day.state === 'none') {
+        between.push(key)
+        continue
+      }
+      if (last && dayHolds(day.state) && dayHolds(days.get(last)!.state)) {
+        days.get(last)!.right = true
+        for (const gap of between) Object.assign(days.get(gap)!, { left: true, right: true })
+        day.left = true
+      }
+      last = key
+      between = []
+    }
+  }
+
+  for (const key of [...days.keys()]) if (key < from || key > to) days.delete(key)
+  return days
 }
 
 /** How long the habit has been followed, as "5 gündür", "3 haftadır", "7 aydır", "2 yıldır". */
