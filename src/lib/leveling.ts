@@ -15,6 +15,7 @@ import { dayCount, intervalOf, isLongGoal, isPlannedDaily, nextPeriod, periodGoa
 import { intervalCycles } from './interval'
 import { entryPhotos } from './journal'
 import { streaks, successRate } from './stats'
+import { capAtEnd, hasEnded } from './habitEnd'
 import { isCompleted, isExcused, isShownOn } from './today'
 
 // The leveling system (CLAUDE.md, step 12). Everything here is pure: XP is worked out from the
@@ -418,8 +419,9 @@ function habitEvents(
     const { count, period } = goal
     let run = 0
     let previousEmpty = false
-    for (let week = periodRange(period, created).start; week <= last; week = nextPeriod(period, week)) {
-      const weekEnd = periodRange(period, week).end
+    for (let week = periodRange(period, created).start; week <= last && !hasEnded(habit, week); week = nextPeriod(period, week)) {
+      // The period holding the habit's last day ends there; no go after it is asked for.
+      const weekEnd = capAtEnd(habit, periodRange(period, week).end)
       let completed = 0
       let comebackUsed = false
       const bonus = weekStreakBonus(run)

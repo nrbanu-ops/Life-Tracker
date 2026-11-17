@@ -1,5 +1,6 @@
 import type { LogEntry } from '../db/logs'
 import type { DayPart, Habit, HabitLog, HabitLogStatus } from '../db/types'
+import { hasEnded } from './habitEnd'
 import { incrementOf } from './amount'
 import { toDateKey, weekdayOf } from './date'
 import { dayCount, intervalOf, isPlannedDaily, periodGoal, periodRange } from './frequency'
@@ -20,6 +21,8 @@ export const isExcused = (status: HabitLogStatus | undefined): boolean =>
 export function isShownOn(habit: Habit, key: string): boolean {
   // Past days from before the habit existed stay empty in the calendar.
   if (key < toDateKey(new Date(habit.createdAt))) return false
+  // After its last day a habit is over: not planned, so not missed either.
+  if (hasEnded(habit, key)) return false
   const { frequency } = habit
   if (frequency.type === 'weekdays') return frequency.days.includes(weekdayOf(key))
   // "X times a week / month / year" habits can be done on any day, so they show every day.
@@ -76,6 +79,8 @@ export type TodayItem = {
    * when an "every N months" habit is not due yet.
    */
   countsToday: boolean
+  /** The day shown is the habit's last day (its end date). */
+  lastDay?: boolean
 }
 
 /**
@@ -90,7 +95,7 @@ export function buildToday(habits: Habit[], logs: HabitLog[], today: string): To
     .map((habit) => {
       const own = logs.filter((log) => log.habitId === habit.id)
       const todayLog = own.find((log) => log.date === today)
-      const base = { habit, status: todayLog?.status, value: todayLog?.value }
+      const base = { habit, status: todayLog?.status, value: todayLog?.value, ...(habit.endDate === today ? { lastDay: true } : {}) }
       const months = intervalOf(habit.frequency)
       if (months) {
         // Asked for from its due day on, until it is done; then the clock starts again.

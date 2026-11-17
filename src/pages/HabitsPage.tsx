@@ -11,6 +11,7 @@ import { db } from '../db/db'
 import type { Habit, HabitLog, Project } from '../db/types'
 import { describeTarget } from '../lib/amount'
 import { describeFrequency } from '../lib/frequency'
+import { dayLabel, describeEnd } from '../lib/habitEnd'
 import { isLongGoal } from '../lib/frequency'
 import { isDailyGoal, isWeeklyGoal } from '../lib/today'
 import { useTodayKey } from '../lib/useTodayKey'
@@ -44,7 +45,10 @@ export function HabitsPage() {
   const [chainId, setChainId] = useState<string>()
 
   const active = habits?.filter((h) => !h.archived) ?? []
-  const archived = habits?.filter((h) => h.archived) ?? []
+  // Habits finished after their end date keep a list of their own: a result, not a shelf.
+  const completed = habits?.filter((h) => h.archived && h.completedOn) ?? []
+  const archived = habits?.filter((h) => h.archived && !h.completedOn) ?? []
+  const [showCompleted, setShowCompleted] = useState(false)
   const editingHabit =
     editing?.mode === 'edit' ? habits?.find((h) => h.id === editing.id) : undefined
   const projectById = new Map(projects.map((p) => [p.id, p]))
@@ -55,7 +59,7 @@ export function HabitsPage() {
   const edit = (habit: Habit) => setEditing({ mode: 'edit', id: habit.id })
   // Quit habits have a counter instead of a chain, so they go straight to the form.
   const select = (habit: Habit) => (habit.kind === 'quit' ? edit(habit) : setChainId(habit.id))
-  const chainHabit = active.find((h) => h.id === chainId)
+  const chainHabit = [...active, ...completed].find((h) => h.id === chainId)
 
   return (
     <>
@@ -84,15 +88,40 @@ export function HabitsPage() {
                   habits={group.list}
                   projectById={projectById}
                   onSelect={select}
-                  chain={{ logsByHabit, today }}
+                  today={today}
+                  chain={logsByHabit}
                 />
               </section>
             ))}
         </div>
       )}
 
-      {archived.length > 0 && (
+      {completed.length > 0 && (
         <section className="mt-8">
+          <button
+            type="button"
+            onClick={() => setShowCompleted((v) => !v)}
+            aria-expanded={showCompleted}
+            className="text-sm text-muted"
+          >
+            {showCompleted ? 'Tamamlananları gizle' : `🏁 Tamamlananlar (${completed.length})`}
+          </button>
+          {showCompleted && (
+            <div className="mt-3">
+              <HabitList
+                habits={[...completed].sort((a, b) => b.completedOn!.localeCompare(a.completedOn!))}
+                projectById={projectById}
+                onSelect={select}
+                today={today}
+                chain={logsByHabit}
+              />
+            </div>
+          )}
+        </section>
+      )}
+
+      {archived.length > 0 && (
+        <section className={completed.length > 0 ? 'mt-4' : 'mt-8'}>
           <button
             type="button"
             onClick={() => setShowArchived((v) => !v)}
@@ -103,7 +132,7 @@ export function HabitsPage() {
           </button>
           {showArchived && (
             <div className="mt-3 opacity-70">
-              <HabitList habits={archived} projectById={projectById} onSelect={edit} />
+              <HabitList habits={archived} projectById={projectById} onSelect={edit} today={today} />
             </div>
           )}
         </section>
@@ -183,11 +212,12 @@ type ListProps = {
   habits: Habit[]
   projectById: Map<string, Project>
   onSelect: (habit: Habit) => void
-  /** Draws each habit's chain under it; left out for the archive. */
-  chain?: { logsByHabit: Map<string, HabitLog[]>; today: string }
+  today: string
+  /** Every habit's logs, to draw its chain under it; left out for the archive. */
+  chain?: Map<string, HabitLog[]>
 }
 
-function HabitList({ habits, projectById, onSelect, chain }: ListProps) {
+function HabitList({ habits, projectById, onSelect, today, chain }: ListProps) {
   return (
     <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
       {habits.map((habit) => {
@@ -209,14 +239,12 @@ function HabitList({ habits, projectById, onSelect, chain }: ListProps) {
                         .join(' · ')}
                   {project && ` · ${project.title}`}
                   {habit.minimumVersion && ` · Min: ${habit.minimumVersion}`}
+                  {habit.completedOn
+                    ? ` · 🏁 ${dayLabel(habit.completedOn, today)} tamamlandı`
+                    : habit.endDate && !habit.archived && ` · ${describeEnd(habit, today)}`}
                 </span>
                 {chain && (
-                  <HabitChain
-                    habit={habit}
-                    logs={chain.logsByHabit.get(habit.id) ?? []}
-                    today={chain.today}
-                    color={project?.color}
-                  />
+                  <HabitChain habit={habit} logs={chain.get(habit.id) ?? []} today={today} color={project?.color} />
                 )}
               </span>
               <span className="text-muted" aria-hidden>

@@ -11,6 +11,7 @@ import { MonthReviewCard } from '../components/MonthReviewCard'
 import { EmptyState } from '../components/EmptyState'
 import { FreezeCard } from '../components/FreezeCard'
 import { HabitActionSheet } from '../components/HabitActionSheet'
+import { HabitEndCard } from '../components/HabitEndCard'
 import { HardDayCard } from '../components/HardDayCard'
 import { HabitCheckRow } from '../components/HabitCheckRow'
 import { PageHeader } from '../components/PageHeader'
@@ -204,6 +205,7 @@ export function TodayPage() {
         (Dialogs are left alone — a sheet opened from the visible card must still appear.)
       */}
       <div className="[&>*:not(:first-child):not(dialog)]:hidden">
+        <HabitEndCard today={today} />
         <FreezeCard today={today} />
         <WeekPlanCard today={today} variant="prompt" />
         <BackupReminder />

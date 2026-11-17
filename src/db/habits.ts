@@ -20,6 +20,7 @@ export type HabitInput = Pick<
   | 'projectId'
   | 'effort'
   | 'stat'
+  | 'endDate'
 >
 
 /** Notes the effort tier from today on when it changed, so XP already earned stays as it was. */
@@ -69,6 +70,7 @@ export async function updateHabit(id: string, input: HabitInput): Promise<void> 
     cue: input.cue,
     focus: input.focus,
     projectId: input.projectId,
+    endDate: input.endDate,
   })
 }
 
@@ -96,5 +98,24 @@ export async function deleteHabit(id: string): Promise<void> {
 }
 
 export async function setHabitArchived(id: string, archived: boolean): Promise<void> {
-  await db.habits.update(id, { archived })
+  const habit = await db.habits.get(id)
+  if (!habit) return
+  // Taken back out of the archive, a finished habit goes on with no end; otherwise Bugün
+  // would ask straight away whether to finish it again.
+  const reopen = !archived && habit.endDate !== undefined && habit.endDate < todayKey()
+  await db.habits.update(id, {
+    archived,
+    ...(archived ? {} : { completedOn: undefined }),
+    ...(reopen ? { endDate: undefined } : {}),
+  })
+}
+
+/** Past its last day, the user called it done: it is archived with that day kept as its finish. */
+export async function completeHabit(id: string): Promise<void> {
+  await db.habits.update(id, { archived: true, completedOn: todayKey(), focus: undefined })
+}
+
+/** Past its last day, the user goes on: a new last day, or none at all. */
+export async function continueHabit(id: string, endDate: string | undefined): Promise<void> {
+  await db.habits.update(id, { endDate })
 }

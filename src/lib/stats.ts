@@ -2,6 +2,7 @@ import { addDays, addMonths, endOfMonth, startOfMonth } from 'date-fns'
 import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey, weekdayOf, weekRange } from './date'
 import { dayCount, intervalOf, isPlannedDaily, nextPeriod, periodGoal, periodRange, type StreakUnit } from './frequency'
+import { capAtEnd, hasEnded } from './habitEnd'
 import { intervalCycles } from './interval'
 import { isCompleted, isExcused, isShownOn } from './today'
 
@@ -56,8 +57,9 @@ export function successRate(
   } else if (goal && goal.period !== 'week') {
     const own = logs.filter((l) => l.habitId === habit.id).sort((a, b) => a.date.localeCompare(b.date))
     const earliest = from > created ? from : created
-    for (let p = periodRange(goal.period, earliest).start; p <= to; p = nextPeriod(goal.period, p)) {
-      const { end } = periodRange(goal.period, p)
+    for (let p = periodRange(goal.period, earliest).start; p <= to && !hasEnded(habit, p); p = nextPeriod(goal.period, p)) {
+      // The period holding the last day ends there, as the first one starts on the day the habit was added.
+      const end = capAtEnd(habit, periodRange(goal.period, p).end)
       const first = p < created ? created : p
       const inPeriod = own.filter((l) => l.date >= first && l.date <= end)
       const completed = inPeriod.filter((l) => isCompleted(l.status)).map((l) => l.date)
@@ -72,13 +74,14 @@ export function successRate(
     const { count } = habit.frequency
     const weeks = new Map<string, string[]>()
     for (const day of days) {
+      if (hasEnded(habit, day)) break
       const week = weekRange(day).start
       weeks.set(week, [...(weeks.get(week) ?? []), day])
     }
     for (const [week, weekDays] of weeks) {
       const target = Math.min(count, weekDays.length)
       const completed = weekDays.filter((d) => isCompleted(byDate.get(d))).length
-      const running = weekRange(week).end > today
+      const running = capAtEnd(habit, weekRange(week).end) > today
       if (running && completed < target) continue
       planned += target
       done += Math.min(completed, target)
@@ -147,8 +150,8 @@ export function streaks(habit: Habit, logs: HabitLog[], today: string): Streaks 
     return { current: run, longest, unit: 'time' }
   }
   if (goal) {
-    for (let p = periodRange(goal.period, start).start; p <= today; p = nextPeriod(goal.period, p)) {
-      const { end } = periodRange(goal.period, p)
+    for (let p = periodRange(goal.period, start).start; p <= today && !hasEnded(habit, p); p = nextPeriod(goal.period, p)) {
+      const end = capAtEnd(habit, periodRange(goal.period, p).end)
       const first = p < start ? start : p
       const inPeriod = own.filter((l) => l.date >= first && l.date <= end)
       const completed = inPeriod.filter((l) => l.date <= today && isCompleted(l.status)).length

@@ -347,6 +347,17 @@ describe('penalties', () => {
     expect(fines(data([run], [late], { penaltyFrom: START }), START, day(0), day(3))).toEqual([])
   })
 
+  it("fines nothing after a habit's last day, and a weekly goal only for the days it still had", () => {
+    const run = habit('Koşu', { endDate: day(1) }) // heavy, 25 XP
+    // Days 0 and 1 missed, then it ended: two fines, none for days 2 to 5.
+    expect(total(fines(data([run], [], { penaltyFrom: START }), START, day(5), day(6)))).toBe(-50)
+    // Three a week, ending on day 1 (a Tuesday): the short week asks for two, one was done.
+    const gym = habit('Spor', { frequency: { type: 'timesPerWeek', count: 3 }, endDate: day(1) })
+    const after = fines(data([gym], [done(gym, day(0))], { penaltyFrom: START }), START, day(6), day(7))
+    expect(after).toHaveLength(1)
+    expect(after[0]).toMatchObject({ date: day(1), xp: -25 })
+  })
+
   it('fines a weekly goal per missing go when the week is over', () => {
     const gym = habit('Spor', { frequency: { type: 'timesPerWeek', count: 3 } }) // heavy, 25 XP
     const d = data([gym], [done(gym, day(1))], { penaltyFrom: START })

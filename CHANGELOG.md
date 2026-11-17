@@ -3,6 +3,19 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-17
+
+### Habit'e bitiş tarihi 🏁
+- Habit'i düzenle → Daha fazla seçenek → **Ne zamana kadar?** İsteğe bağlı: 1 ay, 3 ay, 6 ay,
+  istediğin bir gün ya da Süresiz (varsayılan).
+- Son gün Bugün'de satırın altında **"Son gün 🏁"** yazar. Ertesi gün bir kart çıkar: zincirin,
+  başarı oranın, ne kadar sürdüğü ve "Devam edelim mi, yoksa tamamlandı mı?"
+  - **Tamamlandı ✓**: habit Bugün'den kalkar, Habit'ler'in altındaki **🏁 Tamamlananlar**
+    listesine zinciriyle birlikte geçer.
+  - **Devam et**: 1, 3 ya da 6 ay daha, ya da süresiz.
+- Cevabı beklerken hiçbir gün kaçmış sayılmaz: ceza yazılmaz, seri kırılmaz.
+- Habit'ler'de bitiş tarihi olanların satırında "bitiş 30 Kasım" yazar.
+
 ## 2026-11-16
 
 ### Zincirin ayı ve yılı 🗓️

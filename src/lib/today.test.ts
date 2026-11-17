@@ -158,6 +158,16 @@ describe('buildToday', () => {
   })
 })
 
+describe('a habit with a last day', () => {
+  it('is on the list through its last day, marked as such, and gone after it', () => {
+    const h = habit('a', { type: 'daily' }, { endDate: WED })
+    expect(buildToday([h], [], WED)[0]).toMatchObject({ lastDay: true, countsToday: true })
+    expect(buildToday([h], [], '2026-10-27')[0].lastDay).toBeUndefined()
+    expect(buildToday([h], [], '2026-10-29')).toEqual([])
+    expect(buildToday([habit('b', { type: 'timesPerMonth', count: 2 }, { endDate: WED })], [], '2026-10-29')).toEqual([])
+  })
+})
+
 describe('weekly goals', () => {
   it('tells weekly goals from daily ones', () => {
     expect(isWeeklyGoal(habit('a', { type: 'timesPerWeek', count: 3 }))).toBe(true)

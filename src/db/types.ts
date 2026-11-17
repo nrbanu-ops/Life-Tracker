@@ -78,6 +78,13 @@ export type Habit = {
   stat?: 'str' | 'int' | 'vit' | 'sen' | 'dis' | 'pro' | 'kin' | 'cha'
   /** The tier in use from each day on, so a change never alters XP already earned. */
   effortLog?: { from: string; tier: 'light' | 'medium' | 'heavy' | 'intense' }[]
+  /**
+   * Optional last day (day key). After it the habit is not planned any more, and Bugün asks
+   * whether to go on (a new end date or none) or call it done.
+   */
+  endDate?: string
+  /** Day it was called done after its end date. Such a habit is also archived. */
+  completedOn?: string
   archived: boolean
   order: number
   createdAt: string

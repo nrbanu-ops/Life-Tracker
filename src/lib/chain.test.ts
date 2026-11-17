@@ -119,6 +119,31 @@ describe('habitChain', () => {
   })
 })
 
+describe('a habit with a last day', () => {
+  it('stops its chain there and never misses a day after it', () => {
+    const h = habit({ type: 'daily' }, '2026-10-20T09:00:00.000Z', { endDate: '2026-10-24' })
+    const logs = ['2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24'].map((d) => log(d))
+    const links = habitChain(h, logs, TODAY)
+    expect(links.map((l) => l.key)).toEqual(['2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24'])
+    expect(states(links)).toEqual(['done', 'done', 'done', 'done', 'done'])
+    // Four days have gone by since its last day; the streak is still whole.
+    expect(streaks(h, logs, TODAY)).toMatchObject({ current: 5, longest: 5 })
+  })
+
+  it('ends a weekly goal on its last day, the short week asking for no more than it has', () => {
+    // Last day Wednesday 14 October: that week has three days, the goal is three a week.
+    const h = habit({ type: 'timesPerWeek', count: 3 }, '2026-10-05T00:00:00.000Z', { endDate: '2026-10-14' })
+    const logs = [log('2026-10-05'), log('2026-10-06'), log('2026-10-07'), log('2026-10-12'), log('2026-10-13'), log('2026-10-14')]
+    expect(states(habitChain(h, logs, TODAY))).toEqual(['done', 'done'])
+    expect(streaks(h, logs, TODAY).current).toBe(2)
+  })
+
+  it('drops the turn an "every N months" habit would wait for after its end', () => {
+    const h = habit({ type: 'everyMonths', months: 3 }, '2026-01-01T00:00:00.000Z', { endDate: '2026-06-30' })
+    expect(states(habitChain(h, [log('2026-01-05'), log('2026-04-10')], TODAY))).toEqual(['done', 'done'])
+  })
+})
+
 describe('chainDays', () => {
   const joints = (days: Map<string, { left: boolean; right: boolean }>, key: string) => {
     const day = days.get(key)!
@@ -181,5 +206,13 @@ describe('trackedFor', () => {
     expect(since('2026-10-07')).toBe('3 haftadır')
     expect(since('2026-03-28')).toBe('7 aydır')
     expect(since('2024-10-01')).toBe('2 yıldır')
+  })
+
+  it('says how long it ran once its last day is behind it', () => {
+    const h = habit({ type: 'daily' }, '2026-08-01T09:00:00.000Z', { endDate: '2026-10-05' })
+    // 1 August to the end of 5 October.
+    expect(trackedFor(h, TODAY)).toBe('66 gün sürdü')
+    expect(trackedFor(habit({ type: 'daily' }, '2026-01-01T09:00:00.000Z', { endDate: '2026-06-30' }), TODAY)).toBe('6 ay sürdü')
+    expect(trackedFor(habit({ type: 'daily' }, '2026-10-20T09:00:00.000Z', { endDate: '2026-10-26' }), TODAY)).toBe('7 gün sürdü')
   })
 })

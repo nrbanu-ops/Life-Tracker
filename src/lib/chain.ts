@@ -2,6 +2,7 @@ import { addDays, differenceInMonths, differenceInYears } from 'date-fns'
 import type { Habit, HabitLog } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
 import { dayCount, intervalOf, isPlannedDaily, nextPeriod, periodGoal, periodRange, type StreakUnit } from './frequency'
+import { capAtEnd, hasEnded } from './habitEnd'
 import { intervalCycles } from './interval'
 import { dayStates, type DayState } from './stats'
 import { isCompleted, isExcused, isShownOn } from './today'
@@ -41,13 +42,15 @@ export function habitChain(habit: Habit, logs: HabitLog[], today: string): Chain
       // The turn still running waits as the last link, due or not.
       cycle.doneOn ? { key: cycle.doneOn, state: 'done' } : { key: `open-${cycle.due}`, state: 'open' },
     ])
+    // A habit that has ended has no turn left to wait for.
+    if (hasEnded(habit, today) && links.at(-1)?.state === 'open') links.pop()
     return links.slice(-CHAIN_LENGTH.time)
   }
 
   if (goal) {
     const links: ChainLink[] = []
-    for (let p = periodRange(goal.period, created).start; p <= today; p = nextPeriod(goal.period, p)) {
-      const { end } = periodRange(goal.period, p)
+    for (let p = periodRange(goal.period, created).start; p <= today && !hasEnded(habit, p); p = nextPeriod(goal.period, p)) {
+      const end = capAtEnd(habit, periodRange(goal.period, p).end)
       const first = p < created ? created : p
       const inPeriod = own.filter((l) => l.date >= first && l.date <= end)
       const completed = inPeriod.filter((l) => l.date <= today && isCompleted(l.status)).length
@@ -124,14 +127,26 @@ export function chainDays(habit: Habit, logs: HabitLog[], from: string, to: stri
   return days
 }
 
-/** How long the habit has been followed, as "5 gündür", "3 haftadır", "7 aydır", "2 yıldır". */
+/**
+ * How long the habit has been followed: "5 gündür", "3 haftadır", "7 aydır", "2 yıldır"; for
+ * one past its last day, how long it ran: "66 gün sürdü", "3 ay sürdü".
+ */
 export function trackedFor(habit: Habit, today: string): string {
   const created = createdKey(habit)
-  const days = dayCount(created, today) - 1
+  const ended = hasEnded(habit, today)
+  // Counted to the end of its last day, so a habit set for 30 days ran 30 days.
+  const to = ended ? toDateKey(addDays(fromDateKey(habit.endDate!), 1)) : today
+  const days = dayCount(created, to) - 1
   if (days <= 0) return 'bugün başladı'
-  if (days < 14) return `${days} gündür`
-  if (days < 61) return `${Math.floor(days / 7)} haftadır`
-  const months = differenceInMonths(fromDateKey(today), fromDateKey(created))
-  if (months < 24) return `${months} aydır`
-  return `${differenceInYears(fromDateKey(today), fromDateKey(created))} yıldır`
+  const span =
+    // A set run is thought of in days ("30 gün", "66 gün"), so an ended one is told in days for longer.
+    days < (ended ? 100 : 14)
+      ? ([days, 'gün', 'gündür'] as const)
+      : days < 61
+        ? ([Math.floor(days / 7), 'hafta', 'haftadır'] as const)
+        : differenceInMonths(fromDateKey(to), fromDateKey(created)) < 24
+          ? ([differenceInMonths(fromDateKey(to), fromDateKey(created)), 'ay', 'aydır'] as const)
+          : ([differenceInYears(fromDateKey(to), fromDateKey(created)), 'yıl', 'yıldır'] as const)
+  // Ended: "sürdü" after it; still going: the "-dır" form, which already says "until now".
+  return ended ? `${span[0]} ${span[1]} sürdü` : `${span[0]} ${span[2]}`
 }

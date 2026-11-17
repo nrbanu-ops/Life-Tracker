@@ -5,6 +5,7 @@ import { db } from '../db/db'
 import { createHabit, deleteHabit, setHabitArchived, updateHabit, type HabitInput } from '../db/habits'
 import type { DayPart, Habit, HabitFrequency, HabitKind, Project } from '../db/types'
 import { DEFAULT_INCREMENT } from '../lib/amount'
+import { todayKey } from '../lib/date'
 import {
   frequencyOf,
   INTERVAL_MAX,
@@ -25,6 +26,7 @@ import {
   type EffortTier,
   type StatKey,
 } from '../lib/leveling'
+import { dayLabel, endIn, EXTEND_MONTHS } from '../lib/habitEnd'
 import { useLevelingOn } from '../lib/levelingSetting'
 import { DAY_PART_LABEL, DAY_PARTS, FOCUS_MAX } from '../lib/today'
 import { Segmented } from './Segmented'
@@ -93,6 +95,9 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   const [why, setWhy] = useState(habit?.why ?? '')
   const [when, setWhen] = useState<DayPart | ''>(habit?.when ?? '')
   const [cue, setCue] = useState(habit?.cue ?? '')
+  // Optional last day; empty means it runs with no end.
+  const [endDate, setEndDate] = useState(habit?.endDate ?? '')
+  const [today] = useState(todayKey)
   const [projectId, setProjectId] = useState(habit ? (habit.projectId ?? '') : (defaultProjectId ?? ''))
   const [effort, setEffort] = useState<EffortTier | ''>(habit?.effort ?? '')
   const [stat, setStat] = useState<StatKey | ''>(habit?.stat ?? '')
@@ -109,7 +114,17 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
   const [more, setMore] = useState(
     () =>
       !!habit &&
-      !!(habit.why || habit.when || habit.cue || habit.minimumVersion || habit.focus || habit.effort || habit.stat || habit.projectId),
+      !!(
+        habit.why ||
+        habit.when ||
+        habit.cue ||
+        habit.minimumVersion ||
+        habit.focus ||
+        habit.effort ||
+        habit.stat ||
+        habit.projectId ||
+        habit.endDate
+      ),
   )
 
   const trimmedTitle = title.trim()
@@ -167,6 +182,8 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
       projectId: projectId || undefined,
       effort: isQuit ? undefined : effort || undefined,
       stat: isQuit ? undefined : stat || undefined,
+      // A quit habit counts time since stopping; it has nothing to finish.
+      endDate: isQuit ? undefined : endDate || undefined,
     }
     if (habit) await updateHabit(habit.id, input)
     else await createHabit(input)
@@ -399,7 +416,7 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
         <span className="min-w-0">
           <span className="block font-medium">Daha fazla seçenek</span>
           <span className="block truncate text-muted">
-            {isQuit ? 'Neden, proje' : 'Neden, tetikleyici, minimum, omurga, proje'}
+            {isQuit ? 'Neden, proje' : 'Neden, bitiş tarihi, tetikleyici, minimum, omurga, proje'}
           </span>
         </span>
         <span aria-hidden className={`text-xl text-muted transition-transform ${more ? 'rotate-90' : ''}`}>
@@ -429,6 +446,47 @@ export function HabitForm({ habit, defaultProjectId, projects, onDone }: Props) 
           {/* Quit habits have no time of day, minimum version or keystone mark. */}
           {!isQuit && (
             <>
+              <fieldset className="flex flex-col gap-2">
+                <legend className="mb-1.5 text-sm text-muted">Ne zamana kadar? (isteğe bağlı)</legend>
+                <div className="flex gap-2">
+                  {EXTEND_MONTHS.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setEndDate(endIn(n, today))}
+                      aria-pressed={endDate === endIn(n, today)}
+                      className={`flex-1 rounded-lg py-2 text-sm ${
+                        endDate === endIn(n, today) ? 'bg-accent text-surface' : 'bg-bg text-muted'
+                      }`}
+                    >
+                      {n} ay
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setEndDate('')}
+                    aria-pressed={endDate === ''}
+                    className={`flex-1 rounded-lg py-2 text-sm ${endDate === '' ? 'bg-accent text-surface' : 'bg-bg text-muted'}`}
+                  >
+                    Süresiz
+                  </button>
+                </div>
+                <input
+                  id="habit-end"
+                  type="date"
+                  value={endDate}
+                  min={today}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  aria-label="Bitiş tarihi"
+                  className={inputClass}
+                />
+                <span className="text-xs text-muted">
+                  {endDate
+                    ? `Son gün: ${endDate === today ? 'bugün' : dayLabel(endDate, today)}. Ertesi gün Bugün'de "devam mı, tamam mı?" diye sorulur.`
+                    : 'Belirli bir süre için yapıyorsan (ör. 30 günlük meydan okuma) son günü seç; o gün gelince sorulur.'}
+                </span>
+              </fieldset>
+
               <fieldset className="flex flex-col gap-2">
                 <legend className="mb-1.5 text-sm text-muted">Günün hangi bölümünde?</legend>
                 <Segmented<DayPart | ''>

@@ -19,7 +19,7 @@ type Props = {
 const LONG_PRESS_MS = 500
 
 export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
-  const { habit, status, value, goalCount, nextDue, overdue, countsToday } = item
+  const { habit, status, value, goalCount, nextDue, overdue, countsToday, lastDay } = item
   const timer = useRef<number | undefined>(undefined)
   const longPressed = useRef(false)
 
@@ -34,6 +34,7 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
   }
 
   const details: string[] = []
+  if (lastDay) details.push('Son gün 🏁')
   // When and after what: the two things that decide whether it actually gets done.
   const timing = [habit.when && DAY_PART_LABEL[habit.when], habit.cue].filter(Boolean).join(', ')
   if (timing && status === undefined) details.push(timing)

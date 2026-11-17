@@ -335,3 +335,32 @@ describe('every N months', () => {
     expect(dayStates(h, [], '2026-10-27', TODAY, TODAY).get('2026-10-27')).toBe('open')
   })
 })
+
+describe('a habit with a last day', () => {
+  it('plans nothing after it, by the day or by the period', () => {
+    const daily = habit({ type: 'daily' }, { endDate: '2026-10-20' })
+    expect(successRate(daily, [log('2026-10-19'), log('2026-10-20')], '2026-10-19', TODAY, TODAY)).toEqual({
+      done: 2,
+      planned: 2,
+      rate: 1,
+    })
+    expect(dayStates(daily, [], '2026-10-20', '2026-10-21', TODAY)).toEqual(
+      new Map([
+        ['2026-10-20', 'missed'],
+        ['2026-10-21', 'none'],
+      ]),
+    )
+
+    // Last day Wednesday 21 October: that week has three days, so twice is its whole goal.
+    const weekly = habit({ type: 'timesPerWeek', count: 2 }, { endDate: '2026-10-21' })
+    expect(successRate(weekly, [log('2026-10-19'), log('2026-10-20')], '2026-10-19', TODAY, TODAY)).toEqual({
+      done: 2,
+      planned: 2,
+      rate: 1,
+    })
+
+    // A monthly goal that ends mid-month is judged on its last day, not on the 31st.
+    const monthly = habit({ type: 'timesPerMonth', count: 2 }, { endDate: '2026-10-10' })
+    expect(successRate(monthly, [log('2026-10-03')], '2026-10-01', TODAY, TODAY)).toEqual({ done: 1, planned: 2, rate: 0.5 })
+  })
+})

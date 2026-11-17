@@ -1,4 +1,4 @@
-import { addMonths } from 'date-fns'
+import { addDays, addMonths } from 'date-fns'
 import type { Habit } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
 import { intervalOf } from './frequency'
@@ -25,6 +25,12 @@ export type Cycle = { due: string; doneOn?: string; missed: string[] }
  * missed once it is behind `today`; done on the deadline itself is still in time.
  */
 export function intervalCycles(habit: Habit, completed: string[], today: string): Cycle[] {
+  // A habit with a last day stops there: a deadline after it is never missed, and the open
+  // turn is judged as of the day after its end.
+  if (habit.endDate !== undefined && habit.endDate < today) {
+    const stop = toDateKey(addDays(fromDateKey(habit.endDate), 1))
+    return intervalCycles({ ...habit, endDate: undefined }, completed.filter((day) => day <= habit.endDate!), stop)
+  }
   const months = intervalOf(habit.frequency) ?? 1
   const cycles: Cycle[] = []
   let due = firstDue(habit)
