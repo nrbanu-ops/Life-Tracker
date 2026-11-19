@@ -47,6 +47,13 @@ export const PALETTES: Palette[] = [
     bg: ['#fdf6e7', '#fdf6e7'],
   },
   {
+    id: 'neon',
+    name: 'Neon Sahil',
+    note: 'hep aydınlık',
+    swatch: ['#c8197a', '#2ec4c9', '#ffb27a'],
+    bg: ['#ffeef5', '#ffeef5'],
+  },
+  {
     id: 'phantom',
     name: 'Phantom',
     note: 'hep karanlık',

@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd3e8"/><stop offset="0.38" stop-color="#ffdfe0"/><stop offset="0.63" stop-color="#ffecd6"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9a3"/><stop offset="0.55" stop-color="#ffbfa6"/><stop offset="1" stop-color="#ff9fc9"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c4f0ee"/><stop offset="1" stop-color="#a6e0e8"/>
+    </linearGradient>
+    <!-- The sun's lower half falls apart into bars, wider toward the horizon. -->
+    <mask id="bars">
+      <rect x="0" y="0" width="900" height="1800" fill="#fff"/>
+      <rect x="300" y="930" width="700" height="8" fill="#000"/>
+      <rect x="300" y="972" width="700" height="12" fill="#000"/>
+      <rect x="300" y="1016" width="700" height="16" fill="#000"/>
+      <rect x="300" y="1062" width="700" height="21" fill="#000"/>
+      <rect x="300" y="1110" width="700" height="27" fill="#000"/>
+    </mask>
+    <path id="frond" d="M 0 0 C 46 -34 112 -40 172 -6 C 120 -22 66 -14 0 0 Z"/>
+  </defs>
+  <rect x="-300" y="-300" width="1500" height="2500" fill="url(#sky)"/>
+
+  <!-- The sun keeps to the right: headings that sit on the sky start at the left. -->
+  <circle cx="660" cy="930" r="240" fill="url(#sun)" mask="url(#bars)"/>
+
+  <!-- A low, far shoreline of stepped towers, almost mist. -->
+  <g fill="#efc9e6">
+    <rect x="-20" y="1088" width="70" height="62"/>
+    <rect x="58" y="1046" width="44" height="104"/><rect x="66" y="1032" width="28" height="14"/>
+    <rect x="110" y="1072" width="62" height="78"/>
+    <rect x="182" y="1020" width="40" height="130"/><rect x="190" y="1002" width="24" height="18"/><rect x="198" y="986" width="8" height="16"/>
+    <rect x="230" y="1080" width="80" height="70"/>
+    <rect x="318" y="1056" width="46" height="94"/>
+    <rect x="372" y="1096" width="96" height="54"/>
+  </g>
+
+  <!-- The sea, with the sun's light lying on it in pale strokes. -->
+  <rect x="-300" y="1150" width="1500" height="1000" fill="url(#sea)"/>
+  <g fill="#ffffff" opacity="0.7">
+    <rect x="520" y="1176" width="280" height="6" rx="3"/>
+    <rect x="560" y="1214" width="200" height="6" rx="3"/>
+    <rect x="490" y="1256" width="330" height="5" rx="2.5"/>
+    <rect x="590" y="1302" width="150" height="5" rx="2.5"/>
+    <rect x="540" y="1356" width="240" height="4" rx="2"/>
+    <rect x="80" y="1236" width="120" height="4" rx="2"/>
+    <rect x="150" y="1420" width="170" height="4" rx="2"/>
+  </g>
+  <!-- Sand at the very bottom. -->
+  <path d="M -300 1640 C 100 1600 500 1660 1200 1610 L 1200 2100 L -300 2100 Z" fill="#ffe7cf"/>
+
+  <!-- Palms: a tall one on the right edge, a short one low on the left. -->
+  <g fill="#d8a9d9">
+    <path d="M 828 1800 C 818 1400 800 1080 772 760 L 790 758 C 826 1080 846 1400 862 1800 Z"/>
+    <g transform="translate(781 760)">
+      <use href="#frond" transform="rotate(-160) scale(1.05)"/>
+      <use href="#frond" transform="rotate(-130) scale(0.95)"/>
+      <use href="#frond" transform="rotate(-95) scale(0.7)"/>
+      <use href="#frond" transform="rotate(-60) scale(0.9)"/>
+      <use href="#frond" transform="rotate(-25) scale(1.05)"/>
+      <use href="#frond" transform="rotate(10) scale(0.95)"/>
+      <use href="#frond" transform="rotate(150) scale(0.8)"/>
+    </g>
+    <path d="M 20 1800 C 34 1640 52 1540 82 1440 L 98 1446 C 72 1546 58 1650 50 1800 Z"/>
+    <g transform="translate(90 1442) scale(0.75)">
+      <use href="#frond" transform="rotate(-165)"/>
+      <use href="#frond" transform="rotate(-125) scale(0.9)"/>
+      <use href="#frond" transform="rotate(-80) scale(0.7)"/>
+      <use href="#frond" transform="rotate(-40) scale(0.95)"/>
+      <use href="#frond" transform="rotate(-5) scale(1.05)"/>
+      <use href="#frond" transform="rotate(25) scale(0.85)"/>
+    </g>
+  </g>
+</svg>

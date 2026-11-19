@@ -5,6 +5,13 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-19
 
+### Yeni tema: Neon Sahil 🌴
+- Ayarlar → Renk teması → **Neon Sahil**: 80'lerin sahil şehri havası. Sıcak pembe ve turkuaz,
+  pastel pembe gökyüzü, çizgili bir gün batımı güneşi, uzakta kuleler, palmiyeler ve denizde
+  güneşin yansıması.
+- Hep aydınlık: telefon koyu moddayken de böyle kalır.
+- Bulutlar ve martılar yavaşça kayar; Ayarlar'daki "Arka plan hareketi" bunu durdurur.
+
 ### Başlıklar okunur oldu 🏷️
 - "Günlük hedefler", "Güncel görevler" gibi bölüm başlıkları artık arka planın üstünde kaybolmuyor:
   arkalarında yarı saydam bir zemin var ve yazıları soluk gri değil, normal renkte.

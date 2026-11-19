@@ -494,6 +494,42 @@
   --wave-9: #9edde4;
   --wave-10: #90d6e3;
 }
+/*
+ * Neon Sahil: an eighties seaside at sunset — hot pink and turquoise on a pastel sky, with a
+ * drawing of its own (striped sun, far towers, palms) in place of the bands. Always bright.
+ */
+:root[data-palette='neon'] {
+  color-scheme: light;
+  --color-bg: #ffeef5;
+  --color-surface: #ffffff;
+  --color-text: #2b1d3d;
+  --color-muted: #5a4870;
+  --color-border: #f5d3e4;
+  --color-accent: #c8197a;
+  --color-accent-soft: #ffe0ef;
+  /* Hot pink, sunset orange and the sea. */
+  --color-p1: #d81f4f;
+  --color-p2: #b46200;
+  --color-p3: #0a7e8c;
+  /* The leveling window as a pink card with a turquoise edge. */
+  --color-sys-bg: #fff8fb;
+  --color-sys-panel: #ffe4f1;
+  --color-sys-line: #f4b9d6;
+  --color-sys-edge: #0a8f9c;
+  --color-sys-glow: #c8197a;
+  --color-sys-text: #2b1d3d;
+  --color-sys-muted: #5a4870;
+  --color-sys-warn: #d0541e;
+  --color-sys-danger: #c62828;
+  --color-rank-e: #6b7a94;
+  --color-rank-d: #1f9e52;
+  --color-rank-c: #1d7fd4;
+  --color-rank-b: #7c5cd6;
+  --color-rank-a: #d6453f;
+  --color-rank-s: #b07d08;
+  --color-backdrop-tint: #ff9fc9;
+}
+:root[data-palette='neon'] .map-tiles,
 :root[data-palette='limonata'] .map-tiles,
 :root[data-palette='kumsal'] .map-tiles {
   /* The page stays light, so the map must not be inverted for the phone's dark mode. */
@@ -783,13 +819,16 @@ body,
  * place — one that barely moves, and one in front of it that drifts.
  */
 :root[data-palette='phantom'] .backdrop-waves,
-:root[data-palette='mantar'] .backdrop-waves {
+:root[data-palette='mantar'] .backdrop-waves,
+:root[data-palette='neon'] .backdrop-waves {
   display: none;
 }
 :root[data-palette='phantom'] .app-backdrop::before,
 :root[data-palette='phantom'] .app-backdrop::after,
 :root[data-palette='mantar'] .app-backdrop::before,
-:root[data-palette='mantar'] .app-backdrop::after {
+:root[data-palette='mantar'] .app-backdrop::after,
+:root[data-palette='neon'] .app-backdrop::before,
+:root[data-palette='neon'] .app-backdrop::after {
   content: '';
   position: absolute;
   /* Larger than the screen, so the drift never shows an edge. */
@@ -811,6 +850,14 @@ body,
 :root[data-palette='mantar'] .app-backdrop::after {
   background-image: url("./assets/bg-mantar-front.svg");
   /* Clouds cross the sky; everything else stays where it is. */
+  animation: backdrop-clouds 90s ease-in-out infinite alternate;
+}
+:root[data-palette='neon'] .app-backdrop::before {
+  background-image: url("./assets/bg-neon-back.svg");
+}
+:root[data-palette='neon'] .app-backdrop::after {
+  background-image: url("./assets/bg-neon-front.svg");
+  /* Only the clouds and gulls drift; the sun and the palms stay put. */
   animation: backdrop-clouds 90s ease-in-out infinite alternate;
 }
 @keyframes backdrop-clouds {
