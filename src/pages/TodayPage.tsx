@@ -199,6 +199,16 @@ export function TodayPage() {
         </>
       )}
 
+      {/* Right under the habits: what else there is to do today is the next thing to see. */}
+      <TodayTasks
+        today={today}
+        projectColor={projectColor}
+        goals={long.current}
+        waitingGoals={long.waiting}
+        onGoalTap={tap}
+        onGoalMore={setActionHabitId}
+      />
+
       {/*
         Reminders queue here, most pressing first, and only the first one that has something to
         say is shown: each renders nothing when it is not due, so the first child is the winner.
@@ -215,15 +225,6 @@ export function TodayPage() {
       </div>
 
       <WeekPlanCard today={today} variant="plan" />
-
-      <TodayTasks
-        today={today}
-        projectColor={projectColor}
-        goals={long.current}
-        waitingGoals={long.waiting}
-        onGoalTap={tap}
-        onGoalMore={setActionHabitId}
-      />
 
       <LevelCard />
 

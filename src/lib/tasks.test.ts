@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Task } from '../db/types'
-import { compareTasks, describeDue, groupTasks, nextOccurrence, todayTasks } from './tasks'
+import { compareTasks, currentTasks, describeDue, groupTasks, nextOccurrence, todayTasks } from './tasks'
 
 // 2026-10-28 is a Wednesday.
 const WED = '2026-10-28'
@@ -68,6 +68,31 @@ describe('compareTasks', () => {
       task('yesterday', { date: '2026-10-27' }),
     ].sort(compareTasks)
     expect(sorted.map((t) => t.id)).toEqual(['urgent', 'yesterday', 'early', 'noTime'])
+  })
+})
+
+describe('currentTasks', () => {
+  it('shows what is due, then the undated, then the next week in date order', () => {
+    const { open } = currentTasks(
+      [
+        task('farAway', { date: '2026-11-20' }),
+        task('saturday', { date: '2026-10-31' }),
+        task('undatedLow', { priority: 4 }),
+        task('tomorrow', { date: '2026-10-29', priority: 4 }),
+        task('late', { date: '2026-10-27' }),
+        task('undatedUrgent', { priority: 1 }),
+        task('today', { date: WED, priority: 1 }),
+        task('inAWeek', { date: '2026-11-04' }),
+        task('doneEarlier', { date: WED, done: true, completedAt: new Date(2026, 9, 27, 12).toISOString() }),
+      ],
+      WED,
+    )
+    expect(open.map((t) => t.id)).toEqual(['today', 'late', 'undatedUrgent', 'undatedLow', 'tomorrow', 'saturday', 'inAWeek'])
+  })
+
+  it('keeps the tasks completed today', () => {
+    const { done } = currentTasks([task('a', { done: true, completedAt: new Date(2026, 9, 28, 9).toISOString() })], WED)
+    expect(done.map((t) => t.id)).toEqual(['a'])
   })
 })
 

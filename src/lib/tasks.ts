@@ -51,6 +51,26 @@ export function todayTasks(tasks: Task[], today: string): { open: Task[]; done: 
   return { open: open.sort(compareTasks), done: done.sort(compareTasks) }
 }
 
+/** How far ahead a dated task counts as current on Bugün. */
+export const CURRENT_DAYS_AHEAD = 7
+
+/**
+ * Bugün's "Güncel görevler": every open task that is not for some later week — overdue and
+ * due today first, then the undated ones (they have no day of their own, so they would
+ * otherwise never be seen outside the tasks page), then the next `CURRENT_DAYS_AHEAD` days
+ * in date order. Plus the tasks completed today, so a tap can be undone.
+ */
+export function currentTasks(tasks: Task[], today: string): { open: Task[]; done: Task[] } {
+  const horizon = toDateKey(addDays(fromDateKey(today), CURRENT_DAYS_AHEAD))
+  const open = tasks.filter((t) => !t.done)
+  const due = open.filter((t) => t.date !== undefined && t.date <= today).sort(compareTasks)
+  const undated = open.filter((t) => t.date === undefined).sort(compareTasks)
+  const soon = open
+    .filter((t) => t.date !== undefined && t.date > today && t.date <= horizon)
+    .sort((a, b) => a.date!.localeCompare(b.date!) || compareTasks(a, b))
+  return { open: [...due, ...undated, ...soon], done: todayTasks(tasks, today).done }
+}
+
 export type TaskGroup = { key: string; title: string; tasks: Task[] }
 
 /** Open tasks grouped by when they are due, for the tasks page. */

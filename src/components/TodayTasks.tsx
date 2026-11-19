@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { db } from '../db/db'
 import { setTaskDone } from '../db/tasks'
-import { todayTasks } from '../lib/tasks'
+import { currentTasks } from '../lib/tasks'
 import { splitDone, type TodayItem } from '../lib/today'
 import { HabitCheckRow } from './HabitCheckRow'
 import { TaskRow } from './TaskRow'
@@ -20,10 +20,14 @@ type Props = {
   onGoalMore?: (habitId: string) => void
 }
 
+/** Open tasks shown before the rest fold into "+n görev daha"; Bugün is not the tasks page. */
+const SHOWN_TASKS = 8
+
 /**
- * What there is to get done besides the day's habits: tasks that are overdue or due today,
- * and the long goals whose turn it is — a yearly check-up that has come round reads as a
- * to-do, not as a habit of today. Whatever was finished today stays so it can be undone.
+ * "Güncel görevler": what there is to get done besides the day's habits — overdue, today's,
+ * undated and the next week's tasks (`currentTasks`), and the long goals whose turn it is (a
+ * yearly check-up that has come round reads as a to-do, not as a habit of today). Whatever
+ * was finished today stays so it can be undone.
  */
 export function TodayTasks({ today, projectColor, goals = [], waitingGoals = [], onGoalTap, onGoalMore }: Props) {
   const tasks = useLiveQuery(() => db.tasks.toArray())
@@ -32,11 +36,13 @@ export function TodayTasks({ today, projectColor, goals = [], waitingGoals = [],
   const [waitingShown, setWaitingShown] = useState(false)
 
   if (!tasks) return null
-  const { open, done } = todayTasks(tasks, today)
+  const { open: allOpen, done } = currentTasks(tasks, today)
+  const open = allOpen.slice(0, SHOWN_TASKS)
+  const more = allOpen.length - open.length
   const goal = splitDone(goals)
   const waiting = waitingShown ? waitingGoals : []
   const finished = done.length + goal.done.length
-  const total = open.length + done.length + goals.length
+  const total = allOpen.length + done.length + goals.length
   const mixed = goals.length + waiting.length > 0
 
   const habitRow = (item: TodayItem) => (
@@ -64,7 +70,7 @@ export function TodayTasks({ today, projectColor, goals = [], waitingGoals = [],
     <section className="mb-6">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-medium text-muted">
-          Yapılacaklar{total > 0 && ` · ${finished}/${total}`}
+          Güncel görevler{total > 0 && ` · ${finished}/${total}`}
         </h2>
         <div className="flex items-center gap-1">
           <Link to="/gorevler" className="rounded-full px-2 py-1 text-sm text-muted">
@@ -87,7 +93,7 @@ export function TodayTasks({ today, projectColor, goals = [], waitingGoals = [],
           onClick={() => setEditing({ mode: 'new', date: today })}
           className="w-full rounded-2xl border border-dashed border-border px-4 py-3 text-left text-sm text-muted"
         >
-          Bugün için görev yok. Eklemek için dokun.
+          Güncel görev yok. Eklemek için dokun.
         </button>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
@@ -97,6 +103,12 @@ export function TodayTasks({ today, projectColor, goals = [], waitingGoals = [],
           {done.map(taskRow)}
           {waiting.map(habitRow)}
         </ul>
+      )}
+
+      {more > 0 && (
+        <Link to="/gorevler" className="tap-text flex w-fit items-center text-sm text-muted">
+          +{more} görev daha · Tümü ›
+        </Link>
       )}
 
       {waitingGoals.length > 0 && (

@@ -3,6 +3,16 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-19
+
+### Bugün'de güncel görevler 📋
+- Bugün'deki görev bölümünün adı artık **Güncel görevler** ve habit'lerin hemen altında duruyor.
+- Eskiden yalnızca tarihi bugün olan ya da gecikmiş görevler görünüyordu. Şimdi sırasıyla:
+  gecikmiş ve bugünkü görevler, **tarihsiz görevler** ve **önümüzdeki 7 güne** tarihli olanlar
+  ("Yarın", "Pazartesi 10:30" diye yazar).
+- En fazla 8 görev gösterilir; fazlası için "+n görev daha · Tümü ›".
+- Sırası gelen aylık ve yıllık hedefler yine bu bölümde.
+
 ## 2026-11-17
 
 ### Habit'e bitiş tarihi 🏁
