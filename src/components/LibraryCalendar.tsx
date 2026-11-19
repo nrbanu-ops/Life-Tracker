@@ -158,7 +158,7 @@ export function LibraryCalendar({ items, today, onSelect }: Props) {
       <p className="mt-1 px-1 text-xs text-muted">{summary ? `Bu ay: ${summary}` : 'Bu ay henüz bir şey bitirmedin.'}</p>
 
       <section className="mt-5">
-        <h2 className="mb-2 text-sm font-medium text-muted">
+        <h2 className="mb-2 section-title">
           {selected === today ? 'Bugün' : format(fromDateKey(selected), 'd MMMM EEEE', { locale: tr })}
         </h2>
         {!selectedDay ? (

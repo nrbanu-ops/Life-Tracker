@@ -183,7 +183,7 @@ function Tile({ value, label }: { value: number; label: string }) {
 function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 text-sm font-medium text-muted">{title}</h2>
+      <h2 className="mb-2 section-title">{title}</h2>
       <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
         {children}
       </div>

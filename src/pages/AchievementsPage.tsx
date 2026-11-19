@@ -73,7 +73,7 @@ export function AchievementsPage() {
         if (list.length === 0) return null
         return (
           <section key={group} className="mb-6">
-            <h2 className="mb-2 text-sm font-medium text-muted">{GROUP_LABEL[group]}</h2>
+            <h2 className="mb-2 section-title">{GROUP_LABEL[group]}</h2>
             <AchievementList achievements={sortAchievements(list)} />
           </section>
         )
@@ -84,7 +84,7 @@ export function AchievementsPage() {
         if (list.length === 0) return null
         return (
           <section key={project.id} className="mb-6">
-            <Link to={`/projeler/${project.id}`} className="mb-2 flex items-center gap-2 text-sm font-medium text-muted">
+            <Link to={`/projeler/${project.id}`} className="section-title mb-2">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: project.color }} aria-hidden />
               {project.title} ›
             </Link>

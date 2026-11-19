@@ -20,7 +20,7 @@ export function MemoryCard({ today }: { today: string }) {
 
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-muted">{memory.label}</h2>
+      <h2 className="mb-2 section-title">{memory.label}</h2>
       <Link
         to={`/takvim?gun=${memory.date}`}
         className="flex gap-3 overflow-hidden rounded-2xl border border-border bg-surface p-3"

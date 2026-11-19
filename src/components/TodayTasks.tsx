@@ -69,11 +69,11 @@ export function TodayTasks({ today, projectColor, goals = [], waitingGoals = [],
   return (
     <section className="mb-6">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-muted">
+        <h2 className="section-title">
           Güncel görevler{total > 0 && ` · ${finished}/${total}`}
         </h2>
         <div className="flex items-center gap-1">
-          <Link to="/gorevler" className="rounded-full px-2 py-1 text-sm text-muted">
+          <Link to="/gorevler" className="section-chip tap-reach text-sm">
             Görevler ›
           </Link>
           <button

@@ -81,7 +81,7 @@ export function HabitsPage() {
             .filter((group) => group.list.length > 0)
             .map((group) => (
               <section key={group.title}>
-                <h2 className="mb-2 text-sm font-medium text-muted">
+                <h2 className="mb-2 section-title">
                   {group.title} · {group.list.length}
                 </h2>
                 <HabitList

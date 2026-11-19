@@ -37,7 +37,7 @@ export function JournalGallery({ days, onOpen }: Props) {
     <div className="flex flex-col gap-6">
       {months.map(({ month, photos }) => (
         <section key={month}>
-          <h2 className="mb-2 text-sm font-medium text-muted capitalize">
+          <h2 className="mb-2 section-title capitalize">
             {format(fromDateKey(`${month}-01`), 'LLLL yyyy', { locale: tr })}
           </h2>
           <div className="grid grid-cols-3 gap-1">

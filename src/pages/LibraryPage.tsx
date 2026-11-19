@@ -247,7 +247,7 @@ function Shelf({ title, items, onSelect }: ShelfProps) {
   if (items.length === 0) return null
   return (
     <section>
-      <h2 className="mb-2 text-sm font-medium text-muted">
+      <h2 className="mb-2 section-title">
         {title} · {items.length}
       </h2>
       <ul className="grid grid-cols-3 gap-3">

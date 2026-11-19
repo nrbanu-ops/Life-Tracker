@@ -126,7 +126,7 @@ export function StatsPage() {
 
       {selected && (
         <section className="mb-6">
-          <h2 className="mb-2 text-sm font-medium text-muted">Habit'lerin</h2>
+          <h2 className="mb-2 section-title">Habit'lerin</h2>
           <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1">
             {tracked.map((habit) => (
               <button
@@ -152,7 +152,7 @@ export function StatsPage() {
 
       {openProjects.length > 0 && (
         <section className="mb-6">
-          <h2 className="mb-2 text-sm font-medium text-muted">Projeler</h2>
+          <h2 className="mb-2 section-title">Projeler</h2>
           <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
             {openProjects.map((project) => {
               const progress = projectProgress(milestones.filter((m) => m.projectId === project.id))
@@ -316,7 +316,7 @@ function MoodSection({ habits, logs, moods, today }: MoodSectionProps) {
 
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-muted">Ruh hali ve enerji · son 30 gün</h2>
+      <h2 className="mb-2 section-title">Ruh hali ve enerji · son 30 gün</h2>
       {recent.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted">
           Bugün ekranında günün ruh halini ve enerjini işaretle; burada nasıl gittiği ve habit'lerinle bağlantısı görünecek.
@@ -365,7 +365,7 @@ function QuitStatsSection({ habits }: { habits: Habit[] }) {
   const now = useNow()
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-muted">Bıraktıkların</h2>
+      <h2 className="mb-2 section-title">Bıraktıkların</h2>
       <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
         {habits.map((habit) => {
           const stats = quitStats(habit, now)

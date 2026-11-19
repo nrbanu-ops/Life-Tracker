@@ -656,6 +656,35 @@
     min-height: 2.75rem;
     padding-inline: 0.25rem;
   }
+  /*
+   * Section headings sit straight on the drawn backdrop, where muted text sank into the waves.
+   * A see-through band of the card colour lifts them off it without making them bold.
+   */
+  .section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    width: fit-content;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-lg);
+    background: color-mix(in oklab, var(--color-surface) 70%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+    backdrop-filter: blur(6px);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+  }
+  /* What sits beside a heading (a count, "Tümü ›"): the same band, quieter. */
+  .section-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--radius-lg);
+    background: color-mix(in oklab, var(--color-surface) 55%, transparent);
+    backdrop-filter: blur(6px);
+    color: var(--color-muted);
+  }
   /* The same reach for a small button inside a tight row, without making the row any taller. */
   .tap-reach {
     position: relative;

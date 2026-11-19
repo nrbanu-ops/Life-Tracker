@@ -63,7 +63,7 @@ export function ProjectAchievements({ project, milestones, habits }: Props) {
   return (
     <section className="mb-6">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-muted">
+        <h2 className="section-title">
           Başarımlar · {earned}/{list.length}
         </h2>
         {canAsk && (

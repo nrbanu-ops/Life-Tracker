@@ -146,7 +146,7 @@ export function JournalPage() {
             const mood = moodByDate.get(day.date)
             return (
             <section key={day.date}>
-              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-muted">
+              <h2 className="section-title mb-2">
                 {day.date === today
                   ? 'Bugün'
                   : format(fromDateKey(day.date), 'd MMMM EEEE', { locale: tr })}

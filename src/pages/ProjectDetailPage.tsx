@@ -131,7 +131,7 @@ export function ProjectDetailPage() {
 
       <section className="mb-6">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-muted">
+          <h2 className="section-title">
             Adımlar{progress.total > 0 && ` · ${progress.done}/${progress.total}`}
           </h2>
           <div className="flex gap-2">
@@ -159,7 +159,7 @@ export function ProjectDetailPage() {
 
       <section className="mb-6">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-muted">Bağlı habit'ler · son {RATE_DAYS} gün</h2>
+          <h2 className="section-title">Bağlı habit'ler · son {RATE_DAYS} gün</h2>
           <button
             type="button"
             onClick={() => setLinking(true)}
@@ -196,7 +196,7 @@ export function ProjectDetailPage() {
 
       <section className="mb-6">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-muted">
+          <h2 className="section-title">
             Görevler{doneTaskCount > 0 && ` · ${doneTaskCount} tamamlandı`}
           </h2>
           <button

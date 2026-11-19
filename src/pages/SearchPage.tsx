@@ -67,7 +67,7 @@ export function SearchPage() {
           <div className="mt-2 flex flex-col gap-5">
             {groups.map((group) => (
               <section key={group.label}>
-                <h2 className="mb-2 text-sm font-medium text-muted">{group.label}</h2>
+                <h2 className="mb-2 section-title">{group.label}</h2>
                 <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
                   {group.hits.map((hit) => (
                     <li key={hit.id}>

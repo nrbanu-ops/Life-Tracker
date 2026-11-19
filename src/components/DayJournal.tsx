@@ -28,8 +28,8 @@ export function DayJournal({ date, canWrite }: Props) {
   return (
     <section>
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-muted">Günlük</h2>
-        <Link to="/gunluk" className="rounded-full px-2 py-1 text-sm text-muted">
+        <h2 className="section-title">Günlük</h2>
+        <Link to="/gunluk" className="section-chip tap-reach text-sm">
           Tümü ›
         </Link>
       </div>

@@ -43,7 +43,7 @@ export function DayDetail({ date, today, habits, logs, tasks, projects }: Props)
       </h2>
 
       <div>
-        <h3 className="mb-2 text-sm font-medium text-muted">
+        <h3 className="mb-2 section-title">
           Habit'ler{!isFuture && total > 0 && ` · ${done}/${total}`}
         </h3>
         {isFuture ? (
@@ -67,7 +67,7 @@ export function DayDetail({ date, today, habits, logs, tasks, projects }: Props)
 
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-sm font-medium text-muted">Görevler</h3>
+          <h3 className="section-title">Görevler</h3>
           <button
             type="button"
             onClick={() => setEditing({ mode: 'new', date })}

@@ -18,7 +18,7 @@ export function TodayMilestones() {
 
   return (
     <section className="mt-8">
-      <h2 className="mb-2 text-sm font-medium text-muted">Projelerinde sıradaki adım</h2>
+      <h2 className="mb-2 section-title">Projelerinde sıradaki adım</h2>
       <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
         {rows.map(({ project, next }) => (
           <li key={project.id} className="flex items-center">

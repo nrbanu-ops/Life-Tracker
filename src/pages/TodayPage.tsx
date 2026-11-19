@@ -230,7 +230,7 @@ export function TodayPage() {
 
       {quitHabits.length > 0 && (
         <section className={items.length > 0 ? 'mt-2' : ''}>
-          <h2 className="mb-3 text-sm font-medium text-muted">Bıraktıkların</h2>
+          <h2 className="mb-3 section-title">Bıraktıkların</h2>
           <ul className="flex flex-col gap-3">
             {quitHabits.map((habit) => (
               <QuitCard
@@ -280,9 +280,9 @@ function HabitGroup({ title, detail, items, hideDone, projectColor, onTap, onMor
 
   return (
     <section className="mb-6">
-      <div className="mb-2 flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-medium text-muted">{title}</h2>
-        {detail && <span className="text-xs text-muted">{detail}</span>}
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h2 className="section-title">{title}</h2>
+        {detail && <span className="section-chip text-xs">{detail}</span>}
       </div>
       {shown.length > 0 && (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">

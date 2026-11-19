@@ -5,6 +5,12 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-19
 
+### Başlıklar okunur oldu 🏷️
+- "Günlük hedefler", "Güncel görevler" gibi bölüm başlıkları artık arka planın üstünde kaybolmuyor:
+  arkalarında yarı saydam bir zemin var ve yazıları soluk gri değil, normal renkte.
+- Yanlarındaki "Bu hafta 0/1 tamam", "Görevler ›", "Tümü ›" da aynı zemini aldı.
+- Bütün sayfalardaki bölüm başlıkları (Habit'ler, İstatistik, Günlük, Projeler, Başarımlar…) aynı görünümde.
+
 ### Bugün'de güncel görevler 📋
 - Bugün'deki görev bölümünün adı artık **Güncel görevler** ve habit'lerin hemen altında duruyor.
 - Eskiden yalnızca tarihi bugün olan ya da gecikmiş görevler görünüyordu. Şimdi sırasıyla:
