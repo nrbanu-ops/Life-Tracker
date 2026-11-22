@@ -1,4 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { androidBridge } from '../lib/android'
+import { todayKey } from '../lib/date'
 import { entryPhotos, JOURNAL_PHOTO_MAX } from '../lib/journal'
 import { weightPhotos, type WeightPhoto } from '../lib/weight'
 import { db } from './db'
@@ -9,6 +11,8 @@ import type { WeightEntry } from './types'
 export async function setWeight(date: string, kg: number | undefined): Promise<void> {
   if (kg === undefined) await db.weights.delete(date)
   else await db.weights.put({ date, kg })
+  // The shell's weigh-in reminder stays quiet on a day it has been told about.
+  if (date === todayKey()) androidBridge?.markWeighed?.(kg === undefined ? '' : date)
 }
 
 /** Sets the target weight; undefined clears it. */

@@ -32,22 +32,22 @@ export function parseTime(value: string): { hour: number; minute: number } | und
   return { hour, minute }
 }
 
-export function loadReminder(): Reminder {
+export function loadReminder(key = KEY, fallback = DEFAULT_REMINDER): Reminder {
   try {
-    const stored = localStorage.getItem(KEY)
-    if (!stored) return DEFAULT_REMINDER
+    const stored = localStorage.getItem(key)
+    if (!stored) return fallback
     const parsed = JSON.parse(stored) as Partial<Reminder>
     const time = parseTime(`${parsed.hour}:${pad(Number(parsed.minute))}`)
-    if (!time) return DEFAULT_REMINDER
+    if (!time) return fallback
     return { on: Boolean(parsed.on), ...time }
   } catch {
-    return DEFAULT_REMINDER
+    return fallback
   }
 }
 
-function remember(reminder: Reminder): void {
+function remember(reminder: Reminder, key = KEY): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(reminder))
+    localStorage.setItem(key, JSON.stringify(reminder))
   } catch {
     // A full or blocked storage shouldn't stop the alarm itself from being set.
   }
@@ -64,4 +64,23 @@ export function applyReminder(reminder: Reminder): boolean {
   return reminder.on
     ? bridge.setReminder(reminder.hour, reminder.minute, REMINDER_TEXT)
     : bridge.clearReminder()
+}
+
+/** The morning weigh-in nudge: its own time, silent on a day that already has a weigh-in. */
+export const DEFAULT_WEIGH_REMINDER: Reminder = { on: false, hour: 8, minute: 0 }
+export const WEIGH_REMINDER_TEXT = 'Bugün tartılmayı unutma ⚖️'
+const WEIGH_KEY = 'life-tracker:weigh-reminder'
+
+/** Shells built before the weigh-in reminder don't know the call. */
+export const supportsWeighReminder = typeof androidBridge?.setWeighReminder === 'function'
+
+export const loadWeighReminder = (): Reminder => loadReminder(WEIGH_KEY, DEFAULT_WEIGH_REMINDER)
+
+export function applyWeighReminder(reminder: Reminder): boolean {
+  remember(reminder, WEIGH_KEY)
+  const bridge = androidBridge
+  if (!bridge?.setWeighReminder || !bridge.clearWeighReminder) return false
+  return reminder.on
+    ? bridge.setWeighReminder(reminder.hour, reminder.minute, WEIGH_REMINDER_TEXT)
+    : bridge.clearWeighReminder()
 }

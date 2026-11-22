@@ -8,10 +8,15 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 /**
- * One daily reminder, set from the web app (Settings → Hatırlatıcılar).
+ * Daily reminders, set from the web app (Ayarlar → Hatırlatıcılar). Two slots: the daily one
+ * ("" — its keys predate slots, so they stay unprefixed) and the weigh-in one (WEIGH), which
+ * stays quiet on a day the web app has already reported a weigh-in for (markWeighed).
  *
  * The alarm is inexact on purpose: Android may move it by a few minutes, which costs nothing for
  * a nudge and avoids the exact-alarm permission. The time is kept here as well so the reminder
@@ -20,13 +25,17 @@ import java.util.Calendar;
 final class Reminders {
     static final String CHANNEL = "daily";
     static final String EXTRA_TEXT = "text";
+    static final String EXTRA_SLOT = "slot";
+    static final String WEIGH = "weigh_";
 
     private static final String PREFS = "reminders";
     private static final String KEY_ON = "on";
     private static final String KEY_HOUR = "hour";
     private static final String KEY_MINUTE = "minute";
     private static final String KEY_TEXT = "text";
+    private static final String KEY_WEIGHED = "weighed";
     private static final int REQUEST = 101;
+    private static final int REQUEST_WEIGH = 102;
 
     private Reminders() {}
 
@@ -39,36 +48,56 @@ final class Reminders {
     }
 
     static boolean schedule(Context context, int hour, int minute, String text) {
+        return schedule(context, "", hour, minute, text);
+    }
+
+    static boolean schedule(Context context, String slot, int hour, int minute, String text) {
         if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return false;
-        String message = text == null || text.trim().isEmpty() ? "Bugünü işaretlemeyi unutma" : text.trim();
+        String message = text == null || text.trim().isEmpty() ? defaultText(slot) : text.trim();
         prefs(context)
                 .edit()
-                .putBoolean(KEY_ON, true)
-                .putInt(KEY_HOUR, hour)
-                .putInt(KEY_MINUTE, minute)
-                .putString(KEY_TEXT, message)
+                .putBoolean(slot + KEY_ON, true)
+                .putInt(slot + KEY_HOUR, hour)
+                .putInt(slot + KEY_MINUTE, minute)
+                .putString(slot + KEY_TEXT, message)
                 .apply();
-        return arm(context, hour, minute, message);
+        return arm(context, slot, hour, minute, message);
     }
 
     static boolean cancel(Context context) {
-        prefs(context).edit().putBoolean(KEY_ON, false).apply();
+        return cancel(context, "");
+    }
+
+    static boolean cancel(Context context, String slot) {
+        prefs(context).edit().putBoolean(slot + KEY_ON, false).apply();
         try {
-            context.getSystemService(AlarmManager.class).cancel(intent(context, null));
+            context.getSystemService(AlarmManager.class).cancel(intent(context, slot, null));
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    /** After a reboot the alarm is gone; this puts the saved one back. */
-    static void rearm(Context context) {
-        SharedPreferences prefs = prefs(context);
-        if (!prefs.getBoolean(KEY_ON, false)) return;
-        arm(context, prefs.getInt(KEY_HOUR, 21), prefs.getInt(KEY_MINUTE, 0), prefs.getString(KEY_TEXT, ""));
+    /** The day (yyyy-MM-dd) the web app last saw a weigh-in for today; "" clears it. */
+    static void markWeighed(Context context, String day) {
+        prefs(context).edit().putString(KEY_WEIGHED, day == null ? "" : day).apply();
     }
 
-    private static boolean arm(Context context, int hour, int minute, String text) {
+    /** After a reboot the alarms are gone; this puts the saved ones back. */
+    static void rearm(Context context) {
+        rearm(context, "");
+        rearm(context, WEIGH);
+    }
+
+    private static void rearm(Context context, String slot) {
+        SharedPreferences prefs = prefs(context);
+        if (!prefs.getBoolean(slot + KEY_ON, false)) return;
+        int hour = prefs.getInt(slot + KEY_HOUR, WEIGH.equals(slot) ? 8 : 21);
+        int minute = prefs.getInt(slot + KEY_MINUTE, 0);
+        arm(context, slot, hour, minute, prefs.getString(slot + KEY_TEXT, ""));
+    }
+
+    private static boolean arm(Context context, String slot, int hour, int minute, String text) {
         Calendar when = Calendar.getInstance();
         when.set(Calendar.HOUR_OF_DAY, hour);
         when.set(Calendar.MINUTE, minute);
@@ -82,22 +111,37 @@ final class Reminders {
                             AlarmManager.RTC_WAKEUP,
                             when.getTimeInMillis(),
                             AlarmManager.INTERVAL_DAY,
-                            intent(context, text));
+                            intent(context, slot, text));
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    private static PendingIntent intent(Context context, String text) {
-        Intent broadcast = new Intent(context, ReminderReceiver.class);
-        if (text != null) broadcast.putExtra(EXTRA_TEXT, text);
-        return PendingIntent.getBroadcast(
-                context, REQUEST, broadcast, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    private static int request(String slot) {
+        return WEIGH.equals(slot) ? REQUEST_WEIGH : REQUEST;
     }
 
-    /** Posts the reminder; tapping it opens the app. */
-    static void show(Context context, String text) {
+    private static String defaultText(String slot) {
+        return WEIGH.equals(slot) ? "Bugün tartılmayı unutma" : "Bugünü işaretlemeyi unutma";
+    }
+
+    private static PendingIntent intent(Context context, String slot, String text) {
+        Intent broadcast = new Intent(context, ReminderReceiver.class);
+        // Matching ignores extras, so the request code is what keeps the two alarms apart.
+        broadcast.putExtra(EXTRA_SLOT, slot);
+        if (text != null) broadcast.putExtra(EXTRA_TEXT, text);
+        return PendingIntent.getBroadcast(
+                context, request(slot), broadcast, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    /** Posts the reminder; tapping it opens the app. The weigh-in one keeps quiet once weighed today. */
+    static void show(Context context, String slot, String text) {
+        String which = slot == null ? "" : slot;
+        if (WEIGH.equals(which)) {
+            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+            if (today.equals(prefs(context).getString(KEY_WEIGHED, ""))) return;
+        }
         createChannel(context);
         PendingIntent open =
                 PendingIntent.getActivity(
@@ -110,11 +154,11 @@ final class Reminders {
                 new Notification.Builder(context, CHANNEL)
                         .setSmallIcon(R.drawable.ic_notification)
                         .setContentTitle("Life Tracker")
-                        .setContentText(text == null || text.isEmpty() ? "Bugünü işaretlemeyi unutma" : text)
+                        .setContentText(text == null || text.isEmpty() ? defaultText(which) : text)
                         .setContentIntent(open)
                         .setAutoCancel(true)
                         .build();
-        context.getSystemService(NotificationManager.class).notify(REQUEST, notification);
+        context.getSystemService(NotificationManager.class).notify(request(which), notification);
     }
 
     private static SharedPreferences prefs(Context context) {

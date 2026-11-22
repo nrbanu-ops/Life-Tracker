@@ -1,21 +1,35 @@
 import { useState } from 'react'
 import { applyReminder, loadReminder, parseTime, reminderTime, type Reminder } from '../lib/reminders'
 
-/** Settings: one daily nudge, scheduled by the Android shell. */
-export function ReminderSection() {
-  const [reminder, setReminder] = useState<Reminder>(loadReminder)
+type Props = {
+  id?: string
+  title?: string
+  description?: string
+  load?: () => Reminder
+  apply?: (reminder: Reminder) => boolean
+}
+
+/** Settings: one daily nudge, scheduled by the Android shell. The weigh-in one reuses it with its own wording. */
+export function ReminderSection({
+  id = 'hatirlatici',
+  title = 'Günlük hatırlatma',
+  description = 'Her gün seçtiğin saatte telefonuna bildirim gelir: günü işaretlemeyi unutma.',
+  load = () => loadReminder(),
+  apply = applyReminder,
+}: Props) {
+  const [reminder, setReminder] = useState<Reminder>(load)
   const [failed, setFailed] = useState(false)
 
   const change = (next: Reminder) => {
     setReminder(next)
     // Turning it off can't really fail in a way worth shouting about.
-    setFailed(next.on && !applyReminder(next))
+    setFailed(next.on && !apply(next))
   }
 
   return (
-    <section id="hatirlatici" className="rounded-2xl border border-border bg-surface p-4">
+    <section id={id} className="rounded-2xl border border-border bg-surface p-4">
       <label className="flex cursor-pointer items-center justify-between gap-3">
-        <span className="font-medium">Günlük hatırlatma</span>
+        <span className="font-medium">{title}</span>
         <input
           type="checkbox"
           role="switch"
@@ -28,17 +42,15 @@ export function ReminderSection() {
           className="relative h-7 w-12 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent after:absolute after:top-1 after:left-1 after:h-5 after:w-5 after:rounded-full after:bg-surface after:shadow after:transition-transform peer-checked:after:translate-x-5"
         />
       </label>
-      <p className="mt-1 text-sm text-muted">
-        Her gün seçtiğin saatte telefonuna bildirim gelir: günü işaretlemeyi unutma.
-      </p>
+      <p className="mt-1 text-sm text-muted">{description}</p>
 
       {reminder.on && (
         <div className="mt-3 flex items-center gap-3">
-          <label htmlFor="reminder-time" className="text-sm text-muted">
+          <label htmlFor={`${id}-time`} className="text-sm text-muted">
             Saat
           </label>
           <input
-            id="reminder-time"
+            id={`${id}-time`}
             type="time"
             value={reminderTime(reminder)}
             onChange={(e) => {

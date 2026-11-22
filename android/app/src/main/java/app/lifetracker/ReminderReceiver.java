@@ -13,7 +13,8 @@ public final class ReminderReceiver extends BroadcastReceiver {
                 Reminders.rearm(context);
                 return;
             }
-            Reminders.show(context, intent.getStringExtra(Reminders.EXTRA_TEXT));
+            // Alarms set before slots existed carry no slot: they are the daily one.
+            Reminders.show(context, intent.getStringExtra(Reminders.EXTRA_SLOT), intent.getStringExtra(Reminders.EXTRA_TEXT));
         } catch (Exception e) {
             // A reminder is never worth crashing the app for.
         }

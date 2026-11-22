@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_REMINDER, loadReminder, parseTime, reminderTime } from './reminders'
+import { DEFAULT_REMINDER, loadReminder, parseTime, reminderTime, DEFAULT_WEIGH_REMINDER, applyWeighReminder, loadWeighReminder } from './reminders'
 
 function fakeStorage() {
   const map = new Map<string, string>()
@@ -54,5 +54,13 @@ describe('loadReminder', () => {
     expect(loadReminder()).toEqual(DEFAULT_REMINDER)
     store.set('life-tracker:reminder', JSON.stringify({ on: true, hour: 99, minute: 0 }))
     expect(loadReminder()).toEqual(DEFAULT_REMINDER)
+  })
+})
+
+describe('weigh-in reminder', () => {
+  it('has its own default time and storage, and cannot be set without the shell', () => {
+    expect(loadWeighReminder()).toEqual(DEFAULT_WEIGH_REMINDER)
+    expect(applyWeighReminder({ on: true, hour: 7, minute: 30 })).toBe(false)
+    expect(loadWeighReminder()).toEqual({ on: true, hour: 7, minute: 30 })
   })
 })

@@ -17,6 +17,11 @@ type AndroidBridge = {
   /** Schedules one reminder a day at hour:minute, replacing any earlier one. */
   setReminder?(hour: number, minute: number, text: string): boolean
   clearReminder?(): boolean
+  /** The weigh-in reminder: like the daily one, but the shell skips it on a day marked weighed. */
+  setWeighReminder?(hour: number, minute: number, text: string): boolean
+  clearWeighReminder?(): boolean
+  /** Tells the shell today is weighed (day key), or not any more (''). */
+  markWeighed?(day: string): void
   /** Only in shells that read the gallery's multiple selection themselves; see canPickSeveral. */
   multiPhoto?(): boolean
 }

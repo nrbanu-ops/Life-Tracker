@@ -5,6 +5,11 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Tartı hatırlatması ⏰ (Android)
+- Ayarlar → Hatırlatma ve seviye'de yeni **Tartı hatırlatması**: seçtiğin saatte (varsayılan 08:00)
+  "Bugün tartılmayı unutma ⚖️" bildirimi. O gün kilonu girdiysen bildirim gelmez.
+- Kilo sayfasından da ayara gidilebilir. Yeni Android sürümünü (APK) kurman gerekiyor.
+
 ### Kilo: tahmini varış, başarımlar 🎯
 - Özet'te **tahmini varış tarihi**: son 4 haftanın hızıyla "Bu hızla hedefe 11 Şubat civarı
   (haftada 0,6 kg)". Düşüş yoksa ya da çok yavaşsa bunu söyler.

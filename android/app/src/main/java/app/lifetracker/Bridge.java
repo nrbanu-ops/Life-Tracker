@@ -71,6 +71,24 @@ final class Bridge {
         return Reminders.cancel(context);
     }
 
+    /** The weigh-in reminder: like the daily one, but silent on a day already weighed. */
+    @JavascriptInterface
+    public boolean setWeighReminder(int hour, int minute, String text) {
+        main.post(askNotifications);
+        return Reminders.schedule(context, Reminders.WEIGH, hour, minute, text);
+    }
+
+    @JavascriptInterface
+    public boolean clearWeighReminder() {
+        return Reminders.cancel(context, Reminders.WEIGH);
+    }
+
+    /** Today's key once weighed ("" when today's weigh-in was removed). */
+    @JavascriptInterface
+    public void markWeighed(String day) {
+        Reminders.markWeighed(context, day);
+    }
+
     /** A one-off download (manual backup); always a new file. */
     @JavascriptInterface
     public boolean saveFile(String name, String mimeType, String base64) {

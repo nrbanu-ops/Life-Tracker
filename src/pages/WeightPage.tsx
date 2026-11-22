@@ -1,7 +1,7 @@
 import { addDays, format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { PageHeader } from '../components/PageHeader'
 import { Segmented } from '../components/Segmented'
 import { weightInputClass } from '../components/WeightCard'
@@ -10,6 +10,7 @@ import { WeightPhotos } from '../components/WeightPhotos'
 import type { WeightEntry } from '../db/types'
 import { setWeight, setWeightTarget, useWeightPhotos, useWeights } from '../db/weight'
 import { fromDateKey, toDateKey } from '../lib/date'
+import { supportsWeighReminder } from '../lib/reminders'
 import { useTodayKey } from '../lib/useTodayKey'
 import { ETA_WEEKS, formatKg, parseKg, trend, trendChange, weightEta, weightMonths, weightProgress, type WeightEta } from '../lib/weight'
 
@@ -120,6 +121,11 @@ function Overview({ entries, targetKg, onChart }: DataProps & { onChart: () => v
           <p className="text-sm text-muted">İlk kilonu yukarıdan gir; ilerleme ve grafik burada görünür.</p>
         )}
         <TargetEditor targetKg={targetKg} />
+        {supportsWeighReminder && (
+          <Link to="/ayarlar#tarti-hatirlatici" className="tap-text block text-sm text-muted">
+            ⏰ Tartı hatırlatması
+          </Link>
+        )}
       </section>
 
       {progress && (

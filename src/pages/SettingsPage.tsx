@@ -17,7 +17,7 @@ import { copyText } from '../lib/clipboard'
 import { askGemini } from '../lib/gemini'
 import { getTmdbKey, setTmdbKey } from '../lib/library'
 import { setLevelingOn, useLevelingOn } from '../lib/levelingSetting'
-import { supportsReminders } from '../lib/reminders'
+import { applyWeighReminder, loadWeighReminder, supportsReminders, supportsWeighReminder } from '../lib/reminders'
 import { checkForUpdate, type UpdateResult } from '../lib/update'
 import { useTodayKey } from '../lib/useTodayKey'
 
@@ -71,11 +71,20 @@ export function SettingsPage() {
         <SettingsGroup
           id="oyun"
           title="Hatırlatma ve seviye"
-          detail={supportsReminders ? 'Günlük hatırlatma, seviye sistemi, ceza' : 'Seviye sistemi, ceza'}
+          detail={supportsReminders ? 'Günlük ve tartı hatırlatması, seviye sistemi, ceza' : 'Seviye sistemi, ceza'}
           open={open}
           onToggle={setOpen}
         >
           {supportsReminders && <ReminderSection />}
+          {supportsWeighReminder && (
+            <ReminderSection
+              id="tarti-hatirlatici"
+              title="Tartı hatırlatması"
+              description="Seçtiğin saatte tartılmayı hatırlatır; o gün kilonu girdiysen bildirim gelmez."
+              load={loadWeighReminder}
+              apply={applyWeighReminder}
+            />
+          )}
           <section id="seviye" className="rounded-2xl border border-border bg-surface p-4">
             <Switch label="Seviye sistemi" checked={levelingOn} onChange={setLevelingOn} />
             <p className="mt-1 text-sm text-muted">
@@ -170,6 +179,7 @@ const GROUP_OF: Record<string, string> = {
   depolama: 'veri',
   sifirla: 'veri',
   hatirlatici: 'oyun',
+  'tarti-hatirlatici': 'oyun',
   seviye: 'oyun',
   'yapay-zeka': 'baglanti',
   claude: 'baglanti',
