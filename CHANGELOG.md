@@ -5,6 +5,10 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Mercan Resifi'ne yeni arka plan 🎨
+- Çizim yerine yumuşak, pastel bir resim: su yüzeyi, ışık hüzmeleri, pastel mercanlar ve kum.
+  Su bir ton daha koyu mavi. Arka plan artık sabit duruyor.
+
 ### Yeni tema: Mercan Resifi 🐠
 - Ayarlar → Renk teması'nda **Mercan Resifi**: her zaman açık, okyanus temalı. Arka planda su
   yüzeyi, ışık hüzmeleri, dipte mercanlar ve yosunlar; önde yavaşça kayan balıklar ve kabarcıklar.

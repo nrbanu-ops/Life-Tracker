@@ -530,8 +530,9 @@
   --color-backdrop-tint: #ff9fc9;
 }
 /*
- * Mercan Resifi: under a calm sea — sky and surface at the top, light shafts, corals and
- * seaweed on the sand, a few fish and bubbles drifting in front. Always bright, drawn artwork.
+ * Mercan Resifi: under a calm sea — a soft painted picture (the user's own, made with an image
+ * model) of the surface, light shafts, pastel corals and sand, its water deepened a shade.
+ * Always bright.
  */
 :root[data-palette='resif'] {
   color-scheme: light;
@@ -878,8 +879,7 @@ body,
 :root[data-palette='mantar'] .app-backdrop::after,
 :root[data-palette='neon'] .app-backdrop::before,
 :root[data-palette='neon'] .app-backdrop::after,
-:root[data-palette='resif'] .app-backdrop::before,
-:root[data-palette='resif'] .app-backdrop::after {
+:root[data-palette='resif'] .app-backdrop::before {
   content: '';
   position: absolute;
   /* Larger than the screen, so the drift never shows an edge. */
@@ -912,12 +912,11 @@ body,
   animation: backdrop-clouds 90s ease-in-out infinite alternate;
 }
 :root[data-palette='resif'] .app-backdrop::before {
-  background-image: url("./assets/bg-resif-back.svg");
-}
-:root[data-palette='resif'] .app-backdrop::after {
-  background-image: url("./assets/bg-resif-front.svg");
-  /* The fish, bubbles and clouds drift; the sea and the reef stay put. */
-  animation: backdrop-clouds 90s ease-in-out infinite alternate;
+  /* One painted picture (fish and bubbles included), so nothing drifts: it is pinned to the
+     screen, bottom first, so the reef stays in view and the sky is what gets cropped. */
+  background-image: url("./assets/bg-resif.webp");
+  background-position: center bottom;
+  inset: 0;
 }
 @keyframes backdrop-clouds {
   from { transform: translate3d(-5%, 0, 0); }
