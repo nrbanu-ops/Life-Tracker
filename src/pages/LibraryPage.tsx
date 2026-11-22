@@ -1,8 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { EmptyState } from '../components/EmptyState'
-import { BackIcon } from '../components/icons'
 import { LibraryAddSheet } from '../components/LibraryAddSheet'
 import { LibraryCalendar } from '../components/LibraryCalendar'
 import { LibraryGoals } from '../components/LibraryGoals'
@@ -32,7 +31,6 @@ import { useTodayKey } from '../lib/useTodayKey'
 const FILTERS: (LibraryKind | 'all')[] = ['all', ...LIBRARY_KINDS]
 
 export function LibraryPage() {
-  const navigate = useNavigate()
   const today = useTodayKey()
   const items = useLiveQuery(() => db.library.toArray())
   const year = Number(today.slice(0, 4))
@@ -67,16 +65,6 @@ export function LibraryPage() {
       <PageHeader
         title="Kütüphane"
         subtitle={items && yearSummary(items, today)}
-        action={
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="Geri"
-            className="-mr-2.5 -mt-1.5 rounded-full p-2.5 text-muted transition-colors hover:text-text"
-          >
-            <BackIcon width={22} height={22} />
-          </button>
-        }
       />
 
       <div className="mb-4">

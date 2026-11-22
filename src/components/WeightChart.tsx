@@ -4,11 +4,11 @@ import { formatKg } from '../lib/weight'
 export type WeightPoint = { label: string; detail: string; kg: number; trend: number }
 
 /** Each weigh-in as a dot, the 7-day average as the line, the target as a dashed rule. */
-export function WeightChart({ data, targetKg }: { data: WeightPoint[]; targetKg?: number }) {
+export function WeightChart({ data, targetKg, height = 200 }: { data: WeightPoint[]; targetKg?: number; height?: number }) {
   const values = [...data.map((p) => p.kg), ...(targetKg !== undefined ? [targetKg] : [])]
   const domain = [Math.floor(Math.min(...values) - 1), Math.ceil(Math.max(...values) + 1)]
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
         <CartesianGrid vertical={false} stroke="var(--color-border)" />
         <XAxis

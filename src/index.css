@@ -721,6 +721,17 @@
     backdrop-filter: blur(6px);
     color: var(--color-muted);
   }
+  /* A section's page tabs under the title: on the same band, so they don't drown in the backdrop. */
+  .section-tabs {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0 0.25rem;
+    border-radius: var(--radius-lg);
+    background: color-mix(in oklab, var(--color-surface) 55%, transparent);
+    backdrop-filter: blur(6px);
+  }
   /* The same reach for a small button inside a tight row, without making the row any taller. */
   .tap-reach {
     position: relative;

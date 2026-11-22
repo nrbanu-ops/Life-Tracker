@@ -2,10 +2,8 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
 import { EmptyState } from '../components/EmptyState'
 import { EntrySheet } from '../components/EntrySheet'
-import { BackIcon } from '../components/icons'
 import { JournalComposer } from '../components/JournalComposer'
 import { JournalEntryList } from '../components/JournalEntryList'
 import { JournalGallery } from '../components/JournalGallery'
@@ -30,7 +28,6 @@ import { useTodayKey } from '../lib/useTodayKey'
 const PAGE = 10
 
 export function JournalPage() {
-  const navigate = useNavigate()
   const today = useTodayKey()
   const entries = useLiveQuery(() => db.journal.toArray())
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray(), [], [])
@@ -61,19 +58,7 @@ export function JournalPage() {
 
   return (
     <>
-      <PageHeader
-        title="Günlük"
-        action={
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="Geri"
-            className="-mr-2.5 -mt-1.5 rounded-full p-2.5 text-muted transition-colors hover:text-text"
-          >
-            <BackIcon width={22} height={22} />
-          </button>
-        }
-      />
+      <PageHeader title="Günlük" />
 
       <JournalComposer date={today} />
 

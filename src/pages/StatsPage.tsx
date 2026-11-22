@@ -6,6 +6,7 @@ import { Link } from 'react-router'
 import { EmptyState } from '../components/EmptyState'
 import { Heatmap } from '../components/Heatmap'
 import { MonthReviewCard } from '../components/MonthReviewCard'
+import { LevelCard } from '../components/LevelCard'
 import { PageHeader } from '../components/PageHeader'
 import { ProgressBar } from '../components/ProgressBar'
 import { RateChart, type RatePoint } from '../components/RateChart'
@@ -64,6 +65,7 @@ export function StatsPage() {
     return (
       <>
         <PageHeader title="İstatistik" />
+        <LevelCard />
         <EmptyState
           title="Gösterilecek veri yok"
           text="Habit'lerini işaretledikçe seriler, ısı haritası ve grafikler burada görünecek."
@@ -87,6 +89,7 @@ export function StatsPage() {
   return (
     <>
       <PageHeader title="İstatistik" />
+      <LevelCard />
 
       <Link
         to="/ozet"

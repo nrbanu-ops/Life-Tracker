@@ -63,3 +63,32 @@ export function changeOn(entries: WeightEntry[], date: string): number | undefin
   if (!last || last.date !== date || !before) return undefined
   return last.kg - before.kg
 }
+
+/**
+ * How much the 7-day average moved over the last `days` days, against the latest weigh-in at least
+ * that old; undefined when there isn't one.
+ */
+export function trendChange(entries: WeightEntry[], days: number): number | undefined {
+  const t = trend(entries)
+  const last = t.at(-1)
+  if (!last) return undefined
+  const cutoff = toDateKey(addDays(fromDateKey(last.date), -days))
+  const before = t.filter((p) => p.date <= cutoff).at(-1)
+  return before ? last.kg - before.kg : undefined
+}
+
+export type WeightMonth = { month: string; average: number; entries: WeightEntry[] }
+
+/** Weigh-ins by calendar month, newest month and newest day first, with the month's average. */
+export function weightMonths(entries: WeightEntry[]): WeightMonth[] {
+  const groups = new Map<string, WeightEntry[]>()
+  for (const e of byDate(entries).reverse()) {
+    const month = e.date.slice(0, 7)
+    groups.set(month, [...(groups.get(month) ?? []), e])
+  }
+  return [...groups].map(([month, list]) => ({
+    month,
+    average: list.reduce((sum, e) => sum + e.kg, 0) / list.length,
+    entries: list,
+  }))
+}

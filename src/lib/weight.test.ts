@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { changeOn, formatKg, parseKg, trend, weightProgress } from './weight'
+import { changeOn, formatKg, parseKg, trend, trendChange, weightMonths, weightProgress } from './weight'
 
 describe('parseKg', () => {
   it('reads a comma or a dot and rounds to 0.1', () => {
@@ -67,5 +67,34 @@ describe('changeOn', () => {
   it('is undefined without a weigh-in that day or one before it', () => {
     expect(changeOn(entries, '2026-11-05')).toBeUndefined()
     expect(changeOn(entries, '2026-11-01')).toBeUndefined()
+  })
+})
+
+describe('trendChange', () => {
+  const entries = [
+    { date: '2026-11-01', kg: 80 },
+    { date: '2026-11-08', kg: 79 },
+    { date: '2026-11-15', kg: 78 },
+  ]
+  it('compares the average now with the one a week before', () => {
+    expect(trendChange(entries, 7)).toBe(-1)
+  })
+  it('is undefined when nothing is that old', () => {
+    expect(trendChange(entries, 30)).toBeUndefined()
+    expect(trendChange([], 7)).toBeUndefined()
+  })
+})
+
+describe('weightMonths', () => {
+  it('groups by month, newest first, with the average', () => {
+    const months = weightMonths([
+      { date: '2026-10-30', kg: 81 },
+      { date: '2026-11-02', kg: 80 },
+      { date: '2026-11-09', kg: 79 },
+    ])
+    expect(months.map((m) => [m.month, m.average, m.entries.map((e) => e.date)])).toEqual([
+      ['2026-11', 79.5, ['2026-11-09', '2026-11-02']],
+      ['2026-10', 81, ['2026-10-30']],
+    ])
   })
 })

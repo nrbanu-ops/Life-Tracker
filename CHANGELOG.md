@@ -5,8 +5,18 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Yeni gezinme: bölümler ve sekmeler 🧭
+- Alt çubuk artık beş bölüm: **Bugün · Hedefler · Günlük · Kütüphane · İlerleme**. Bugün ana sayfa
+  olarak aynen kaldı.
+- **Hedefler**: Habit'ler / Projeler / Görevler. **Günlük**: Yazılar / Takvim. **İlerleme**:
+  İstatistik / Kilo / Başarımlar; seviye kartı İstatistik'in başında.
+- Bölümün sayfaları başlığın altında sekme olarak duruyor; Günlük ve Kütüphane artık tek dokunuşta.
+- "Daha fazla" menüsü kalktı: başlıkta Ara, Zamanlayıcı ve Ayarlar var.
+- Kilo sayfası kendi içinde **Özet / Grafik / Geçmiş**: Özet sayfanın ana sayfası (giriş, hedef,
+  son 1 hafta ve 1 ay değişimi, son 30 gün); Grafik'te aralık seçimi; Geçmiş aylara göre.
+
 ### Kilo takibi ⚖️
-- Yeni **Kilo** sayfası ("Daha fazla" menüsünde): her gün için bir kilo, aynı gün tekrar girilirse
+- Yeni **Kilo** sayfası (İlerleme bölümünde): her gün için bir kilo, aynı gün tekrar girilirse
   yenisi yazılır; istersen geçmiş bir günü de girebilirsin.
 - **Hedef kilo**: başlangıçtan bu yana kaç kilo verdiğin, hedefe ne kadar kaldığı ve ilerleme çubuğu.
 - **Grafik**: noktalar tartıların, çizgi 7 günlük ortalama (günlük 1–2 kg oynama gidişatı saklamasın

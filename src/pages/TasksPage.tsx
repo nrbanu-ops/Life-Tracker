@@ -1,8 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
 import { EmptyState } from '../components/EmptyState'
-import { BackIcon } from '../components/icons'
 import { PageHeader } from '../components/PageHeader'
 import { TaskRow } from '../components/TaskRow'
 import { TaskSheet, type TaskEditing } from '../components/TaskSheet'
@@ -14,7 +12,6 @@ import { useTodayKey } from '../lib/useTodayKey'
 const RECENT_DONE = 20
 
 export function TasksPage() {
-  const navigate = useNavigate()
   const today = useTodayKey()
   const tasks = useLiveQuery(() => db.tasks.toArray())
   const projects = useLiveQuery(() => db.projects.toArray(), [], [])
@@ -45,19 +42,7 @@ export function TasksPage() {
 
   return (
     <>
-      <PageHeader
-        title="Görevler"
-        action={
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            aria-label="Geri"
-            className="-mr-2.5 -mt-1.5 rounded-full p-2.5 text-muted transition-colors hover:text-text"
-          >
-            <BackIcon width={22} height={22} />
-          </button>
-        }
-      />
+      <PageHeader title="Görevler" />
 
       {tasks === undefined ? null : groups.length === 0 ? (
         <EmptyState
