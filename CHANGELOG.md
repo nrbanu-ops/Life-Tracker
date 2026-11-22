@@ -5,6 +5,10 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Yeni uygulama simgesi ⭐
+- Gece mavisi–mor zeminde parıltılı altın bir yıldız. Android uygulamasında (yeni APK) ve ana
+  ekrana eklenen web uygulamasında aynı.
+
 ### Zincir Bugün'de ve İstatistik'te 🔗
 - **Bugün**: her habit satırının sağında son 7 halka ve zincirin şu anki uzunluğu (🔗 8 gün).
 - **İstatistik**: yeni **Zincirler** bölümü; her habit'in zinciri, en uzun serisi, başarı oranı ve

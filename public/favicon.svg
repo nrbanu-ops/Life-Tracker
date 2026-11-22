@@ -1,5 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#3f6b5c"/>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#dfe9e4" stroke-width="36" stroke-dasharray="700 300" stroke-linecap="round" transform="rotate(-90 256 256)"/>
-  <path d="M190 260l46 46 90-100" fill="none" stroke="#ffffff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#232d5c"/>
+      <stop offset="1" stop-color="#4b2c73"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff0b3"/>
+      <stop offset="1" stop-color="#f3b33d"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#ffd36b" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffd36b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="262" r="205" fill="url(#glow)"/>
+  <path d="M256.0,122.0 L293.6,220.2 L398.7,225.6 L316.9,291.8 L344.2,393.4 L256.0,336.0 L167.8,393.4 L195.1,291.8 L113.3,225.6 L218.4,220.2 Z" fill="url(#gold)" stroke="url(#gold)" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M386,86 Q386,128 428,128 Q386,128 386,170 Q386,128 344,128 Q386,128 386,86 Z" fill="#fff6d6"/>
+  <path d="M132,124 Q132,150 158,150 Q132,150 132,176 Q132,150 106,150 Q132,150 132,124 Z" fill="#fff6d6"/>
+  <path d="M398,352 Q398,372 418,372 Q398,372 398,392 Q398,372 378,372 Q398,372 398,352 Z" fill="#fff6d6"/>
 </svg>

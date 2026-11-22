@@ -2,6 +2,6 @@
 <resources>
     <color name="bg">#F8F5EC</color>
     <color name="accent">#3F6B5C</color>
-    <color name="icon_bg">#3F6B5C</color>
+    <color name="icon_bg">#232D5C</color>
     <bool name="light_bars">true</bool>
 </resources>

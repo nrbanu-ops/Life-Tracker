@@ -1,13 +1,35 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <!-- The favicon (public/favicon.svg) scaled into the adaptive icon's safe zone: a progress ring and a tick. -->
+    <!-- The favicon (public/favicon.svg) scaled into the adaptive icon's safe zone: a golden star and three sparkles. -->
     <group android:scaleX="0.15" android:scaleY="0.15" android:translateX="15.6" android:translateY="15.6">
+        <!-- The soft golden glow behind the star. -->
+        <path android:pathData="M51,262 A205,205 0 1,0 461,262 A205,205 0 1,0 51,262 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="radial" android:centerX="256" android:centerY="262" android:gradientRadius="205">
+                    <item android:offset="0" android:color="#8CFFD36B" />
+                    <item android:offset="1" android:color="#00FFD36B" />
+                </gradient>
+            </aapt:attr>
+        </path>
         <path
-            android:strokeColor="#DFE9E4" android:strokeWidth="36" android:strokeLineCap="round"
-            android:trimPathEnd="0.743"
-            android:pathData="M256,106 A150,150 0 0,1 256,406 A150,150 0 0,1 256,106" />
-        <path
-            android:strokeColor="#FFFFFF" android:strokeWidth="40" android:strokeLineCap="round" android:strokeLineJoin="round"
-            android:pathData="M190,260 L236,306 L326,206" />
+            android:strokeWidth="18" android:strokeLineJoin="round"
+            android:pathData="M256.0,122.0 L293.6,220.2 L398.7,225.6 L316.9,291.8 L344.2,393.4 L256.0,336.0 L167.8,393.4 L195.1,291.8 L113.3,225.6 L218.4,220.2 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="256" android:startY="122" android:endX="256" android:endY="400">
+                    <item android:offset="0" android:color="#FFFFF0B3" />
+                    <item android:offset="1" android:color="#FFF3B33D" />
+                </gradient>
+            </aapt:attr>
+            <aapt:attr name="android:strokeColor">
+                <gradient android:type="linear" android:startX="256" android:startY="122" android:endX="256" android:endY="400">
+                    <item android:offset="0" android:color="#FFFFF0B3" />
+                    <item android:offset="1" android:color="#FFF3B33D" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:fillColor="#FFF6D6" android:pathData="M386,86 Q386,128 428,128 Q386,128 386,170 Q386,128 344,128 Q386,128 386,86 Z" />
+        <path android:fillColor="#FFF6D6" android:pathData="M132,124 Q132,150 158,150 Q132,150 132,176 Q132,150 106,150 Q132,150 132,124 Z" />
+        <path android:fillColor="#FFF6D6" android:pathData="M398,352 Q398,372 418,372 Q398,372 398,392 Q398,372 378,372 Q398,372 398,352 Z" />
     </group>
 </vector>

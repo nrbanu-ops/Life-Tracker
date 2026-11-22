@@ -60,6 +60,8 @@ Ayarlar → **Bugün ekranı** (`TodaySection`, `src/lib/todaySetting.ts`): ciha
 Bu hesaplamalar `src/lib/stats.ts` içinde saf fonksiyonlar olarak yazılır ve Vitest ile test edilir.
 
 ## Tasarım
+Uygulama simgesi (kullanıcının isteği: "yıldızlı, parıltılı"): gece mavisinden mora geçen zeminde altın yıldız, arkasında yumuşak ışıltı, üç küçük parıltı. Kaynak `public/favicon.svg`; PNG'ler (`icon-192/512`, `icon-maskable-512` tam kare ve içerik %78, `apple-touch-icon` tam kare %90) bu SVG'den tarayıcıda çizilerek üretilir. Android uyarlanabilir simgesi aynı çizim: `res/drawable/ic_fg.xml` (aynı path'ler, 0,15 ölçek / 15,6 kaydırma ile güvenli alana) ve `ic_bg.xml` (aynı geçiş); simge değişirse ikisi birlikte değişir.
+
 - Mobile-first, telefonda tek elle kullanılabilir
 - Sade, sakin, minimalist; açık ve koyu tema (sistem ayarına göre)
 - Bir habit'i işaretlemek en fazla 1 dokunuş olmalı
