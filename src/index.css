@@ -529,6 +529,43 @@
   --color-rank-s: #b07d08;
   --color-backdrop-tint: #ff9fc9;
 }
+/*
+ * Mercan Resifi: under a calm sea — sky and surface at the top, light shafts, corals and
+ * seaweed on the sand, a few fish and bubbles drifting in front. Always bright, drawn artwork.
+ */
+:root[data-palette='resif'] {
+  color-scheme: light;
+  --color-bg: #e8f7fb;
+  --color-surface: #ffffff;
+  --color-text: #0f2a36;
+  /* Dark enough to read straight on the deepest water near the sea floor. */
+  --color-muted: #355866;
+  --color-border: #cde9f1;
+  --color-accent: #0a6f8f;
+  --color-accent-soft: #d5f1f8;
+  /* Coral, sun and deep water. */
+  --color-p1: #d8452f;
+  --color-p2: #a87a00;
+  --color-p3: #1c6fc0;
+  /* The leveling window as a sea-glass card with a coral edge. */
+  --color-sys-bg: #f4fcff;
+  --color-sys-panel: #dff4fa;
+  --color-sys-line: #a9dcea;
+  --color-sys-edge: #e0634d;
+  --color-sys-glow: #0a6f8f;
+  --color-sys-text: #0f2a36;
+  --color-sys-muted: #355866;
+  --color-sys-warn: #cf4520;
+  --color-sys-danger: #c62828;
+  --color-rank-e: #6b7a94;
+  --color-rank-d: #1f9e52;
+  --color-rank-c: #1d7fd4;
+  --color-rank-b: #7c5cd6;
+  --color-rank-a: #d6453f;
+  --color-rank-s: #b07d08;
+  --color-backdrop-tint: #5cc6de;
+}
+:root[data-palette='resif'] .map-tiles,
 :root[data-palette='neon'] .map-tiles,
 :root[data-palette='limonata'] .map-tiles,
 :root[data-palette='kumsal'] .map-tiles {
@@ -831,7 +868,8 @@ body,
  */
 :root[data-palette='phantom'] .backdrop-waves,
 :root[data-palette='mantar'] .backdrop-waves,
-:root[data-palette='neon'] .backdrop-waves {
+:root[data-palette='neon'] .backdrop-waves,
+:root[data-palette='resif'] .backdrop-waves {
   display: none;
 }
 :root[data-palette='phantom'] .app-backdrop::before,
@@ -839,7 +877,9 @@ body,
 :root[data-palette='mantar'] .app-backdrop::before,
 :root[data-palette='mantar'] .app-backdrop::after,
 :root[data-palette='neon'] .app-backdrop::before,
-:root[data-palette='neon'] .app-backdrop::after {
+:root[data-palette='neon'] .app-backdrop::after,
+:root[data-palette='resif'] .app-backdrop::before,
+:root[data-palette='resif'] .app-backdrop::after {
   content: '';
   position: absolute;
   /* Larger than the screen, so the drift never shows an edge. */
@@ -869,6 +909,14 @@ body,
 :root[data-palette='neon'] .app-backdrop::after {
   background-image: url("./assets/bg-neon-front.svg");
   /* Only the clouds and gulls drift; the sun and the palms stay put. */
+  animation: backdrop-clouds 90s ease-in-out infinite alternate;
+}
+:root[data-palette='resif'] .app-backdrop::before {
+  background-image: url("./assets/bg-resif-back.svg");
+}
+:root[data-palette='resif'] .app-backdrop::after {
+  background-image: url("./assets/bg-resif-front.svg");
+  /* The fish, bubbles and clouds drift; the sea and the reef stay put. */
   animation: backdrop-clouds 90s ease-in-out infinite alternate;
 }
 @keyframes backdrop-clouds {

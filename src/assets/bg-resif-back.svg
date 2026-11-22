@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4fcff"/><stop offset="1" stop-color="#dcf4fb"/>
+    </linearGradient>
+    <!-- Kept light all the way down: headings sit on this water in the muted ink. -->
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9eef7"/><stop offset="0.5" stop-color="#aee2f0"/><stop offset="1" stop-color="#96d5e8"/>
+    </linearGradient>
+    <linearGradient id="ray" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6e7c8"/><stop offset="1" stop-color="#ecd5a8"/>
+    </linearGradient>
+  </defs>
+  <rect x="-300" y="-300" width="1500" height="2500" fill="url(#sky)"/>
+
+  <!-- The sea, from a wavy surface down. -->
+  <path fill="url(#sea)" d="M -300 330 C -200 300 -120 360 -20 330 C 80 300 160 360 260 330 C 360 300 440 360 540 330 C 640 300 720 360 820 330 C 920 300 1000 360 1200 330 L 1200 2200 L -300 2200 Z"/>
+  <path fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.8" d="M -300 330 C -200 300 -120 360 -20 330 C 80 300 160 360 260 330 C 360 300 440 360 540 330 C 640 300 720 360 820 330 C 920 300 1000 360 1200 330"/>
+  <path fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.5" d="M -300 372 C -180 352 -100 392 20 372 C 140 352 220 392 340 372 C 460 352 540 392 660 372 C 780 352 860 392 1200 372"/>
+
+  <!-- Light falling through the water, slanting from the surface. -->
+  <g fill="url(#ray)">
+    <polygon points="430,340 520,340 760,1400 560,1400"/>
+    <polygon points="600,340 650,340 900,1150 780,1150"/>
+    <polygon points="250,340 300,340 420,1050 330,1050"/>
+  </g>
+
+  <!-- The floor sits above the tab bar, which covers the last ~140 units of a phone screen. -->
+  <g transform="translate(0 -150)">
+  <!-- Sea floor: sand on the right, rising a little toward the corals. -->
+  <path fill="url(#sand)" d="M -300 1690 C -100 1650 100 1700 300 1670 C 480 1640 640 1600 820 1630 C 950 1650 1100 1620 1200 1640 L 1200 2200 L -300 2200 Z"/>
+
+  <!-- Seaweed on the left, low, so headings above it stay on plain water. -->
+  <g fill="none" stroke="#5cbf9a" stroke-width="14" stroke-linecap="round">
+    <path d="M 60 1700 C 40 1640 90 1600 70 1540 C 50 1480 95 1440 80 1390"/>
+    <path d="M 110 1700 C 130 1650 90 1610 115 1560 C 140 1510 100 1470 120 1430"/>
+  </g>
+  <path fill="none" stroke="#7fd1ad" stroke-width="10" stroke-linecap="round" d="M 160 1700 C 150 1660 180 1630 165 1590 C 150 1550 175 1520 168 1490"/>
+
+  <!-- Corals on the right. -->
+  <g fill="none" stroke="#ff8a6b" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 700 1660 L 700 1520 M 700 1590 L 650 1530 L 640 1470 M 700 1560 L 750 1500 L 745 1440 M 650 1530 L 610 1500"/>
+  </g>
+  <g fill="none" stroke="#ffb199" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 800 1650 L 805 1560 M 805 1600 L 840 1540 M 805 1580 L 775 1530"/>
+  </g>
+  <!-- A round brain coral and a small sea star on the sand. -->
+  <ellipse cx="560" cy="1655" rx="46" ry="30" fill="#f6a6b8"/>
+  <path fill="none" stroke="#e48aa0" stroke-width="5" stroke-linecap="round" d="M 528 1650 C 545 1635 560 1665 590 1645 M 535 1668 C 552 1655 572 1678 588 1662"/>
+  <path fill="#ffb347" d="M 420 1690 L 428 1672 L 436 1690 L 455 1690 L 440 1701 L 446 1719 L 428 1708 L 410 1719 L 416 1701 L 401 1690 Z"/>
+  </g>
+</svg>

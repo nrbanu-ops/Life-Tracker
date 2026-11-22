@@ -5,6 +5,11 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Yeni tema: Mercan Resifi 🐠
+- Ayarlar → Renk teması'nda **Mercan Resifi**: her zaman açık, okyanus temalı. Arka planda su
+  yüzeyi, ışık hüzmeleri, dipte mercanlar ve yosunlar; önde yavaşça kayan balıklar ve kabarcıklar.
+- Eski Okyanus teması olduğu gibi duruyor (o, telefonun açık/koyu ayarını izler).
+
 ### Yeni uygulama simgesi ⭐
 - Gece mavisi–mor zeminde parıltılı altın bir yıldız. Android uygulamasında (yeni APK) ve ana
   ekrana eklenen web uygulamasında aynı.

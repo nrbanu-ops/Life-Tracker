@@ -54,6 +54,13 @@ export const PALETTES: Palette[] = [
     bg: ['#ffeef5', '#ffeef5'],
   },
   {
+    id: 'resif',
+    name: 'Mercan Resifi',
+    note: 'hep aydınlık',
+    swatch: ['#0a6f8f', '#ff8a6b', '#7fd3e6'],
+    bg: ['#e8f7fb', '#e8f7fb'],
+  },
+  {
     id: 'phantom',
     name: 'Phantom',
     note: 'hep karanlık',
