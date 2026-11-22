@@ -14,6 +14,8 @@ import type {
   Task,
   UnlockedAchievement,
   WeekPlan,
+  WeightEntry,
+  WeightGoal,
   XpWeek,
 } from './types'
 
@@ -33,6 +35,8 @@ export const db = new Dexie('life-tracker') as Dexie & {
   xpWeeks: EntityTable<XpWeek, 'week'>
   weekPlans: EntityTable<WeekPlan, 'week'>
   hardDays: EntityTable<HardDay, 'date'>
+  weights: EntityTable<WeightEntry, 'date'>
+  weightGoal: EntityTable<WeightGoal, 'id'>
 }
 
 // Booleans can't be indexed in IndexedDB, so `archived` and `done` are filtered in memory.
@@ -123,6 +127,12 @@ db.version(13)
 // v14: days declared hard, when the minimum is enough.
 db.version(14).stores({
   hardDays: 'date',
+})
+
+// v15: weight tracking — one weight per day, and the target.
+db.version(15).stores({
+  weights: 'date',
+  weightGoal: 'id',
 })
 
 export const META_TABLE = 'meta'

@@ -246,6 +246,19 @@ export type HardDay = {
   date: string
 }
 
+/** The day's weight; one row per day, a new entry the same day replaces it. */
+export type WeightEntry = {
+  /** Day key. */
+  date: string
+  kg: number
+}
+
+/** The weight being aimed at; a single row with id 'current'. */
+export type WeightGoal = {
+  id: 'current'
+  targetKg: number
+}
+
 /** Key–value bookkeeping, e.g. 'backupHandle' (a FileSystemFileHandle) or 'lastBackupAt'. */
 export type MetaEntry = {
   key: string

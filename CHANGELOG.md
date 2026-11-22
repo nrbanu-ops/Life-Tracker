@@ -5,6 +5,16 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Kilo takibi ⚖️
+- Yeni **Kilo** sayfası ("Daha fazla" menüsünde): her gün için bir kilo, aynı gün tekrar girilirse
+  yenisi yazılır; istersen geçmiş bir günü de girebilirsin.
+- **Hedef kilo**: başlangıçtan bu yana kaç kilo verdiğin, hedefe ne kadar kaldığı ve ilerleme çubuğu.
+- **Grafik**: noktalar tartıların, çizgi 7 günlük ortalama (günlük 1–2 kg oynama gidişatı saklamasın
+  diye), kesikli çizgi hedef.
+- Bugün ekranında hızlı giriş kartı; girince günün kilosu, değişim ve hedefe kalan görünür.
+- Kilo girilen her gün **+2 XP** (Dayanıklılık). XP kilonun inmesine değil, tartılmaya verilir.
+- Kilo kayıtları yedeğe girer; habit/XP sıfırlaması onlara dokunmaz.
+
 ### Sıfırlama artık sadece habit'leri ve XP'yi siler 🔄
 - Ayarlar → Veri ve yedek'teki bölümün adı **"Habit'leri ve XP'yi sıfırla"** oldu.
 - **Silinir:** habit'ler, işaretlemeler ve seriler, zor gün kayıtları, kazanılmış başarımlar, XP ve seviye.

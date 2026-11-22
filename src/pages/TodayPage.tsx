@@ -20,6 +20,7 @@ import { QuitCard } from '../components/QuitCard'
 import { QuitSheet } from '../components/QuitSheet'
 import { TodayMilestones } from '../components/TodayMilestones'
 import { TodayTasks } from '../components/TodayTasks'
+import { WeightCard } from '../components/WeightCard'
 import { WeekPlanCard } from '../components/WeekPlanCard'
 import { SundayReviewNudge } from '../components/WeeklyReview'
 import { YearReviewCard } from '../components/YearReviewCard'
@@ -225,6 +226,8 @@ export function TodayPage() {
       </div>
 
       <WeekPlanCard today={today} variant="plan" />
+
+      <WeightCard today={today} />
 
       <LevelCard />
 

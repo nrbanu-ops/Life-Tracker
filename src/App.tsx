@@ -2,6 +2,7 @@ import { lazy, type ComponentType } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { Layout } from './components/Layout'
 import { TimerProvider } from './components/TimerProvider'
+import { WeightPage } from './pages/WeightPage'
 import { TodayPage } from './pages/TodayPage'
 
 // The home screen loads with the app; every other screen (and big libraries such as the
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="profil" element={<ProfilePage />} />
             <Route path="ozet" element={<YearReviewPage />} />
             <Route path="ara" element={<SearchPage />} />
+            <Route path="kilo" element={<WeightPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

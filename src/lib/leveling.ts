@@ -1,6 +1,7 @@
 import { addDays } from 'date-fns'
 import type {
   DayMood,
+  WeightEntry,
   Habit,
   HabitLog,
   JournalEntry,
@@ -267,6 +268,7 @@ export type XpSource =
   | 'project'
   | 'journal'
   | 'mood'
+  | 'weight'
   | 'library'
   | 'achievement'
   | 'emergency'
@@ -281,6 +283,7 @@ export const SOURCE_LABEL: Record<XpSource, string> = {
   project: 'Biten projeler',
   journal: 'Günlük yazısı',
   mood: 'Ruh hali',
+  weight: 'Kilo',
   library: 'Kütüphane',
   achievement: 'Başarımlar',
   emergency: 'Acil görev',
@@ -299,6 +302,8 @@ export type XpData = {
   projects: Project[]
   journal: JournalEntry[]
   moods: DayMood[]
+  /** Weigh-ins; missing in older callers and tests. */
+  weights?: WeightEntry[]
   library: LibraryItem[]
   achievements: UnlockedAchievement[]
   /** Missed habits cost XP from this day on; undefined while penalties are off. */
@@ -318,6 +323,7 @@ export const XP = {
   project: { base: 100, perStep: 10, max: 300 },
   journal: 5,
   mood: 2,
+  weight: 2,
   library: { book: 40, movie: 10, series: 10, game: 20, place: 10, other: 10 } as Record<LibraryItem['kind'], number>,
   achievement: 25,
   emergency: 100,
@@ -700,6 +706,9 @@ export function xpEvents(data: XpData, from: string, to: string, today: string):
   for (const m of data.moods) {
     if ((m.mood || m.energy) && inRange(m.date)) events.push({ date: m.date, xp: XP.mood, source: 'mood', stat: 'sen' })
   }
+  for (const w of data.weights ?? []) {
+    if (inRange(w.date)) events.push({ date: w.date, xp: XP.weight, source: 'weight', stat: 'vit' })
+  }
   for (const item of data.library) {
     if (item.status === 'done' && inRange(item.finishedAt)) {
       events.push({ date: item.finishedAt, xp: XP.library[item.kind], source: 'library', stat: LIBRARY_STAT[item.kind] })
@@ -733,6 +742,7 @@ export function firstDay(data: XpData, today: string, from?: string): string {
     ...data.tasks.flatMap((t) => (t.completedAt ? [dayOf(t.completedAt)] : [])),
     ...data.journal.map((e) => e.date),
     ...data.moods.map((m) => m.date),
+    ...(data.weights ?? []).map((w) => w.date),
     ...data.library.flatMap((i) => (i.finishedAt ? [i.finishedAt] : [])),
     ...data.achievements.map((a) => a.unlockedAt),
   ].filter((d) => d <= today)

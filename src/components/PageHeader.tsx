@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { BottomSheet } from './BottomSheet'
-import { JournalIcon, LibraryIcon, MoreIcon, SearchIcon, SettingsIcon, TimerIcon, TrophyIcon } from './icons'
+import { JournalIcon, LibraryIcon, MoreIcon, SearchIcon, SettingsIcon, StatsIcon, TimerIcon, TrophyIcon } from './icons'
 
 type Props = {
   title: string
@@ -16,6 +16,7 @@ const iconButton = 'rounded-full p-2.5 text-muted transition-colors hover:text-t
 /** Everything that is not opened every day lives behind "more", with its name next to its icon. */
 const MORE = [
   { to: '/kutuphane', label: 'Kütüphane', detail: 'Kitap, film, dizi, oyun, yer', Icon: LibraryIcon },
+  { to: '/kilo', label: 'Kilo', detail: 'Tartı, hedef ve grafik', Icon: StatsIcon },
   { to: '/basarimlar', label: 'Başarımlar', detail: 'Kazandıkların ve sıradakiler', Icon: TrophyIcon },
   { to: '/zamanlayici', label: 'Zamanlayıcı', detail: 'Kronometre ve geri sayım', Icon: TimerIcon },
   { to: '/ayarlar', label: 'Ayarlar', detail: 'Tema, yedek, hatırlatma', Icon: SettingsIcon },
