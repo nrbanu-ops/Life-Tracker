@@ -5,6 +5,11 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Zincir Bugün'de ve İstatistik'te 🔗
+- **Bugün**: her habit satırının sağında son 7 halka ve zincirin şu anki uzunluğu (🔗 8 gün).
+- **İstatistik**: yeni **Zincirler** bölümü; her habit'in zinciri, en uzun serisi, başarı oranı ve
+  ne zamandır sürdüğü. Birine dokununca aşağıdaki ayrıntılar o habit'e geçer.
+
 ### Kilo grafiğinde habit günleri 📊
 - Grafik sekmesinde **Habit göster**: bir habit seç, yaptığın günler grafikte gölgelenir. Örneğin
   koşu günleriyle kilonun gidişatını yan yana görürsün.

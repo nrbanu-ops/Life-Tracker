@@ -1,9 +1,10 @@
 import { addDays, addMonths, format, startOfMonth } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { EmptyState } from '../components/EmptyState'
+import { HabitChain } from '../components/HabitChain'
 import { Heatmap } from '../components/Heatmap'
 import { MonthReviewCard } from '../components/MonthReviewCard'
 import { LevelCard } from '../components/LevelCard'
@@ -49,6 +50,13 @@ export function StatsPage() {
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray())
   const logs = useLiveQuery(() => logsCovering(from, today), [from, today], [])
   const projects = useLiveQuery(() => db.projects.toArray(), [], [])
+  // Chains and their summaries reach back to each habit's start, past the year loaded above.
+  const allLogs = useLiveQuery(() => db.habitLogs.toArray(), [], [])
+  const logsByHabit = useMemo(() => {
+    const map = new Map<string, HabitLog[]>()
+    for (const log of allLogs) map.set(log.habitId, [...(map.get(log.habitId) ?? []), log])
+    return map
+  }, [allLogs])
   const milestones = useLiveQuery(() => db.milestones.toArray(), [], [])
   const moods = useLiveQuery(() => db.moods.where('date').between(from, today, true, true).toArray(), [from, today], [])
   const [selectedId, setSelectedId] = useState<string>()
@@ -124,6 +132,32 @@ export function StatsPage() {
             value={best && best.streak.current > 0 ? `${best.streak.current} ${streakUnit(best.streak.unit)}` : '–'}
             detail={best && best.streak.current > 0 ? best.habit.title : undefined}
           />
+        </section>
+      )}
+
+      {tracked.length > 0 && (
+        <section className="mb-6">
+          <h2 className="mb-2 section-title">Zincirler</h2>
+          <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
+            {tracked.map((habit) => (
+              <li key={habit.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(habit.id)}
+                  aria-pressed={habit.id === selected?.id}
+                  className="block w-full px-4 py-3 text-left"
+                >
+                  <span className="block truncate font-medium">{habit.title}</span>
+                  <HabitChain
+                    habit={habit}
+                    logs={logsByHabit.get(habit.id) ?? []}
+                    today={today}
+                    color={projects.find((p) => p.id === habit.projectId)?.color}
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

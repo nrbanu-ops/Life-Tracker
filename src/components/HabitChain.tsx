@@ -1,8 +1,8 @@
 import { Fragment } from 'react'
 import type { Habit, HabitLog } from '../db/types'
-import { habitChain, holds, trackedFor, type LinkState } from '../lib/chain'
+import { habitChain, holds, trackedFor, type ChainLink, type LinkState } from '../lib/chain'
 import { chainColors } from '../lib/chainUi'
-import { STREAK_UNIT } from '../lib/frequency'
+import { STREAK_UNIT, type StreakUnit } from '../lib/frequency'
 import { streaks, successRate } from '../lib/stats'
 import { toDateKey } from '../lib/date'
 
@@ -68,6 +68,39 @@ export function HabitChain({ habit, logs, today, color }: Props) {
         ))}
       </span>
       <ChainSummary habit={habit} logs={logs} today={today} />
+    </span>
+  )
+}
+
+/** What Bugün shows at the end of a habit's row: its last links and how long the chain is now. */
+export type MiniChainData = { links: ChainLink[]; current: number; unit: StreakUnit }
+
+const MINI_DOT: Record<LinkState, string> = {
+  done: 'h-2 w-2 bg-(--chain)',
+  minimum: 'h-2 w-2 border border-(--chain) bg-[color-mix(in_oklab,var(--chain)_30%,transparent)]',
+  excused: 'h-1 w-1 bg-(--chain) opacity-50',
+  missed: 'h-2 w-2 border border-border',
+  open: 'h-2 w-2 border border-dashed border-(--chain)',
+}
+
+/** A small chain for a list row: the same links, smaller, with the current length under them. */
+export function MiniChain({ chain, color }: { chain: MiniChainData; color?: string }) {
+  if (chain.links.length === 0) return null
+  return (
+    <span className="flex shrink-0 flex-col items-end gap-1" style={chainColors(color)}>
+      <span className="flex items-center" aria-hidden>
+        {chain.links.map((link, i) => (
+          <Fragment key={link.key}>
+            {i > 0 && <span className={`h-px w-1 ${joint(chain.links[i - 1].state, link.state)}`} />}
+            <span className={`shrink-0 rounded-full ${MINI_DOT[link.state]}`} />
+          </Fragment>
+        ))}
+      </span>
+      {chain.current > 0 && (
+        <span className="text-[11px] leading-none text-muted tabular-nums">
+          🔗 {chain.current} {STREAK_UNIT[chain.unit]}
+        </span>
+      )}
     </span>
   )
 }

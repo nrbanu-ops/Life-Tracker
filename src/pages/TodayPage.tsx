@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { BackupReminder } from '../components/BackupReminder'
 import { DayJournal } from '../components/DayJournal'
 import { LevelCard } from '../components/LevelCard'
@@ -13,6 +13,7 @@ import { FreezeCard } from '../components/FreezeCard'
 import { HabitActionSheet } from '../components/HabitActionSheet'
 import { HabitEndCard } from '../components/HabitEndCard'
 import { HardDayCard } from '../components/HardDayCard'
+import type { MiniChainData } from '../components/HabitChain'
 import { HabitCheckRow } from '../components/HabitCheckRow'
 import { PageHeader } from '../components/PageHeader'
 import { ProgressRing } from '../components/ProgressRing'
@@ -25,11 +26,14 @@ import { WeekPlanCard } from '../components/WeekPlanCard'
 import { SundayReviewNudge } from '../components/WeeklyReview'
 import { YearReviewCard } from '../components/YearReviewCard'
 import { db } from '../db/db'
+import type { HabitLog } from '../db/types'
 import { markMilestoneCelebrated } from '../db/habits'
 import { useHardDay } from '../db/hardDay'
 import { logsCovering, setLog } from '../db/logs'
 import { fromDateKey, weekRange } from '../lib/date'
+import { habitChain } from '../lib/chain'
 import { isLongGoal } from '../lib/frequency'
+import { streaks } from '../lib/stats'
 import { hardTap } from '../lib/hardDay'
 import {
   buildToday,
@@ -48,6 +52,9 @@ import {
 import { useFocusMode, useHideDone } from '../lib/todaySetting'
 import { useNow } from '../lib/useNow'
 import { useTodayKey } from '../lib/useTodayKey'
+
+/** Links in a row's chain: a week of a daily habit, without crowding the title. */
+const MINI_CHAIN = 7
 
 export function TodayPage() {
   const today = useTodayKey()
@@ -68,6 +75,20 @@ export function TodayPage() {
     const { start, end } = weekRange(today)
     return logsCovering(start, end)
   }, [today])
+  // Chains reach back further than this week (up to 12 months); log rows are small.
+  const allLogs = useLiveQuery(() => db.habitLogs.toArray(), [], [])
+  const chains = useMemo(() => {
+    const byHabit = new Map<string, HabitLog[]>()
+    for (const log of allLogs) byHabit.set(log.habitId, [...(byHabit.get(log.habitId) ?? []), log])
+    const map = new Map<string, MiniChainData>()
+    for (const habit of habits ?? []) {
+      if (habit.archived || habit.kind === 'quit') continue
+      const logs = byHabit.get(habit.id) ?? []
+      const { current, unit } = streaks(habit, logs, today)
+      map.set(habit.id, { links: habitChain(habit, logs, today).slice(-MINI_CHAIN), current, unit })
+    }
+    return map
+  }, [habits, allLogs, today])
 
   const subtitle = format(fromDateKey(today), 'd MMMM EEEE', { locale: tr })
   if (habits === undefined || weekLogs === undefined) {
@@ -139,6 +160,7 @@ export function TodayPage() {
               items={keystones}
               hideDone={hideDone}
               projectColor={projectColor}
+              chains={chains}
               onTap={tap}
               onMore={setActionHabitId}
             />
@@ -175,6 +197,7 @@ export function TodayPage() {
                     items={group.list}
                     hideDone={hideDone}
                     projectColor={projectColor}
+                    chains={chains}
                     onTap={tap}
                     onMore={setActionHabitId}
                   />
@@ -270,12 +293,13 @@ type GroupProps = {
   items: TodayItem[]
   hideDone: boolean
   projectColor: Map<string, string>
+  chains: Map<string, MiniChainData>
   onTap: (item: TodayItem) => void
   onMore: (habitId: string) => void
 }
 
 /** One titled block of today's habits, with the "hide completed" fold underneath it. */
-function HabitGroup({ title, detail, items, hideDone, projectColor, onTap, onMore }: GroupProps) {
+function HabitGroup({ title, detail, items, hideDone, projectColor, chains, onTap, onMore }: GroupProps) {
   const [revealed, setRevealed] = useState(false)
   const { open, done: finished } = splitDone(items)
   // Hiding only changes this list; the ring above still counts what was finished.
@@ -296,6 +320,7 @@ function HabitGroup({ title, detail, items, hideDone, projectColor, onTap, onMor
               projectColor={item.habit.projectId ? projectColor.get(item.habit.projectId) : undefined}
               onTap={() => onTap(item)}
               onMore={() => onMore(item.habit.id)}
+              chain={chains.get(item.habit.id)}
             />
           ))}
         </ul>

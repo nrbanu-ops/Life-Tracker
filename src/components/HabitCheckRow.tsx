@@ -6,6 +6,7 @@ import { formatAmount } from '../lib/amount'
 import { fromDateKey } from '../lib/date'
 import { describeFrequency, PERIOD_THIS, periodGoal } from '../lib/frequency'
 import { DAY_PART_LABEL, isExcused, type TodayItem } from '../lib/today'
+import { MiniChain, type MiniChainData } from './HabitChain'
 
 type Props = {
   item: TodayItem
@@ -14,11 +15,13 @@ type Props = {
   onTap: () => void
   /** Long press or the ⋯ button: minimum, skip, exact amount. */
   onMore: () => void
+  /** The habit's last links, shown at the end of the row. */
+  chain?: MiniChainData
 }
 
 const LONG_PRESS_MS = 500
 
-export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
+export function HabitCheckRow({ item, projectColor, onTap, onMore, chain }: Props) {
   const { habit, status, value, goalCount, nextDue, overdue, countsToday, lastDay } = item
   const timer = useRef<number | undefined>(undefined)
   const longPressed = useRef(false)
@@ -90,6 +93,7 @@ export function HabitCheckRow({ item, projectColor, onTap, onMore }: Props) {
             <span className="block truncate text-sm text-muted">{details.join(' · ')}</span>
           )}
         </span>
+        {chain && <MiniChain chain={chain} color={projectColor} />}
       </button>
       <button
         type="button"
