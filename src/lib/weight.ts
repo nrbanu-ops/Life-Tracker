@@ -1,4 +1,4 @@
-import { addDays } from 'date-fns'
+import { addDays, differenceInCalendarDays } from 'date-fns'
 import type { JournalEntry, WeightEntry } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
 import { entryPhotos } from './journal'
@@ -116,4 +116,55 @@ export function weightPhotos(journal: JournalEntry[]): WeightPhoto[] {
     .filter((e) => e.kind === 'weight')
     .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt))
     .flatMap((e) => entryPhotos(e).map((blob, index) => ({ id: `${e.id}:${index}`, entryId: e.id, index, date: e.date, blob })))
+}
+
+/** The weeks the arrival estimate looks back over. */
+export const ETA_WEEKS = 4
+/** Less than this many kg a week down counts as standing still. */
+const STALL_PER_WEEK = 0.05
+
+export type WeightEta =
+  | { kind: 'date'; date: string; perWeek: number }
+  /** Not going down over the last weeks (or too slowly to name a date within two years). */
+  | { kind: 'stalled'; perWeek: number }
+
+/**
+ * When the target would be reached at the pace of the last `ETA_WEEKS` weeks of the 7-day
+ * average. Undefined without a target still ahead or without two weeks of history to measure.
+ */
+export function weightEta(entries: WeightEntry[], targetKg: number | undefined, today: string): WeightEta | undefined {
+  const t = trend(entries)
+  const last = t.at(-1)
+  if (targetKg === undefined || !last || last.kg <= targetKg) return undefined
+  const cutoff = toDateKey(addDays(fromDateKey(last.date), -ETA_WEEKS * 7))
+  const from = t.filter((p) => p.date <= cutoff).at(-1) ?? t[0]
+  const span = differenceInCalendarDays(fromDateKey(last.date), fromDateKey(from.date))
+  if (span < 14) return undefined
+  const perWeek = ((from.kg - last.kg) / span) * 7
+  if (perWeek < STALL_PER_WEEK) return { kind: 'stalled', perWeek }
+  const days = Math.ceil(((last.kg - targetKg) / perWeek) * 7)
+  if (days > 730) return { kind: 'stalled', perWeek }
+  // Counted from today, not from the last weigh-in: a date already behind us would read oddly.
+  const start = last.date > today ? last.date : today
+  return { kind: 'date', date: toDateKey(addDays(fromDateKey(start), days)), perWeek }
+}
+
+/** Kg down from the first weigh-in to the lowest 7-day average: one dry morning doesn't count. */
+export function mostLost(entries: WeightEntry[]): number {
+  const first = byDate(entries)[0]
+  if (!first) return 0
+  return Math.max(0, first.kg - Math.min(...trend(entries).map((p) => p.kg)))
+}
+
+/** The longest run of consecutive days with a weigh-in. */
+export function longestWeighInRun(entries: WeightEntry[]): number {
+  let best = 0
+  let run = 0
+  let previous: string | undefined
+  for (const e of byDate(entries)) {
+    run = previous && toDateKey(addDays(fromDateKey(previous), 1)) === e.date ? run + 1 : 1
+    best = Math.max(best, run)
+    previous = e.date
+  }
+  return best
 }

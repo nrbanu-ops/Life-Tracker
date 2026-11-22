@@ -10,6 +10,7 @@ import type {
   ProjectAchievement,
   Task,
   UnlockedAchievement,
+  WeightEntry,
 } from '../db/types'
 import { addDays } from 'date-fns'
 import { fromDateKey, toDateKey } from './date'
@@ -19,6 +20,7 @@ import { projectProgress } from './projects'
 import { quitStats } from './quit'
 import { streaks, type Streaks } from './stats'
 import { isCompleted, isShownOn } from './today'
+import { longestWeighInRun, mostLost } from './weight'
 
 export type AchievementData = {
   habits: Habit[]
@@ -30,6 +32,9 @@ export type AchievementData = {
   library: LibraryItem[]
   libraryGoals: LibraryGoal[]
   projectAchievements: ProjectAchievement[]
+  /** Weigh-ins and the target; missing in older callers and tests. */
+  weights?: WeightEntry[]
+  weightTargetKg?: number
 }
 
 export type AchievementGroup =
@@ -41,6 +46,7 @@ export type AchievementGroup =
   | 'projects'
   | 'library'
   | 'other'
+  | 'weight'
   | 'project'
 
 export const GROUP_LABEL: Record<AchievementGroup, string> = {
@@ -52,6 +58,7 @@ export const GROUP_LABEL: Record<AchievementGroup, string> = {
   projects: '🎯 Projeler',
   library: '📚 Kütüphane',
   other: '📝 Görevler ve günlük',
+  weight: '⚖️ Kilo',
   project: 'Proje',
 }
 
@@ -231,6 +238,8 @@ export function evaluateAchievements(
       { target: 100, emoji: '📜', title: 'Anı defteri', description: '100 farklı gün günlük yaz' },
     ]),
 
+    ...weightDrafts(data.weights ?? [], data.weightTargetKg),
+
     ...projects.flatMap((p) => projectDrafts(p, data, habitStreaks, today)),
   ]
 
@@ -319,6 +328,27 @@ function measureRule(
       return { current: done, target: rule.count, description: `Bu projede ${rule.count} görev tamamla` }
     }
   }
+}
+
+/** Only once there is a weigh-in: someone not tracking weight shouldn't see a list of goals for it. */
+function weightDrafts(weights: WeightEntry[], targetKg: number | undefined): Draft[] {
+  if (weights.length === 0) return []
+  const latest = [...weights].sort((a, b) => a.date.localeCompare(b.date)).at(-1)!
+  return [
+    ...ladder('weight-lost', 'weight', Math.floor(mostLost(weights) * 10) / 10, [
+      { target: 1, emoji: '🪶', title: 'İlk kilo', description: '7 günlük ortalamada 1 kg ver' },
+      { target: 5, emoji: '🏃', title: 'Beş kilo', description: '7 günlük ortalamada 5 kg ver' },
+      { target: 10, emoji: '🦋', title: 'On kilo', description: '7 günlük ortalamada 10 kg ver' },
+      { target: 20, emoji: '🏔️', title: 'Yirmi kilo', description: '7 günlük ortalamada 20 kg ver' },
+    ]),
+    ...ladder('weigh-in', 'weight', longestWeighInRun(weights), [
+      { target: 7, emoji: '⚖️', title: 'Tartı alışkanlığı', description: '7 gün üst üste tartıl' },
+      { target: 30, emoji: '📈', title: 'Bir ay tartı', description: '30 gün üst üste tartıl' },
+    ]),
+    ...(targetKg !== undefined
+      ? [single('weight-goal', 'weight', '🎯', 'Hedef kilo', 'Hedef kilona ulaş', latest.kg <= targetKg)]
+      : []),
+  ]
 }
 
 /** What a list shows: of each ladder, the earned steps and the next one. */

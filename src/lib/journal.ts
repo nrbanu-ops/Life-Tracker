@@ -16,7 +16,8 @@ export function memoryFor(entries: JournalEntry[], today: string): Memory | unde
   for (const { label, back } of LOOK_BACK) {
     const date = toDateKey(back(fromDateKey(today)))
     // The weekly AI review lives in the journal as well; a memory should be your own writing.
-    const found = entries.filter((e) => e.date === date && e.kind !== 'review')
+    // Progress photos stay out too: a body photo out of the blue on Bugün is not a nice surprise.
+    const found = entries.filter((e) => e.date === date && !e.kind)
     if (found.length > 0) return { label, date, entries: groupByDay(found)[0].entries }
   }
   return undefined

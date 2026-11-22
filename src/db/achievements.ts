@@ -7,7 +7,7 @@ import { db } from './db'
 export function useAchievements(): Achievement[] | undefined {
   const today = useTodayKey()
   return useLiveQuery(async () => {
-    const [habits, logs, projects, milestones, tasks, journal, library, libraryGoals, projectAchievements, unlocked] =
+    const [habits, logs, projects, milestones, tasks, journal, library, libraryGoals, projectAchievements, unlocked, weights, weightGoal] =
       await Promise.all([
         db.habits.toArray(),
         db.habitLogs.toArray(),
@@ -19,8 +19,22 @@ export function useAchievements(): Achievement[] | undefined {
         db.libraryGoals.toArray(),
         db.projectAchievements.toArray(),
         db.achievements.toArray(),
+        db.weights.toArray(),
+        db.weightGoal.get('current'),
       ])
-    const data = { habits, logs, projects, milestones, tasks, journal, library, libraryGoals, projectAchievements }
+    const data = {
+      habits,
+      logs,
+      projects,
+      milestones,
+      tasks,
+      journal,
+      library,
+      libraryGoals,
+      projectAchievements,
+      weights,
+      weightTargetKg: weightGoal?.targetKg,
+    }
     return evaluateAchievements(data, unlocked, today, new Date())
   }, [today])
 }

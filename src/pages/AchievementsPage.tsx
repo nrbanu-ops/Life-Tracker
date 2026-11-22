@@ -8,7 +8,7 @@ import { db } from '../db/db'
 import { GROUP_LABEL, sortAchievements, visibleAchievements, type AchievementGroup } from '../lib/achievements'
 import { compareProjects } from '../lib/projects'
 
-const GENERAL_GROUPS: AchievementGroup[] = ['start', 'streak', 'total', 'perfect', 'quit', 'projects', 'library', 'other']
+const GENERAL_GROUPS: AchievementGroup[] = ['start', 'streak', 'total', 'perfect', 'quit', 'projects', 'library', 'other', 'weight']
 
 export function AchievementsPage() {
   const achievements = useAchievements()

@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import type { JournalEntry } from '../db/types'
-import { changeOn, formatKg, parseKg, trend, trendChange, weightMonths, weightOn, weightPhotos, weightProgress } from './weight'
+import {
+  changeOn,
+  formatKg,
+  longestWeighInRun,
+  mostLost,
+  parseKg,
+  trend,
+  trendChange,
+  weightEta,
+  weightMonths,
+  weightOn,
+  weightPhotos,
+  weightProgress,
+} from './weight'
 
 describe('parseKg', () => {
   it('reads a comma or a dot and rounds to 0.1', () => {
@@ -130,5 +143,50 @@ describe('weightPhotos', () => {
       ['2:1', '2026-11-09'],
     ])
     expect(photos[2].blob).toBe(b)
+  })
+})
+
+describe('weightEta', () => {
+  // One weigh-in a week, 0.5 kg down each time: 0.5 kg a week.
+  const weekly = (n: number, start = 80, step = 0.5) =>
+    Array.from({ length: n }, (_, i) => ({ date: `2026-11-${String(1 + i * 7).padStart(2, '0')}`, kg: start - i * step }))
+  it('names the day the target is reached at the recent pace', () => {
+    const eta = weightEta(weekly(5), 76, '2026-11-29')
+    // 78 kg now, 2 kg to go at 0.5 kg a week: 28 days after today.
+    expect(eta).toEqual({ kind: 'date', date: '2026-12-27', perWeek: 0.5 })
+  })
+  it('says when the weight is not going down', () => {
+    expect(weightEta(weekly(5, 80, 0), 76, '2026-11-29')).toMatchObject({ kind: 'stalled' })
+    expect(weightEta(weekly(5, 80, -0.5), 76, '2026-11-29')).toMatchObject({ kind: 'stalled' })
+  })
+  it('needs a target ahead and two weeks of history', () => {
+    expect(weightEta(weekly(5), undefined, '2026-11-29')).toBeUndefined()
+    expect(weightEta(weekly(5), 79, '2026-11-29')).toBeUndefined()
+    expect(weightEta(weekly(2), 70, '2026-11-08')).toBeUndefined()
+  })
+})
+
+describe('mostLost', () => {
+  it('measures to the lowest 7-day average, not to a single low morning', () => {
+    expect(mostLost([
+      { date: '2026-11-01', kg: 80 },
+      { date: '2026-11-02', kg: 77 },
+      { date: '2026-11-03', kg: 79 },
+    ])).toBe(1.5)
+    expect(mostLost([{ date: '2026-11-01', kg: 80 }, { date: '2026-11-20', kg: 82 }])).toBe(0)
+    expect(mostLost([])).toBe(0)
+  })
+})
+
+describe('longestWeighInRun', () => {
+  it('counts consecutive days', () => {
+    expect(longestWeighInRun([
+      { date: '2026-11-01', kg: 80 },
+      { date: '2026-11-02', kg: 80 },
+      { date: '2026-11-04', kg: 80 },
+      { date: '2026-11-05', kg: 80 },
+      { date: '2026-11-06', kg: 80 },
+    ])).toBe(3)
+    expect(longestWeighInRun([])).toBe(0)
   })
 })

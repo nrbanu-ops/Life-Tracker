@@ -24,6 +24,11 @@ describe('memoryFor', () => {
     expect(memoryFor([review], '2026-10-31')).toBeUndefined()
     expect(memoryFor([review, at('mine', '2025-10-31')], '2026-10-31')?.entries.map((e) => e.id)).toEqual(['mine'])
   })
+
+  it('skips progress photos from Kilo', () => {
+    const photo: JournalEntry = { ...at('photo', '2025-10-31'), kind: 'weight' }
+    expect(memoryFor([photo], '2026-10-31')).toBeUndefined()
+  })
 })
 
 describe('searchEntries', () => {

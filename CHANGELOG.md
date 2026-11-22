@@ -5,6 +5,13 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Kilo: tahmini varış, başarımlar 🎯
+- Özet'te **tahmini varış tarihi**: son 4 haftanın hızıyla "Bu hızla hedefe 11 Şubat civarı
+  (haftada 0,6 kg)". Düşüş yoksa ya da çok yavaşsa bunu söyler.
+- Yeni **⚖️ Kilo başarımları**: 1, 5, 10, 20 kg (7 günlük ortalamada), 7 ve 30 gün üst üste
+  tartılma, hedef kiloya ulaşma.
+- Kilo fotoğrafları Bugün'deki anı kartında artık çıkmaz.
+
 ### Kilo fotoğrafları 📷
 - Kilo sayfasında yeni **Fotoğraf** sekmesi: ilerleme fotoğraflarını gün seçerek ekle.
 - Fotoğraflar o günün **günlüğüne** de eklenir ("⚖️ Kilo fotoğrafı" etiketiyle); ayrı bir yerde tutulmaz.

@@ -11,7 +11,7 @@ import type { WeightEntry } from '../db/types'
 import { setWeight, setWeightTarget, useWeightPhotos, useWeights } from '../db/weight'
 import { fromDateKey, toDateKey } from '../lib/date'
 import { useTodayKey } from '../lib/useTodayKey'
-import { formatKg, parseKg, trend, trendChange, weightMonths, weightProgress } from '../lib/weight'
+import { ETA_WEEKS, formatKg, parseKg, trend, trendChange, weightEta, weightMonths, weightProgress, type WeightEta } from '../lib/weight'
 
 type Tab = 'ozet' | 'grafik' | 'gecmis' | 'foto'
 const TABS: { value: Tab; label: string }[] = [
@@ -82,6 +82,7 @@ function Overview({ entries, targetKg, onChart }: DataProps & { onChart: () => v
   const week = trendChange(entries, 7)
   const month = trendChange(entries, 30)
   const recent = chartPoints(entries, daysBefore(today, 30))
+  const eta = weightEta(entries, targetKg, today)
 
   return (
     <>
@@ -113,6 +114,7 @@ function Overview({ entries, targetKg, onChart }: DataProps & { onChart: () => v
                 <div className="h-full rounded-full bg-accent" style={{ width: `${progress.ratio * 100}%` }} />
               </div>
             )}
+            {eta && <p className="mt-2 text-sm">{etaText(eta)}</p>}
           </>
         ) : (
           <p className="text-sm text-muted">İlk kilonu yukarıdan gir; ilerleme ve grafik burada görünür.</p>
@@ -141,6 +143,16 @@ function Overview({ entries, targetKg, onChart }: DataProps & { onChart: () => v
       )}
     </>
   )
+}
+
+/** The arrival estimate in words; the pace is always the last ETA_WEEKS weeks of the 7-day average. */
+function etaText(eta: WeightEta): string {
+  if (eta.kind === 'date') {
+    return `📅 Bu hızla hedefe ${day(eta.date, 'd MMMM yyyy')} civarı (haftada ${formatKg(eta.perWeek)} kg)`
+  }
+  return eta.perWeek > 0
+    ? `🐢 Son ${ETA_WEEKS} haftada haftada ${formatKg(eta.perWeek)} kg — bu hızla hedef 2 yıldan uzak`
+    : `⏸️ Son ${ETA_WEEKS} haftada düşüş yok; tahmin için gidişatın aşağı dönmesi gerekiyor`
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

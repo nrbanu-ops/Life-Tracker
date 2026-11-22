@@ -95,3 +95,19 @@ describe('perfectDays', () => {
     expect(perfectDays(habits, logs, '2026-01-03')).toEqual({ total: 2, longestRun: 2 })
   })
 })
+
+describe('weight achievements', () => {
+  const w = (day: number, kg: number) => ({ date: `2026-01-${String(day).padStart(2, '0')}`, kg })
+  it('are hidden until the first weigh-in', () => {
+    expect(evaluate({}).some((a) => a.group === 'weight')).toBe(false)
+  })
+  it('count kg lost on the 7-day average, days in a row and the target', () => {
+    const weights = [w(1, 80), w(2, 79), w(3, 78), w(4, 77), w(5, 76), w(6, 75), w(7, 74), w(8, 73)]
+    const list = evaluate({ weights, weightTargetKg: 73 })
+    expect(byId(list, 'weight-lost-1').earned).toBe(true)
+    expect(byId(list, 'weight-lost-5').earned).toBe(false)
+    expect(byId(list, 'weigh-in-7').earned).toBe(true)
+    expect(byId(list, 'weight-goal').earned).toBe(true)
+    expect(evaluate({ weights }).some((a) => a.id === 'weight-goal')).toBe(false)
+  })
+})
