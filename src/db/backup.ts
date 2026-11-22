@@ -76,25 +76,17 @@ export async function restoreBackup(backup: Backup): Promise<number> {
  * off: otherwise the empty app would overwrite the last backup file right away.
  */
 /**
- * Starts the habit and project side over, and leaves the rest of the app alone: the journal,
- * the library, moods, tasks and week plans all stay, as do the settings in `meta`.
+ * Starts the habits and XP over, and leaves the rest of the app alone: projects (with their steps
+ * and achievements), the journal, the library, moods, tasks and week plans all stay, as do the
+ * settings in `meta`.
  *
  * Habit notes in the journal are kept too — they are writing, not bookkeeping, and the journal
- * shows one whose habit is gone as "Silinmiş habit". XP and achievements go with the habits,
- * and because the journal and tasks that stay would otherwise earn that XP straight back, the
- * ledger is told to start again today.
+ * shows one whose habit is gone as "Silinmiş habit". Earned achievements go with the XP, and
+ * because the projects, journal and tasks that stay would otherwise earn that XP straight back,
+ * the ledger is told to start again today.
  */
-export async function resetHabitsAndProjects(today: string): Promise<void> {
-  const cleared = [
-    db.habits,
-    db.habitLogs,
-    db.projects,
-    db.milestones,
-    db.projectAchievements,
-    db.achievements,
-    db.xpWeeks,
-    db.hardDays,
-  ]
+export async function resetHabitsAndXp(today: string): Promise<void> {
+  const cleared = [db.habits, db.habitLogs, db.achievements, db.xpWeeks, db.hardDays]
   await db.transaction('rw', [...cleared, db.meta], async () => {
     for (const table of cleared) await table.clear()
     // A pointer to weeks that no longer exist.

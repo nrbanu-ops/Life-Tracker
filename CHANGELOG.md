@@ -3,6 +3,15 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-22
+
+### Sıfırlama artık sadece habit'leri ve XP'yi siler 🔄
+- Ayarlar → Veri ve yedek'teki bölümün adı **"Habit'leri ve XP'yi sıfırla"** oldu.
+- **Silinir:** habit'ler, işaretlemeler ve seriler, zor gün kayıtları, kazanılmış başarımlar, XP ve seviye.
+- **Kalır:** projeler ve adımları, günlük, fotoğraflar, ruh hali, görevler, kütüphane, haftalık
+  planlar ve ayarlar. Eskiden projeler de siliniyordu.
+- XP sıfırlandığı gün sıfırdan başlar; kalan projeler ve günlük eski seviyeyi geri getirmez.
+
 ## 2026-11-19
 
 ### Yeni tema: Neon Sahil 🌴

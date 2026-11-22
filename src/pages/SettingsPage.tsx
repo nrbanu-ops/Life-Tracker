@@ -8,7 +8,7 @@ import { StorageSection } from '../components/StorageSection'
 import { Switch } from '../components/Switch'
 import { ThemeSection } from '../components/ThemeSection'
 import { TodaySection } from '../components/TodaySection'
-import { resetHabitsAndProjects, saveSafetyCopy } from '../db/backup'
+import { resetHabitsAndXp, saveSafetyCopy } from '../db/backup'
 import { setPenaltyOn, usePenaltyOn } from '../db/leveling'
 import { PLAN_INSTRUCTIONS } from '../lib/aiPlan'
 import { androidBridge } from '../lib/android'
@@ -210,7 +210,7 @@ function SettingsGroup({ id, title, detail, open, onToggle, children }: GroupPro
   )
 }
 
-/** Starts the habit and project side over, behind a typed confirmation. */
+/** Starts the habits and XP over, behind a typed confirmation. */
 function ResetSection() {
   const today = useTodayKey()
   const [open, setOpen] = useState(false)
@@ -222,14 +222,14 @@ function ResetSection() {
 
   return (
     <section id="sifirla" className="rounded-2xl border border-p1/40 bg-surface p-4">
-      <h2 className="font-medium">Habit'leri ve projeleri sıfırla</h2>
+      <h2 className="font-medium">Habit'leri ve XP'yi sıfırla</h2>
       <p className="mt-1 text-sm text-muted">
-        <b>Silinir:</b> habit'ler, bütün işaretlemeler ve seriler, projeler ve adımları, başarımlar,
-        XP ve seviye.
+        <b>Silinir:</b> habit'ler, bütün işaretlemeler ve seriler, zor gün kayıtları, kazanılmış
+        başarımlar, XP ve seviye.
       </p>
       <p className="mt-1 text-sm text-muted">
-        <b>Kalır:</b> günlük yazıların ve fotoğrafların, ruh hali, görevler, kütüphane, haftalık
-        planlar ve ayarların. Habit'e yazdığın notlar da kalır, "Silinmiş habit" olarak görünürler.
+        <b>Kalır:</b> projeler ve adımları, günlük yazıların ve fotoğrafların, ruh hali, görevler,
+        kütüphane, haftalık planlar ve ayarların. Habit'e yazdığın notlar da kalır, "Silinmiş habit" olarak görünürler.
       </p>
       {!open ? (
         <button type="button" onClick={() => setOpen(true)} className="mt-3 rounded-xl border border-p1 px-4 py-2 text-sm font-medium text-p1">
@@ -267,13 +267,13 @@ function ResetSection() {
                   setNoCopy(true)
                   return setBusy(false)
                 }
-                await resetHabitsAndProjects(today)
+                await resetHabitsAndXp(today)
                 // A fresh start: every screen and watcher reads the empty database.
                 window.location.assign(import.meta.env.BASE_URL)
               }}
               className="flex-1 rounded-xl bg-p1 py-2.5 text-sm font-medium text-surface disabled:opacity-40"
             >
-              {busy ? 'Siliniyor…' : noCopy ? 'Kopyasız sil' : 'Habit ve projeleri sil'}
+              {busy ? 'Siliniyor…' : noCopy ? 'Kopyasız sil' : "Habit'leri ve XP'yi sil"}
             </button>
             <button
               type="button"
