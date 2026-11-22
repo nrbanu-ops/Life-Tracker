@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { changeOn, formatKg, parseKg, trend, trendChange, weightMonths, weightProgress } from './weight'
+import type { JournalEntry } from '../db/types'
+import { changeOn, formatKg, parseKg, trend, trendChange, weightMonths, weightOn, weightPhotos, weightProgress } from './weight'
 
 describe('parseKg', () => {
   it('reads a comma or a dot and rounds to 0.1', () => {
@@ -96,5 +97,38 @@ describe('weightMonths', () => {
       ['2026-11', 79.5, ['2026-11-09', '2026-11-02']],
       ['2026-10', 81, ['2026-10-30']],
     ])
+  })
+})
+
+describe('weightOn', () => {
+  const entries = [
+    { date: '2026-11-01', kg: 80 },
+    { date: '2026-11-05', kg: 79 },
+  ]
+  it("takes that day's weigh-in, else the latest before it", () => {
+    expect(weightOn(entries, '2026-11-05')?.kg).toBe(79)
+    expect(weightOn(entries, '2026-11-04')?.kg).toBe(80)
+    expect(weightOn(entries, '2026-10-30')).toBeUndefined()
+  })
+})
+
+describe('weightPhotos', () => {
+  const a = new Blob(['a'])
+  const b = new Blob(['b'])
+  const entry = (id: string, date: string, createdAt: string, extra: Partial<JournalEntry>): JournalEntry => ({
+    id, date, text: '', createdAt, ...extra,
+  })
+  it('only progress photos, oldest day first, each photo on its own', () => {
+    const photos = weightPhotos([
+      entry('2', '2026-11-09', '2026-11-09T08:00', { kind: 'weight', photos: [a, b] }),
+      entry('x', '2026-11-01', '2026-11-01T08:00', { photos: [a] }),
+      entry('1', '2026-11-02', '2026-11-02T08:00', { kind: 'weight', photos: [b] }),
+    ])
+    expect(photos.map((p) => [p.id, p.date])).toEqual([
+      ['1:0', '2026-11-02'],
+      ['2:0', '2026-11-09'],
+      ['2:1', '2026-11-09'],
+    ])
+    expect(photos[2].blob).toBe(b)
   })
 })

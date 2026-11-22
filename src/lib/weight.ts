@@ -1,6 +1,7 @@
 import { addDays } from 'date-fns'
-import type { WeightEntry } from '../db/types'
+import type { JournalEntry, WeightEntry } from '../db/types'
 import { fromDateKey, toDateKey } from './date'
+import { entryPhotos } from './journal'
 
 export const MIN_KG = 20
 export const MAX_KG = 400
@@ -91,4 +92,28 @@ export function weightMonths(entries: WeightEntry[]): WeightMonth[] {
     average: list.reduce((sum, e) => sum + e.kg, 0) / list.length,
     entries: list,
   }))
+}
+
+/** The weigh-in that stood on `date`: that day's, else the latest one before it. */
+export function weightOn(entries: WeightEntry[], date: string): WeightEntry | undefined {
+  return byDate(entries)
+    .filter((e) => e.date <= date)
+    .at(-1)
+}
+
+export type WeightPhoto = {
+  /** `entryId:index`, unique even when an entry holds the same picture twice. */
+  id: string
+  entryId: string
+  index: number
+  date: string
+  blob: Blob
+}
+
+/** The progress photos among journal entries, oldest first (then in the order they were added). */
+export function weightPhotos(journal: JournalEntry[]): WeightPhoto[] {
+  return journal
+    .filter((e) => e.kind === 'weight')
+    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt))
+    .flatMap((e) => entryPhotos(e).map((blob, index) => ({ id: `${e.id}:${index}`, entryId: e.id, index, date: e.date, blob })))
 }

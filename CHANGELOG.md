@@ -5,6 +5,13 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Kilo fotoğrafları 📷
+- Kilo sayfasında yeni **Fotoğraf** sekmesi: ilerleme fotoğraflarını gün seçerek ekle.
+- Fotoğraflar o günün **günlüğüne** de eklenir ("⚖️ Kilo fotoğrafı" etiketiyle); ayrı bir yerde tutulmaz.
+- **Önce / sonra**: ilk ve son fotoğraf yan yana, tarihleri ve o günkü kilolarıyla; aradaki gün ve
+  kilo farkı altında. Bir fotoğrafa dokunup "önce" ya da "sonra" olarak seçebilir ya da silebilirsin.
+- Geçmiş sekmesinde fotoğrafı olan günlerde 📷 işareti.
+
 ### Yeni gezinme: bölümler ve sekmeler 🧭
 - Alt çubuk artık beş bölüm: **Bugün · Hedefler · Günlük · Kütüphane · İlerleme**. Bugün ana sayfa
   olarak aynen kaldı.

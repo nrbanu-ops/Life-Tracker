@@ -141,8 +141,8 @@ export type JournalEntry = {
   audio?: Blob
   /** Its length in seconds, kept so the list can show it without decoding the sound. */
   audioSeconds?: number
-  /** 'review': a weekly look back written by Gemini. */
-  kind?: 'review'
+  /** 'review': a weekly look back written by Gemini. 'weight': progress photos added from Kilo — an ordinary entry otherwise. */
+  kind?: 'review' | 'weight'
   createdAt: string
   updatedAt?: string
 }

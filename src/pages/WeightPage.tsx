@@ -6,17 +6,19 @@ import { PageHeader } from '../components/PageHeader'
 import { Segmented } from '../components/Segmented'
 import { weightInputClass } from '../components/WeightCard'
 import { WeightChart, type WeightPoint } from '../components/WeightChart'
+import { WeightPhotos } from '../components/WeightPhotos'
 import type { WeightEntry } from '../db/types'
-import { setWeight, setWeightTarget, useWeights } from '../db/weight'
+import { setWeight, setWeightTarget, useWeightPhotos, useWeights } from '../db/weight'
 import { fromDateKey, toDateKey } from '../lib/date'
 import { useTodayKey } from '../lib/useTodayKey'
 import { formatKg, parseKg, trend, trendChange, weightMonths, weightProgress } from '../lib/weight'
 
-type Tab = 'ozet' | 'grafik' | 'gecmis'
+type Tab = 'ozet' | 'grafik' | 'gecmis' | 'foto'
 const TABS: { value: Tab; label: string }[] = [
   { value: 'ozet', label: 'Özet' },
   { value: 'grafik', label: 'Grafik' },
   { value: 'gecmis', label: 'Geçmiş' },
+  { value: 'foto', label: 'Fotoğraf' },
 ]
 
 type Range = '30' | '90' | '365' | 'all'
@@ -52,7 +54,8 @@ export function WeightPage() {
   const [params, setParams] = useSearchParams()
   const tab = TABS.find((t) => t.value === params.get('sekme'))?.value ?? 'ozet'
   const data = useWeights()
-  if (!data) return null
+  const photos = useWeightPhotos()
+  if (!data || !photos) return null
   const open = (value: Tab) => setParams(value === 'ozet' ? {} : { sekme: value }, { replace: true })
 
   return (
@@ -63,7 +66,8 @@ export function WeightPage() {
       </div>
       {tab === 'ozet' && <Overview entries={data.entries} targetKg={data.targetKg} onChart={() => open('grafik')} />}
       {tab === 'grafik' && <ChartTab entries={data.entries} targetKg={data.targetKg} />}
-      {tab === 'gecmis' && <HistoryTab entries={data.entries} />}
+      {tab === 'gecmis' && <HistoryTab entries={data.entries} photoDays={new Set(photos.map((p) => p.date))} />}
+      {tab === 'foto' && <WeightPhotos photos={photos} entries={data.entries} />}
     </>
   )
 }
@@ -267,7 +271,7 @@ function ChartTab({ entries, targetKg }: DataProps) {
   )
 }
 
-function HistoryTab({ entries }: { entries: WeightEntry[] }) {
+function HistoryTab({ entries, photoDays }: { entries: WeightEntry[]; photoDays: Set<string> }) {
   if (entries.length === 0) return <p className={`${card} text-sm text-muted`}>Henüz kayıt yok.</p>
   // Each row is compared with the weigh-in before it, which may sit in the previous month.
   const previous = new Map(entries.slice(1).map((e, i) => [e.date, entries[i].kg]))
@@ -284,7 +288,10 @@ function HistoryTab({ entries }: { entries: WeightEntry[] }) {
               const before = previous.get(e.date)
               return (
                 <li key={e.date} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                  <span>{day(e.date, 'd MMMM, EEE')}</span>
+                  <span>
+                    {day(e.date, 'd MMMM, EEE')}
+                    {photoDays.has(e.date) && <span aria-label="fotoğraf var"> 📷</span>}
+                  </span>
                   <span className="flex items-center gap-3">
                     {before !== undefined && <span className="text-xs text-muted tabular-nums">{signed(e.kg - before)}</span>}
                     <span className="font-medium tabular-nums">{formatKg(e.kg)} kg</span>

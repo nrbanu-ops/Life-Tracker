@@ -44,6 +44,9 @@ export function JournalEntryList({ entries, habitsById, onEdit }: Props) {
                       {habit?.title ?? 'Silinmiş habit'}
                     </span>
                   )}
+                  {entry.kind === 'weight' && (
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">⚖️ Kilo fotoğrafı</span>
+                  )}
                   {entry.kind === 'review' && (
                     <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">✨ Haftalık bakış</span>
                   )}
