@@ -1,5 +1,6 @@
 import { addDays, format } from 'date-fns'
 import { tr } from 'date-fns/locale'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PageHeader } from '../components/PageHeader'
@@ -7,10 +8,12 @@ import { Segmented } from '../components/Segmented'
 import { weightInputClass } from '../components/WeightCard'
 import { WeightChart, type WeightPoint } from '../components/WeightChart'
 import { WeightPhotos } from '../components/WeightPhotos'
+import { db } from '../db/db'
 import type { WeightEntry } from '../db/types'
 import { setWeight, setWeightTarget, useWeightPhotos, useWeights } from '../db/weight'
 import { fromDateKey, toDateKey } from '../lib/date'
 import { supportsWeighReminder } from '../lib/reminders'
+import { isCompleted } from '../lib/today'
 import { useTodayKey } from '../lib/useTodayKey'
 import { ETA_WEEKS, formatKg, parseKg, trend, trendChange, weightEta, weightMonths, weightProgress, type WeightEta } from '../lib/weight'
 
@@ -44,7 +47,7 @@ function chartPoints(entries: WeightEntry[], since?: string): WeightPoint[] {
   return entries
     .filter((e) => !since || e.date >= since)
     .map((e) => ({
-      label: day(e.date, 'd MMM'),
+      t: fromDateKey(e.date).getTime(),
       detail: day(e.date, 'd MMMM yyyy EEEE'),
       kg: e.kg,
       trend: trendByDate.get(e.date) ?? e.kg,
@@ -260,8 +263,23 @@ function TargetEditor({ targetKg }: { targetKg?: number }) {
 function ChartTab({ entries, targetKg }: DataProps) {
   const today = useTodayKey()
   const [range, setRange] = useState<Range>('90')
-  const points = chartPoints(entries, range === 'all' ? undefined : daysBefore(today, Number(range)))
+  const [habitId, setHabitId] = useState('')
+  const since = range === 'all' ? undefined : daysBefore(today, Number(range))
+  const points = chartPoints(entries, since)
   const values = points.map((p) => p.kg)
+  const habits = useLiveQuery(() => db.habits.filter((h) => !h.archived && h.kind !== 'quit').toArray(), [], [])
+  const doneDays = useLiveQuery(
+    async () =>
+      habitId
+        ? (await db.habitLogs.where('habitId').equals(habitId).toArray()).filter((l) => isCompleted(l.status)).map((l) => l.date)
+        : [],
+    [habitId],
+    [],
+  )
+  // The chart spans first to last weigh-in in the range, so that is the stretch counted too.
+  const from = entries.find((e) => !since || e.date >= since)?.date
+  const to = entries.at(-1)?.date
+  const shownDays = from && to ? doneDays.filter((d) => d >= from && d <= to) : []
 
   return (
     <>
@@ -271,10 +289,29 @@ function ChartTab({ entries, targetKg }: DataProps) {
       {points.length >= 2 ? (
         <>
           <section className={card}>
-            <WeightChart data={points} targetKg={targetKg} height={260} />
+            <WeightChart data={points} targetKg={targetKg} height={260} shaded={shownDays} />
             <p className="mt-2 text-xs text-muted">
-              Noktalar tartıların, çizgi 7 günlük ortalama{targetKg !== undefined && ', kesikli çizgi hedefin'}.
+              Noktalar tartıların, çizgi 7 günlük ortalama{targetKg !== undefined && ', kesikli çizgi hedefin'}
+              {habitId && ', gölgeli günler seçtiğin habit'}.
             </p>
+            {habits.length > 0 && (
+              <label className="mt-3 flex items-center gap-2 text-sm">
+                <span className="shrink-0 text-muted">Habit göster</span>
+                <select
+                  value={habitId}
+                  onChange={(e) => setHabitId(e.target.value)}
+                  className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 outline-none focus:border-accent"
+                >
+                  <option value="">Yok</option>
+                  {habits.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {habitId && <p className="mt-1 text-xs text-muted">Bu aralıkta {shownDays.length} gün yapıldı.</p>}
           </section>
           <div className="mb-5 grid grid-cols-3 gap-2">
             <Stat label="En düşük" value={`${formatKg(Math.min(...values))} kg`} />

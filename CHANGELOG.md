@@ -5,6 +5,11 @@ Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
 ## 2026-11-22
 
+### Kilo grafiğinde habit günleri 📊
+- Grafik sekmesinde **Habit göster**: bir habit seç, yaptığın günler grafikte gölgelenir. Örneğin
+  koşu günleriyle kilonun gidişatını yan yana görürsün.
+- Grafiğin zaman ekseni artık gerçek tarih: tartı olmayan günler sıkışmaz, boşluk olarak görünür.
+
 ### Tartı hatırlatması ⏰ (Android)
 - Ayarlar → Hatırlatma ve seviye'de yeni **Tartı hatırlatması**: seçtiğin saatte (varsayılan 08:00)
   "Bugün tartılmayı unutma ⚖️" bildirimi. O gün kilonu girdiysen bildirim gelmez.
