@@ -781,6 +781,25 @@
   }
 }
 
+/*
+  Today's blocks one even distance apart. Each card brings its own margin (mb-5, mb-6, mt-8, none —
+  some are shared with other pages), so the stack sets the gap and drops theirs. Unlayered on purpose,
+  so it beats those utilities. A `contents` wrapper (the reminder queue) passes its children through.
+  `stack-tuck` keeps a small link close under the block above it.
+*/
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.page-stack > *,
+.page-stack > .contents > * {
+  margin-block: 0;
+}
+.page-stack > .stack-tuck {
+  margin-top: -0.75rem;
+}
+
 /* A light press on every button, so taps feel answered. */
 button:not(:disabled) {
   transition:

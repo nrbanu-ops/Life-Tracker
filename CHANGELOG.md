@@ -3,6 +3,11 @@
 Yeniden eskiye. Her madde bir ya da birkaç commit; ayrıntı için `git log`.
 Geri dönüş noktaları git etiketi olarak durur (ör. `kayit-2026-10-31`).
 
+## 2026-11-23
+
+### Bugün'de kartlar arası eşit boşluk 📏
+- Kartların araları artık hep aynı: bazıları birbirine yapışık, bazıları çok uzaktı.
+
 ## 2026-11-22
 
 ### Mercan Resifi'ne yeni arka plan 🎨

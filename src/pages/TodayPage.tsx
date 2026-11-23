@@ -118,169 +118,169 @@ export function TodayPage() {
     <>
       <PageHeader title="Bugün" subtitle={subtitle} />
 
-      {items.length === 0 && quitHabits.length > 0 ? null : items.length === 0 ? (
-        <EmptyState
-          title={hasActiveHabits ? 'Bugün planlı habit yok' : 'Henüz habit yok'}
-          text={
-            hasActiveHabits
-              ? 'Keyfini çıkar, yarın görüşürüz.'
-              : 'Her gün, haftada birkaç kez ya da ayda yılda bir yapmak istediğin şeyleri ekle.'
-          }
-          action={
-            !hasActiveHabits && (
-              <Link
-                to="/habitler"
-                state={{ newHabit: true }}
-                className="inline-block rounded-full bg-accent px-5 py-2.5 font-medium text-surface"
-              >
-                + Habit ekle
-              </Link>
-            )
-          }
-        />
-      ) : (
-        <>
-          {items.some((item) => isDailyGoal(item.habit)) && (
-            <section className="mb-5 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
-              <ProgressRing done={done} total={total} />
-              <div>
-                <p className="font-medium">{progressTitle(done, total)}</p>
-                <p className="text-sm text-muted">
-                  {hard ? 'Dokun: minimum · Tekrar dokun: tam' : 'Dokun: işaretle · Uzun bas: minimum, atla'}
-                </p>
-              </div>
-            </section>
-          )}
-
-          {hard && <HardDayCard today={today} />}
-
-          {keystones.length > 0 && (
-            <HabitGroup
-              title="Omurga"
-              items={keystones}
-              hideDone={hideDone}
-              projectColor={projectColor}
-              chains={chains}
-              onTap={tap}
-              onMore={setActionHabitId}
-            />
-          )}
-
-          {restHidden ? (
-            <button
-              type="button"
-              aria-expanded={false}
-              onClick={() => setShowRest(true)}
-              className="mb-6 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-muted"
-            >
-              <span>Diğerleri</span>
-              <span className="tabular-nums">{folded} ▾</span>
-            </button>
-          ) : (
-            <>
-              {[
-                { key: 'daily', title: 'Günlük hedefler', detail: undefined, list: daily },
-                {
-                  key: 'weekly',
-                  title: 'Haftalık hedefler',
-                  detail:
-                    week.done === week.total ? 'Bu hafta hepsi tamam 🎉' : `Bu hafta ${week.done}/${week.total} tamam`,
-                  list: weekly,
-                },
-              ]
-                .filter((group) => group.list.length > 0)
-                .map((group) => (
-                  <HabitGroup
-                    key={group.key}
-                    title={group.title}
-                    detail={group.detail}
-                    items={group.list}
-                    hideDone={hideDone}
-                    projectColor={projectColor}
-                    chains={chains}
-                    onTap={tap}
-                    onMore={setActionHabitId}
-                  />
-                ))}
-              {keystones.length > 0 && folded > 0 && (
-                <button
-                  type="button"
-                  aria-expanded
-                  onClick={() => setShowRest(false)}
-                  className="tap-text -mt-4 mb-3 text-sm text-muted"
+      <div className="page-stack">
+        {items.length === 0 && quitHabits.length > 0 ? null : items.length === 0 ? (
+          <EmptyState
+            title={hasActiveHabits ? 'Bugün planlı habit yok' : 'Henüz habit yok'}
+            text={
+              hasActiveHabits
+                ? 'Keyfini çıkar, yarın görüşürüz.'
+                : 'Her gün, haftada birkaç kez ya da ayda yılda bir yapmak istediğin şeyleri ekle.'
+            }
+            action={
+              !hasActiveHabits && (
+                <Link
+                  to="/habitler"
+                  state={{ newHabit: true }}
+                  className="inline-block rounded-full bg-accent px-5 py-2.5 font-medium text-surface"
                 >
-                  Diğerlerini gizle
-                </button>
-              )}
-            </>
-          )}
-
-          <HabitActionSheet
-            item={items.find((item) => item.habit.id === actionHabitId)}
-            date={today}
-            onClose={() => setActionHabitId(undefined)}
+                  + Habit ekle
+                </Link>
+              )
+            }
           />
-        </>
-      )}
+        ) : (
+          <>
+            {items.some((item) => isDailyGoal(item.habit)) && (
+              <section className="mb-5 flex items-center gap-4 rounded-2xl border border-border bg-surface p-4">
+                <ProgressRing done={done} total={total} />
+                <div>
+                  <p className="font-medium">{progressTitle(done, total)}</p>
+                  <p className="text-sm text-muted">
+                    {hard ? 'Dokun: minimum · Tekrar dokun: tam' : 'Dokun: işaretle · Uzun bas: minimum, atla'}
+                  </p>
+                </div>
+              </section>
+            )}
 
-      {/* Right under the habits: what else there is to do today is the next thing to see. */}
-      <TodayTasks
-        today={today}
-        projectColor={projectColor}
-        goals={long.current}
-        waitingGoals={long.waiting}
-        onGoalTap={tap}
-        onGoalMore={setActionHabitId}
-      />
+            {hard && <HardDayCard today={today} />}
 
-      {/*
-        Reminders queue here, most pressing first, and only the first one that has something to
-        say is shown: each renders nothing when it is not due, so the first child is the winner.
-        (Dialogs are left alone — a sheet opened from the visible card must still appear.)
-      */}
-      <div className="[&>*:not(:first-child):not(dialog)]:hidden">
-        <HabitEndCard today={today} />
-        <FreezeCard today={today} />
-        <WeekPlanCard today={today} variant="prompt" />
-        <BackupReminder />
-        <MonthReviewCard today={today} variant="today" />
-        <SundayReviewNudge today={today} />
-        <YearReviewCard today={today} />
-      </div>
-
-      <WeekPlanCard today={today} variant="plan" />
-
-      <WeightCard today={today} />
-
-      <LevelCard />
-
-      {quitHabits.length > 0 && (
-        <section className={items.length > 0 ? 'mt-2' : ''}>
-          <h2 className="mb-3 section-title">Bıraktıkların</h2>
-          <ul className="flex flex-col gap-3">
-            {quitHabits.map((habit) => (
-              <QuitCard
-                key={habit.id}
-                habit={habit}
-                now={now}
-                onOpen={() => setQuitHabitId(habit.id)}
-                onCelebrated={(days) => markMilestoneCelebrated(habit.id, days)}
+            {keystones.length > 0 && (
+              <HabitGroup
+                title="Omurga"
+                items={keystones}
+                hideDone={hideDone}
+                projectColor={projectColor}
+                chains={chains}
+                onTap={tap}
+                onMore={setActionHabitId}
               />
-            ))}
-          </ul>
-          <QuitSheet
-            habit={quitHabits.find((h) => h.id === quitHabitId)}
-            now={now}
-            onClose={() => setQuitHabitId(undefined)}
-          />
-        </section>
-      )}
+            )}
 
-      <TodayMilestones />
+            {restHidden ? (
+              <button
+                type="button"
+                aria-expanded={false}
+                onClick={() => setShowRest(true)}
+                className="mb-6 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-muted"
+              >
+                <span>Diğerleri</span>
+                <span className="tabular-nums">{folded} ▾</span>
+              </button>
+            ) : (
+              <>
+                {[
+                  { key: 'daily', title: 'Günlük hedefler', detail: undefined, list: daily },
+                  {
+                    key: 'weekly',
+                    title: 'Haftalık hedefler',
+                    detail:
+                      week.done === week.total ? 'Bu hafta hepsi tamam 🎉' : `Bu hafta ${week.done}/${week.total} tamam`,
+                    list: weekly,
+                  },
+                ]
+                  .filter((group) => group.list.length > 0)
+                  .map((group) => (
+                    <HabitGroup
+                      key={group.key}
+                      title={group.title}
+                      detail={group.detail}
+                      items={group.list}
+                      hideDone={hideDone}
+                      projectColor={projectColor}
+                      chains={chains}
+                      onTap={tap}
+                      onMore={setActionHabitId}
+                    />
+                  ))}
+                {keystones.length > 0 && folded > 0 && (
+                  <button
+                    type="button"
+                    aria-expanded
+                    onClick={() => setShowRest(false)}
+                    className="tap-text stack-tuck self-start text-sm text-muted"
+                  >
+                    Diğerlerini gizle
+                  </button>
+                )}
+              </>
+            )}
 
-      <MemoryCard today={today} />
+            <HabitActionSheet
+              item={items.find((item) => item.habit.id === actionHabitId)}
+              date={today}
+              onClose={() => setActionHabitId(undefined)}
+            />
+          </>
+        )}
 
-      <div className="mt-8">
+        {/* Right under the habits: what else there is to do today is the next thing to see. */}
+        <TodayTasks
+          today={today}
+          projectColor={projectColor}
+          goals={long.current}
+          waitingGoals={long.waiting}
+          onGoalTap={tap}
+          onGoalMore={setActionHabitId}
+        />
+
+        {/*
+          Reminders queue here, most pressing first, and only the first one that has something to
+          say is shown: each renders nothing when it is not due, so the first child is the winner.
+          (Dialogs are left alone — a sheet opened from the visible card must still appear.)
+        */}
+        <div className="contents [&>*:not(:first-child):not(dialog)]:hidden">
+          <HabitEndCard today={today} />
+          <FreezeCard today={today} />
+          <WeekPlanCard today={today} variant="prompt" />
+          <BackupReminder />
+          <MonthReviewCard today={today} variant="today" />
+          <SundayReviewNudge today={today} />
+          <YearReviewCard today={today} />
+        </div>
+
+        <WeekPlanCard today={today} variant="plan" />
+
+        <WeightCard today={today} />
+
+        <LevelCard />
+
+        {quitHabits.length > 0 && (
+          <section>
+            <h2 className="mb-3 section-title">Bıraktıkların</h2>
+            <ul className="flex flex-col gap-3">
+              {quitHabits.map((habit) => (
+                <QuitCard
+                  key={habit.id}
+                  habit={habit}
+                  now={now}
+                  onOpen={() => setQuitHabitId(habit.id)}
+                  onCelebrated={(days) => markMilestoneCelebrated(habit.id, days)}
+                />
+              ))}
+            </ul>
+            <QuitSheet
+              habit={quitHabits.find((h) => h.id === quitHabitId)}
+              now={now}
+              onClose={() => setQuitHabitId(undefined)}
+            />
+          </section>
+        )}
+
+        <TodayMilestones />
+
+        <MemoryCard today={today} />
+
         <DayJournal date={today} canWrite />
       </div>
     </>
